@@ -579,7 +579,7 @@ contract LongShort {
             tokensToRedeem.mul(longTokenPrice).div(TEN_TO_THE_18);
 
         if (longValue.sub(amountToRedeem) != 0) {
-            newAdjustedBeta = shortValue.mul(TEN_TO_THE_18).div(
+            newAdjustedShortBeta = shortValue.mul(TEN_TO_THE_18).div(
                 longValue.sub(amountToRedeem)
             );
         }
@@ -593,7 +593,6 @@ contract LongShort {
             );
 
         longValue = longValue.sub(amountToRedeem);
-
         _redeem(finalRedeemAmount);
 
         require(
@@ -605,14 +604,15 @@ contract LongShort {
 
     function redeemShort(uint256 tokensToRedeem) external refreshSystemState {
         shortTokens.burnFrom(msg.sender, tokensToRedeem);
+
+        uint256 longBeta = getLongBeta();
+        uint256 newAdjustedLongBeta = 0;
+
         uint256 amountToRedeem =
             tokensToRedeem.mul(shortTokenPrice).div(TEN_TO_THE_18);
-        shortValue = shortValue.sub(amountToRedeem);
 
-        uint256 shortBeta = getShortBeta();
-        uint256 newAdjustedBeta = 0;
         if (shortValue.sub(amountToRedeem) != 0) {
-            newAdjustedBeta = longValue.mul(TEN_TO_THE_18).div(
+            newAdjustedLongBeta = longValue.mul(TEN_TO_THE_18).div(
                 shortValue.sub(amountToRedeem)
             );
         }
@@ -620,11 +620,12 @@ contract LongShort {
         uint256 finalRedeemAmount =
             _calcFinalRedeemAmount(
                 amountToRedeem,
-                newAdjustedBeta,
-                shortBeta,
+                newAdjustedLongBeta,
+                longBeta,
                 false
             );
 
+        shortValue = shortValue.sub(amountToRedeem);
         _redeem(finalRedeemAmount);
 
         require(
