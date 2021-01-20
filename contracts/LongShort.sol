@@ -70,7 +70,18 @@ contract LongShort {
     // Oracle
     AggregatorV3Interface internal priceFeed;
 
+    ////// Constants ///////
     uint256 public constant TEN_TO_THE_18 = 10**18;
+    uint256 public constant feeUnitsOfPrecision = 10000; // [div the above by 10000]
+
+    // Fees for entering
+    uint256 public constant baseEntryFee = 50; // 0.5% [we div by 10000]
+    uint256 public constant feeMultiplier = 100; // [= +1% fee for every 0.1 you tip the beta]
+    uint256 public constant betaMultiplier = 10;
+    uint256 public constant contractValueWhenScalingFeesKicksIn = 10**23; // [above fee kicks in when contract >$100 000]
+
+    // Fees on exit
+    uint256 public constant baseExitFee = 50; // 0.5% [we div by 10000]
 
     // Value of the underlying from which we calculate
     // gains and losses by respective sides
@@ -94,12 +105,40 @@ contract LongShort {
     ILendingPoolAddressesProvider public provider;
     address public aaveLendingContractCore;
 
-    // Fees (eventually to be community adjusted)
-    uint256 public constant baseFee = 50; // 0.5% [we div by 10000]
-    uint256 public constant feeMultiplier = 100; // [= +1% fee for every 0.1 you tip the beta]
-    uint256 public constant betaMultiplier = 10;
-    uint256 public constant feeUnitsOfPrecision = 10000; // [div the above by 10000]
-    uint256 public constant contractValueWhenScalingFeesKicksIn = 10**23; // [above fee kicks in when contract >$100 000]
+    // EVENTS
+    event tokenPriceRefreshed(uint256 longTokenPrice, uint256 shortTokenPrice);
+    event feesLevied(
+        uint256 totalFees,
+        uint256 longPercentage,
+        uint256 shortPercentage
+    );
+    event interestDistribution(
+        uint256 newTotalValueLocked,
+        uint256 totalInterest,
+        uint256 longPercentage,
+        uint256 shortPercentage
+    );
+    event priceUpdate(uint256 oldPrice, uint256 newPrice);
+    event longMinted(
+        uint256 depositAdded,
+        uint256 finalDepositAmount,
+        uint256 tokensMinted
+    );
+    event shortMinted(
+        uint256 depositAdded,
+        uint256 finalDepositAmount,
+        uint256 tokensMinted
+    );
+    event longRedeem(
+        uint256 tokensRedeemed,
+        uint256 valueOfRedemption,
+        uint256 finalRedeemValue
+    );
+    event shortRedeem(
+        uint256 tokensRedeemed,
+        uint256 valueOfRedemption,
+        uint256 finalRedeemValue
+    );
 
     /**
      * Necessary to update system state before any contract actions (deposits / withdraws)
@@ -200,6 +239,7 @@ contract LongShort {
                 shortTokenSupply
             );
         }
+        emit tokenPriceRefreshed(longTokenPrice, shortTokenPrice);
     }
 
     /**
@@ -214,6 +254,8 @@ contract LongShort {
     ) internal {
         _increaseLongShortSides(totalFees, longPercentage, shortPercentage);
         _refreshTokensPrice();
+
+        emit feesLevied(totalFees, longPercentage, shortPercentage);
     }
 
     /**
@@ -235,6 +277,13 @@ contract LongShort {
         );
 
         totalValueLocked = totalValueWithInterest;
+
+        emit interestDistribution(
+            totalValueWithInterest,
+            interestAccrued,
+            longPercentage,
+            shortPercentage
+        );
     }
 
     /**
@@ -323,6 +372,7 @@ contract LongShort {
         // TODO: Check why/if this is bad (casting to uint)
         // If a negative int is return this should fail.
         uint256 newPrice = uint256(getLatestPrice());
+        emit priceUpdate(assetPrice, newPrice);
 
         // Adjusts long and short values based on price movements.
         if (longValue > 0 && shortValue > 0) {
@@ -369,7 +419,8 @@ contract LongShort {
         uint256 betaDiff
     ) internal returns (uint256) {
         // 0.5% fee when contract has low liquidity
-        uint256 fees = feePayableAmount.mul(baseFee).div(feeUnitsOfPrecision);
+        uint256 fees =
+            feePayableAmount.mul(baseEntryFee).div(feeUnitsOfPrecision);
         if (totalValueLocked > contractValueWhenScalingFeesKicksIn) {
             // 0.5% blanket fee + 1% for every 0.1 you dilute the beta!
             // Be careful the above system will rapidly decrease the rate at which the contract can be
@@ -459,6 +510,7 @@ contract LongShort {
         longValue = longValue.add(finalDepositAmount);
         longTokens.mint(msg.sender, amountToMint);
 
+        emit longMinted(amount, finalDepositAmount, amountToMint);
         // Safety Checks
         // Again consider gas implications.
         require(
@@ -491,6 +543,7 @@ contract LongShort {
         shortValue = shortValue.add(finalDepositAmount);
         shortTokens.mint(msg.sender, amountToMint);
 
+        emit shortMinted(amount, finalDepositAmount, amountToMint);
         // Safety Checks
         require(
             shortTokenPrice ==
@@ -521,11 +574,11 @@ contract LongShort {
         returns (uint256)
     {
         // base 0.5% fee
-        uint256 fees = fullAmount.mul(baseFee).div(feeUnitsOfPrecision);
+        uint256 fees = fullAmount.mul(baseExitFee).div(feeUnitsOfPrecision);
 
         // Extra 0.5% fee on deisrable liquidity leaving the book
         uint256 additionalFees =
-            feePayableAmount.mul(baseFee).div(feeUnitsOfPrecision);
+            feePayableAmount.mul(baseExitFee).div(feeUnitsOfPrecision);
 
         return fees.add(additionalFees);
     }
@@ -595,6 +648,8 @@ contract LongShort {
         longValue = longValue.sub(amountToRedeem);
         _redeem(finalRedeemAmount);
 
+        emit longRedeem(tokensToRedeem, amountToRedeem, finalRedeemAmount);
+
         require(
             longTokenPrice ==
                 longValue.mul(TEN_TO_THE_18).div(longTokens.totalSupply())
@@ -627,6 +682,8 @@ contract LongShort {
 
         shortValue = shortValue.sub(amountToRedeem);
         _redeem(finalRedeemAmount);
+
+        emit shortRedeem(tokensToRedeem, amountToRedeem, finalRedeemAmount);
 
         require(
             shortTokenPrice ==

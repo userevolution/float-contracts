@@ -24,7 +24,7 @@ contract("LongShort", (accounts) => {
   let dai;
   let priceOracle;
   let aaveLendingPool;
-  let baseFee;
+  let baseEntryFee;
 
   const defaultMintAmount = "100000000000000000000"; // 100 dai etc.
   const oneUnitInWei = "1000000000000000000";

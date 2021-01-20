@@ -24,7 +24,7 @@ contract("LongShort", (accounts) => {
   let dai;
   let priceOracle;
   let aaveLendingPool;
-  let baseFee;
+  let baseEntryFee;
 
   // Default test values
   const admin = accounts[0];
@@ -49,7 +49,7 @@ contract("LongShort", (accounts) => {
     dai = result.dai;
     priceOracle = result.priceOracle;
     aaveLendingPool = result.aaveLendingPool;
-    baseFee = await longShort.baseFee.call();
+    baseEntryFee = await longShort.baseEntryFee.call();
     getShortBeta = async () => await longShort.getShortBeta.call();
     getLongBeta = async () => await longShort.getLongBeta.call();
 
@@ -68,7 +68,7 @@ contract("LongShort", (accounts) => {
         _amount,
         _longValue,
         _shortValue,
-        baseFee,
+        baseEntryFee,
         feeMultiplier,
         minThreshold,
         feeUnitsOfPrecision,

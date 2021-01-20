@@ -118,7 +118,7 @@ const feeCalculation = (
   _amount,
   _longValue,
   _shortValue,
-  _baseFee,
+  _baseEntryFee,
   _feeMultiplier,
   _minThreshold,
   _feeUnitsOfPrecision,
@@ -129,7 +129,7 @@ const feeCalculation = (
   amount = new BN(_amount);
   longValue = new BN(_longValue);
   shortValue = new BN(_shortValue);
-  baseFee = new BN(_baseFee);
+  baseEntryFee = new BN(_baseEntryFee);
   feeMultiplier = new BN(_feeMultiplier);
   minThreshold = new BN(_minThreshold);
   feeUnitsOfPrecision = new BN(_feeUnitsOfPrecision);
@@ -140,11 +140,11 @@ const feeCalculation = (
   if (isLongDeposit) {
     // Adding to heavy side
     if (longValue.gt(shortValue)) {
-      fees = baseFee.mul(amount).div(feeUnitsOfPrecision);
+      fees = baseEntryFee.mul(amount).div(feeUnitsOfPrecision);
       // Adding to thin side & tipping
     } else if (longValue.add(amount).gt(shortValue)) {
       let amountLiableForFee = amount.sub(shortValue.sub(longValue));
-      fees = baseFee.mul(amountLiableForFee).div(feeUnitsOfPrecision);
+      fees = baseEntryFee.mul(amountLiableForFee).div(feeUnitsOfPrecision);
       // Adding to thin side
     } else {
       fees = new BN(0);
@@ -152,11 +152,11 @@ const feeCalculation = (
   } else {
     // Adding to heavy side
     if (shortValue.gt(longValue)) {
-      fees = baseFee.mul(amount).div(feeUnitsOfPrecision);
+      fees = baseEntryFee.mul(amount).div(feeUnitsOfPrecision);
       // Adding to thin side & tipping
     } else if (shortValue.add(amount).gt(longValue)) {
       let amountLiableForFee = amount.sub(longValue.sub(shortValue));
-      fees = baseFee.mul(amountLiableForFee).div(feeUnitsOfPrecision);
+      fees = baseEntryFee.mul(amountLiableForFee).div(feeUnitsOfPrecision);
       // Adding to thin side
     } else {
       fees = new BN(0);
