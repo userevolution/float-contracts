@@ -74,14 +74,14 @@ contract LongShort {
     uint256 public constant TEN_TO_THE_18 = 10**18;
     uint256 public constant feeUnitsOfPrecision = 10000; // [div the above by 10000]
 
-    // Fees for entering
-    uint256 public constant baseEntryFee = 50; // 0.5% [we div by 10000]
-    uint256 public constant feeMultiplier = 100; // [= +1% fee for every 0.1 you tip the beta]
-    uint256 public constant betaMultiplier = 10;
     uint256 public constant contractValueWhenScalingFeesKicksIn = 10**23; // [above fee kicks in when contract >$100 000]
+    uint256 public constant betaMultiplier = 10;
 
-    // Fees on exit
-    uint256 public constant baseExitFee = 50; // 0.5% [we div by 10000]
+    // Fees for entering
+    uint256 public baseEntryFee; // 0.1% [we div by 10000]
+    uint256 public entryFeeMultiplier; // [= +1% fee for every 0.1 you tip the beta]
+    uint256 public baseExitFee; // 0.5% [we div by 10000]
+    uint256 public badLiquidityExitFee; // Extra charge for removing liquidity from the side with already less depth
 
     // Value of the underlying from which we calculate
     // gains and losses by respective sides
@@ -163,7 +163,11 @@ contract LongShort {
         // kovan 0x506B0B2CF20FAA8f38a4E2B524EE43e1f4458Cc5
         // mainnet 0x24a42fD28C976A61Df5D00D0599C34c4f90748c8
         address lendingPoolAddressProvider,
-        address _priceOracle
+        address _priceOracle,
+        uint256 _baseEntryFee,
+        uint256 _entryFeeMultiplier,
+        uint256 _baseExitFee,
+        uint256 _badLiquidityExitFee
     ) public {
         priceFeed = AggregatorV3Interface(_priceOracle);
 
@@ -174,6 +178,11 @@ contract LongShort {
         daiContract = IERC20(daiAddress);
         provider = ILendingPoolAddressesProvider(lendingPoolAddressProvider);
         adaiContract = IADai(aDaiAddress);
+
+        baseEntryFee = _baseEntryFee;
+        entryFeeMultiplier = _entryFeeMultiplier;
+        baseExitFee = _baseExitFee;
+        badLiquidityExitFee = _badLiquidityExitFee;
 
         // Intialize price at $1 per token (adjust decimals)
         // TODO: we need to ensure 1 dai (18 decimals) =  1 longToken (18 decimals)
@@ -253,7 +262,6 @@ contract LongShort {
         uint256 shortPercentage
     ) internal {
         _increaseLongShortSides(totalFees, longPercentage, shortPercentage);
-        _refreshTokensPrice();
 
         emit feesLevied(totalFees, longPercentage, shortPercentage);
     }
@@ -439,7 +447,7 @@ contract LongShort {
                 feePayableAmount
                     .mul(betaDiff)
                     .mul(betaMultiplier)
-                    .mul(feeMultiplier)
+                    .mul(entryFeeMultiplier)
                     .div(feeUnitsOfPrecision)
                     .div(TEN_TO_THE_18);
 
@@ -482,6 +490,8 @@ contract LongShort {
                 );
             }
             depositLessFees = amount.sub(fees);
+
+            // Fees should not accrue this disproptionately!!!
             if (isLong) {
                 _feesMechanism(fees, 0, 100);
             } else {
@@ -489,6 +499,7 @@ contract LongShort {
             }
             finalDepositAmount = depositLessFees;
         }
+        _refreshTokensPrice();
         return finalDepositAmount;
     }
 
@@ -543,6 +554,9 @@ contract LongShort {
         shortValue = shortValue.add(finalDepositAmount);
         shortTokens.mint(msg.sender, amountToMint);
 
+        // NB : Important to refresh the token price before claculating amount to mint?
+        // So user is buying them at the new price after their fee has increased the price.
+
         emit shortMinted(amount, finalDepositAmount, amountToMint);
         // Safety Checks
         require(
@@ -578,7 +592,7 @@ contract LongShort {
 
         // Extra 0.5% fee on deisrable liquidity leaving the book
         uint256 additionalFees =
-            feePayableAmount.mul(baseExitFee).div(feeUnitsOfPrecision);
+            feePayableAmount.mul(badLiquidityExitFee).div(feeUnitsOfPrecision);
 
         return fees.add(additionalFees);
     }
@@ -611,11 +625,7 @@ contract LongShort {
         }
 
         finalRedeemAmount = amount.sub(fees);
-        if (isLong) {
-            _feesMechanism(fees, 0, 100);
-        } else {
-            _feesMechanism(fees, 100, 0);
-        }
+        _feesMechanism(fees, 50, 50);
 
         return finalRedeemAmount;
     }
@@ -627,16 +637,13 @@ contract LongShort {
 
         uint256 shortBeta = getShortBeta();
         uint256 newAdjustedShortBeta = 0;
-
         uint256 amountToRedeem =
             tokensToRedeem.mul(longTokenPrice).div(TEN_TO_THE_18);
-
         if (longValue.sub(amountToRedeem) != 0) {
             newAdjustedShortBeta = shortValue.mul(TEN_TO_THE_18).div(
                 longValue.sub(amountToRedeem)
             );
         }
-
         uint256 finalRedeemAmount =
             _calcFinalRedeemAmount(
                 amountToRedeem,
@@ -646,15 +653,10 @@ contract LongShort {
             );
 
         longValue = longValue.sub(amountToRedeem);
+        _refreshTokensPrice();
         _redeem(finalRedeemAmount);
 
         emit longRedeem(tokensToRedeem, amountToRedeem, finalRedeemAmount);
-
-        require(
-            longTokenPrice ==
-                longValue.mul(TEN_TO_THE_18).div(longTokens.totalSupply())
-        );
-        require(longValue.add(shortValue) == totalValueLocked);
     }
 
     function redeemShort(uint256 tokensToRedeem) external refreshSystemState {
@@ -662,16 +664,13 @@ contract LongShort {
 
         uint256 longBeta = getLongBeta();
         uint256 newAdjustedLongBeta = 0;
-
         uint256 amountToRedeem =
             tokensToRedeem.mul(shortTokenPrice).div(TEN_TO_THE_18);
-
         if (shortValue.sub(amountToRedeem) != 0) {
             newAdjustedLongBeta = longValue.mul(TEN_TO_THE_18).div(
                 shortValue.sub(amountToRedeem)
             );
         }
-
         uint256 finalRedeemAmount =
             _calcFinalRedeemAmount(
                 amountToRedeem,
@@ -681,14 +680,9 @@ contract LongShort {
             );
 
         shortValue = shortValue.sub(amountToRedeem);
+        _refreshTokensPrice();
         _redeem(finalRedeemAmount);
 
         emit shortRedeem(tokensToRedeem, amountToRedeem, finalRedeemAmount);
-
-        require(
-            shortTokenPrice ==
-                shortValue.mul(TEN_TO_THE_18).div(shortTokens.totalSupply())
-        );
-        require(longValue.add(shortValue) == totalValueLocked);
     }
 }

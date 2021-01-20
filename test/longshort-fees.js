@@ -61,7 +61,7 @@ contract("LongShort", (accounts) => {
       thinBeta = 1
     ) => {
       // check if imbalance or not
-      const feeMultiplier = await longShort.feeMultiplier.call();
+      const entryFeeMultiplier = await longShort.entryFeeMultiplier.call();
       const minThreshold = await longShort.contractValueWhenScalingFeesKicksIn.call();
       const feeUnitsOfPrecision = await longShort.feeUnitsOfPrecision.call();
       return feeCalculation(
@@ -69,7 +69,7 @@ contract("LongShort", (accounts) => {
         _longValue,
         _shortValue,
         baseEntryFee,
-        feeMultiplier,
+        entryFeeMultiplier,
         minThreshold,
         feeUnitsOfPrecision,
         isLongDeposit,

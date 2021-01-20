@@ -20,6 +20,16 @@ const LendingPoolAddressProvider = artifacts.require(
 const ADai = artifacts.require(ADAI);
 
 const initialize = async (admin) => {
+  return initializeWithFeeArguments(admin, 10, 100, 50, 50);
+};
+
+const initializeWithFeeArguments = async (
+  admin,
+  _baseEntryFee,
+  _entryFeeMultiplier,
+  _baseExitFee,
+  _badLiquidityExitFee
+) => {
   // Long and short coins.
   const long = await erc20.new({
     from: admin,
@@ -69,6 +79,10 @@ const initialize = async (admin) => {
     aDai.address,
     lendingPoolAddressProvider.address,
     priceOracle.address,
+    _baseEntryFee,
+    _entryFeeMultiplier,
+    _baseExitFee,
+    _badLiquidityExitFee,
     {
       from: admin,
     }
@@ -119,7 +133,7 @@ const feeCalculation = (
   _longValue,
   _shortValue,
   _baseEntryFee,
-  _feeMultiplier,
+  _entryFeeMultiplier,
   _minThreshold,
   _feeUnitsOfPrecision,
   isLongDeposit,
@@ -130,7 +144,7 @@ const feeCalculation = (
   longValue = new BN(_longValue);
   shortValue = new BN(_shortValue);
   baseEntryFee = new BN(_baseEntryFee);
-  feeMultiplier = new BN(_feeMultiplier);
+  entryFeeMultiplier = new BN(_entryFeeMultiplier);
   minThreshold = new BN(_minThreshold);
   feeUnitsOfPrecision = new BN(_feeUnitsOfPrecision);
 
@@ -202,4 +216,5 @@ module.exports = {
   tokenPriceCalculator,
   simulateTotalValueWithInterest,
   feeCalculation,
+  initializeWithFeeArguments,
 };
