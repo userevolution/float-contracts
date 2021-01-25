@@ -575,8 +575,10 @@ contract LongShort {
 
         try adaiContract.redeem(amount) {
             daiContract.transfer(msg.sender, amount);
+            console.log("I won't be found");
         } catch {
             adaiContract.transfer(msg.sender, amount);
+            console.log("But I will");
         }
     }
 

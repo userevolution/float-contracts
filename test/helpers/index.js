@@ -42,14 +42,22 @@ const initializeWithFeeArguments = async (
   const dai = await erc20.new({
     from: admin,
   });
-  await dai.initialize("short tokens", "SHORT", {
-    from: admin,
-  });
 
   // aDai
   aDai = await ADai.new(dai.address, {
     from: admin,
   });
+
+  await dai.setup("dai token", "DAI", aDai.address, {
+    from: admin,
+  });
+  // Hack this is result of keccak("MINTER_ROLE")
+  //"0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6"
+  await dai.grantRole(
+    "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6",
+    aDai.address,
+    { from: admin }
+  );
 
   // aave lending pool
   aaveLendingPool = await AaveLendingPool.new(
