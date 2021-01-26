@@ -32,7 +32,7 @@ contract("LongShort", (accounts) => {
   const _badLiquidityExitFee = 50;
 
   const defaultMintAmount = "100000000000000000000"; // 100 dai etc.
-  const oneUnitInWei = "1000000000000000000";
+  const oneUnitInWei = "1000000000000000000"; // 10**18
 
   const ninetyPercentDefaultMintAmount = "90000000000000000000";
   const hundredTenPercentDefaultMintAmount = "110000000000000000000"
@@ -74,16 +74,16 @@ contract("LongShort", (accounts) => {
     await longShort.mintShort(new BN(defaultMintAmount), { from: user2 });
 
     // 100 dai
-    const longVal = await longShort.longValue.call();
-    const shortVal = await longShort.shortValue.call();
+    const longVal = await longShort.longValue.call(); // $100
+    const shortVal = await longShort.shortValue.call(); // $100
 
     assert.equal(longVal.toString(), shortVal.toString(), "Price movement");
 
     await priceOracle.increasePrice(tenPercentMovement);
     await longShort._updateSystemState();
 
-    const newLongVal = await longShort.longValue.call();
-    const newShortVal = await longShort.shortValue.call();
+    const newLongVal = await longShort.longValue.call(); // $110
+    const newShortVal = await longShort.shortValue.call(); // $90
 
     // 110 dai
     assert.equal(
