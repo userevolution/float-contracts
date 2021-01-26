@@ -383,6 +383,10 @@ contract LongShort {
         emit priceUpdate(assetPrice, newPrice);
 
         // Adjusts long and short values based on price movements.
+        // $1
+        // $100 on each side.
+        // $1.1 10% increase
+        // $90 on short side. $110 on the long side.
         if (longValue > 0 && shortValue > 0) {
             _priceChangeMechanism(newPrice);
         }

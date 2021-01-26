@@ -27,7 +27,7 @@ contract("LongShort", (accounts) => {
   let baseEntryFee;
 
   const defaultMintAmount = "100000000000000000000"; // 100 dai etc.
-  const oneUnitInWei = "1000000000000000000";
+  const oneUnitInWei = "1000000000000000000"; // 10**18
 
   const tenPercentMovement = "100000000000000000";
 
@@ -58,16 +58,16 @@ contract("LongShort", (accounts) => {
     await longShort.mintShort(new BN(defaultMintAmount), { from: user2 });
 
     // 100 dai
-    const longVal = await longShort.longValue.call();
-    const shortVal = await longShort.shortValue.call();
+    const longVal = await longShort.longValue.call(); // $100
+    const shortVal = await longShort.shortValue.call(); // $100
 
     assert.equal(longVal.toString(), shortVal.toString(), "Price movement");
 
     await priceOracle.increasePrice(tenPercentMovement);
     await longShort._updateSystemState();
 
-    const newLongVal = await longShort.longValue.call();
-    const newShortVal = await longShort.shortValue.call();
+    const newLongVal = await longShort.longValue.call(); // $110
+    const newShortVal = await longShort.shortValue.call(); // $90
 
     // 110 dai
     assert.equal(
@@ -83,4 +83,7 @@ contract("LongShort", (accounts) => {
       "Short value change correct"
     );
   });
+
+  // Case check: Test if there is a 150% price movement
+  // Check if price decreases it works.]
 });
