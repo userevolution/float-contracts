@@ -8,13 +8,13 @@ const {
 } = require("@openzeppelin/test-helpers");
 
 const {
-  initialize,
   mintAndApprove,
   SIMULATED_INSTANT_APY,
   simulateInterestEarned,
   tokenPriceCalculator,
   simulateTotalValueWithInterest,
   feeCalculation,
+  initializeWithFeeArguments,
 } = require("./helpers");
 
 contract("LongShort", (accounts) => {
@@ -25,6 +25,11 @@ contract("LongShort", (accounts) => {
   let priceOracle;
   let aaveLendingPool;
   let baseEntryFee;
+
+  const _baseEntryFee = 0;
+  const _entryFeeMultiplier = 0;
+  const _baseExitFee = 50;
+  const _badLiquidityExitFee = 50;
 
   const defaultMintAmount = "100000000000000000000"; // 100 dai etc.
   const oneUnitInWei = "1000000000000000000";
@@ -42,7 +47,13 @@ contract("LongShort", (accounts) => {
   const user3 = accounts[3];
 
   beforeEach(async () => {
-    const result = await initialize(admin);
+    const result = await initializeWithFeeArguments(
+      admin,
+      _baseEntryFee,
+      _entryFeeMultiplier,
+      _baseExitFee,
+      _badLiquidityExitFee,
+    );
     longShort = result.longShort;
     long = result.long;
     short = result.short;
