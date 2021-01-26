@@ -71,10 +71,10 @@ module.exports = {
       skipDryRun: true,
     },
     binanceTest: {
-      network_id: 5,
+      network_id: 97,
       provider: new HDWalletProvider(mnemonic, binanceTest, 0),
       gas: 8000000,
-      gasPrice: 10000000000, // 10 gwei
+      gasPrice: 50000000000, // 10 gwei
       skipDryRun: true,
     },
     development: {
