@@ -579,10 +579,8 @@ contract LongShort {
 
         try adaiContract.redeem(amount) {
             daiContract.transfer(msg.sender, amount);
-            console.log("I won't be found");
         } catch {
             adaiContract.transfer(msg.sender, amount);
-            console.log("But I will");
         }
     }
 
@@ -605,31 +603,29 @@ contract LongShort {
 
     function _calcFinalRedeemAmount(
         uint256 amount,
-        uint256 newAdjustedBeta,
-        uint256 oldBeta,
+        uint256 newAdjustedBeta, // 0.5
+        uint256 oldBeta, // 1
         bool isLong
     ) internal returns (uint256) {
         uint256 fees = 0;
         uint256 finalRedeemAmount = 0;
 
-        // Even after withdrawl, the beta is still 1  [good for liquity balance]
         if (newAdjustedBeta >= TEN_TO_THE_18) {
-            // Should still levy a small exit fee of 0.5%
+            fees = _feeCalcRedeem(amount, 0);
+        } else {
             if (oldBeta >= TEN_TO_THE_18) {
-                fees = _feeCalcRedeem(amount, 0);
-            } else {
                 uint256 feePayablePortion = 0;
                 if (isLong) {
-                    feePayablePortion = amount.sub(longValue.sub(shortValue));
+                    feePayablePortion = amount.add(shortValue).sub(longValue);
                 } else {
-                    feePayablePortion = amount.sub(shortValue.sub(longValue));
+                    feePayablePortion = amount.add(longValue).sub(shortValue);
                 }
                 fees = _feeCalcRedeem(amount, feePayablePortion);
+            } else {
+                // All is bad liquidity leaving the book.
+                fees = _feeCalcRedeem(amount, amount);
             }
-        } else {
-            fees = _feeCalcRedeem(amount, amount);
         }
-
         finalRedeemAmount = amount.sub(fees);
         _feesMechanism(fees, 50, 50);
 
@@ -645,11 +641,11 @@ contract LongShort {
         uint256 newAdjustedShortBeta = 0;
         uint256 amountToRedeem =
             tokensToRedeem.mul(longTokenPrice).div(TEN_TO_THE_18);
-        if (longValue.sub(amountToRedeem) != 0) {
-            newAdjustedShortBeta = shortValue.mul(TEN_TO_THE_18).div(
-                longValue.sub(amountToRedeem)
-            );
-        }
+
+        newAdjustedShortBeta = (longValue.sub(amountToRedeem))
+            .mul(TEN_TO_THE_18)
+            .div(shortValue);
+
         uint256 finalRedeemAmount =
             _calcFinalRedeemAmount(
                 amountToRedeem,
@@ -666,17 +662,17 @@ contract LongShort {
     }
 
     function redeemShort(uint256 tokensToRedeem) external refreshSystemState {
-        shortTokens.burnFrom(msg.sender, tokensToRedeem);
+        shortTokens.burnFrom(msg.sender, tokensToRedeem); // burning 50 tokens
 
         uint256 longBeta = getLongBeta();
         uint256 newAdjustedLongBeta = 0;
         uint256 amountToRedeem =
             tokensToRedeem.mul(shortTokenPrice).div(TEN_TO_THE_18);
-        if (shortValue.sub(amountToRedeem) != 0) {
-            newAdjustedLongBeta = longValue.mul(TEN_TO_THE_18).div(
-                shortValue.sub(amountToRedeem)
-            );
-        }
+
+        newAdjustedLongBeta = (shortValue.sub(amountToRedeem))
+            .mul(TEN_TO_THE_18)
+            .div(longValue);
+
         uint256 finalRedeemAmount =
             _calcFinalRedeemAmount(
                 amountToRedeem,

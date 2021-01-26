@@ -201,7 +201,7 @@ contract("LongShort", (accounts) => {
       from: user2,
     });
 
-    // so $100 redeemed is good liquidity while $50 is bad.
+    // so $150 redeemed is good liquidity while $50 is bad.
     await longShort.redeemShort(new BN(oneHundredAndFiftyMintAmount), {
       from: user2,
     });
@@ -212,12 +212,11 @@ contract("LongShort", (accounts) => {
     const usersFee = new BN(oneHundredAndFiftyMintAmount).sub(
       usersBalanceOfaDai
     );
-    console.log("usersFee");
-    console.log(usersFee.toString());
 
     const baseFeeAmount = baseExitFee
       .mul(new BN(oneHundredAndFiftyMintAmount))
       .div(feeUnitsOfPrecision);
+
     const badExitFeeAmount = badLiquidityExitFee
       .mul(new BN("50000000000000000000"))
       .div(feeUnitsOfPrecision);
