@@ -240,4 +240,160 @@ contract("LongShort", (accounts) => {
       "Total fee not taken correct."
     );
   });
+
+  // Test Above 3 cases in other direction.
+  it("Case 1 (other side): Exit fees 0.5% only when improving liquidity", async () => {
+    // $100 on long side.
+    await mintAndApprove(dai, twoHundredMintAmount, user1, longShort.address);
+    await longShort.mintLong(new BN(twoHundredMintAmount), { from: user1 });
+
+    // $200 on short side.
+    await mintAndApprove(dai, oneHundredMintAmount, user2, longShort.address);
+    await longShort.mintShort(new BN(oneHundredMintAmount), { from: user2 });
+
+    // Redeem 100 tokens from user, check the fee.
+    await long.increaseAllowance(longShort.address, oneHundredMintAmount, {
+      from: user1,
+    });
+    // User wants to redeem half his tokens.
+    await longShort.redeemLong(new BN(oneHundredMintAmount), { from: user1 });
+
+    // We can expect the fee to be the following
+    const usersBalanceOfaDai = await aDai.balanceOf(user1);
+
+    const usersFee = new BN(oneHundredMintAmount).sub(usersBalanceOfaDai);
+    const baseFeeAmount = baseExitFee
+      .mul(new BN(oneHundredMintAmount))
+      .div(feeUnitsOfPrecision);
+    const badExitFeeAmount = badLiquidityExitFee
+      .mul(new BN(0))
+      .div(feeUnitsOfPrecision);
+
+    const totalExpectedFee = baseFeeAmount.add(badExitFeeAmount);
+
+    assert.equal(
+      usersFee.toString(),
+      totalExpectedFee.toString(),
+      "Fee not calculated correctly."
+    );
+
+    const totalValueInContract = await longShort.totalValueLocked.call();
+    const totalExpectedValueInContract = new BN(twoHundredMintAmount).add(
+      usersFee
+    );
+    assert.equal(
+      totalValueInContract.toString(),
+      totalExpectedValueInContract.toString(),
+      "Total fee not taken correct."
+    );
+
+    // Check long and short values and equal since interest should accrue equally
+    const longValueInContract = await longShort.longValue.call();
+    const shortValueInContract = await longShort.shortValue.call();
+    assert.equal(
+      shortValueInContract.toString(),
+      longValueInContract.toString(),
+      "Interest accrual not equal"
+    );
+  });
+
+  it("Case 2 (other side): Exit fees 2 * 0.5% for bad removal", async () => {
+    // $100 on long side.
+    await mintAndApprove(dai, twoHundredMintAmount, user1, longShort.address);
+    await longShort.mintLong(new BN(twoHundredMintAmount), { from: user1 });
+
+    // $200 on short side.
+    await mintAndApprove(dai, oneHundredMintAmount, user2, longShort.address);
+    await longShort.mintShort(new BN(oneHundredMintAmount), { from: user2 });
+
+    // Redeem 100 tokens from user, check the fee.
+    await short.increaseAllowance(longShort.address, oneHundredMintAmount, {
+      from: user2,
+    });
+    // User wants to redeem half the long tokens.
+    await longShort.redeemShort(new BN(oneHundredMintAmount), { from: user2 });
+
+    // We can expect the fee to be the following
+    const usersBalanceOfaDai = await aDai.balanceOf(user2);
+
+    const usersFee = new BN(oneHundredMintAmount).sub(usersBalanceOfaDai);
+    const baseFeeAmount = baseExitFee
+      .mul(new BN(oneHundredMintAmount))
+      .div(feeUnitsOfPrecision);
+    const badExitFeeAmount = badLiquidityExitFee
+      .mul(new BN(oneHundredMintAmount))
+      .div(feeUnitsOfPrecision);
+
+    const totalExpectedFee = baseFeeAmount.add(badExitFeeAmount);
+
+    assert.equal(
+      usersFee.toString(),
+      totalExpectedFee.toString(),
+      "Fee not calculated correctly."
+    );
+
+    const totalValueInContract = await longShort.totalValueLocked.call();
+    const totalExpectedValueInContract = new BN(twoHundredMintAmount).add(
+      usersFee
+    );
+
+    assert.equal(
+      totalValueInContract.toString(),
+      totalExpectedValueInContract.toString(),
+      "Total fee not taken correct."
+    );
+  });
+
+  it("Case 3 (other side): Exit fees are partially applied to bad liquidity removed.", async () => {
+    // $100 on long side.
+    await mintAndApprove(dai, twoHundredMintAmount, user1, longShort.address);
+    await longShort.mintLong(new BN(twoHundredMintAmount), { from: user1 });
+
+    // $200 on short side.
+    await mintAndApprove(dai, oneHundredMintAmount, user2, longShort.address);
+    await longShort.mintShort(new BN(oneHundredMintAmount), { from: user2 });
+
+    await long.increaseAllowance(longShort.address, twoHundredMintAmount, {
+      from: user1,
+    });
+
+    // so $150 redeemed is good liquidity while $50 is bad.
+    await longShort.redeemLong(new BN(oneHundredAndFiftyMintAmount), {
+      from: user1,
+    });
+
+    // We can expect the fee to be the following
+    const usersBalanceOfaDai = await aDai.balanceOf(user1);
+
+    const usersFee = new BN(oneHundredAndFiftyMintAmount).sub(
+      usersBalanceOfaDai
+    );
+
+    const baseFeeAmount = baseExitFee
+      .mul(new BN(oneHundredAndFiftyMintAmount))
+      .div(feeUnitsOfPrecision);
+
+    const badExitFeeAmount = badLiquidityExitFee
+      .mul(new BN("50000000000000000000"))
+      .div(feeUnitsOfPrecision);
+
+    const totalExpectedFee = baseFeeAmount.add(badExitFeeAmount);
+
+    assert.equal(
+      usersFee.toString(),
+      totalExpectedFee.toString(),
+      "Fee not calculated correctly."
+    );
+
+    const totalValueInContract = await longShort.totalValueLocked.call();
+    const totalExpectedValueInContract = new BN(
+      oneHundredAndFiftyMintAmount
+    ).add(usersFee);
+
+    assert.equal(
+      totalValueInContract.toString(),
+      totalExpectedValueInContract.toString(),
+      "Total fee not taken correct."
+    );
+  });
 });
