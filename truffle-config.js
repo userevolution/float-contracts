@@ -8,6 +8,8 @@ const {
   kovanProviderUrl,
   goerliProviderUrl,
   binanceTest,
+  etherscanApiKey,
+  bscscanApiKey,
 } = require("./secretsManager.js");
 // let HDWalletProvider = function(mnemonic, providerUrl, index) {};
 // let mnemonic, mainnetProviderUrl, rinkebyProviderUrl, goerliProviderUrl;
@@ -17,7 +19,7 @@ const blockchainNodeHost = process.env.BLOCKCHAIN_NODE_HOST || "localhost";
 module.exports = {
   // See <http://truffleframework.com/docs/advanced/configuration>
   // to customize your Truffle configuration!
-  plugins: ["solidity-coverage"],
+  plugins: ["solidity-coverage", "truffle-plugin-verify"],
   // contracts_build_directory: path.join(__dirname, "artifacts/contracts"),
   networks: {
     mainnet: {
@@ -108,5 +110,9 @@ module.exports = {
         evmVersion: "istanbul",
       },
     },
+  },
+  api_keys: {
+    etherscan: etherscanApiKey,
+    bscscan: bscscanApiKey,
   },
 };

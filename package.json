@@ -6,7 +6,11 @@
   "scripts": {
     "compile": "buidler compile",
     "test": "buidler test",
-    "coverage": "buidler coverage"
+    "coverage": "buidler coverage",
+    "verify-non-upgrade-contracts-goerli": "truffle run verify ShortCoins ADai Dai AaveLendingPool LendingPoolAddressesProvider PriceOracle --network goerli",
+    "verify-upgradeable-contracts-goerli": "truffle run verify LongShort@0xB2f6498F61935638AC025F87e31eb191780dA4C6 --network goerli",
+    "verify-non-upgrade-contracts-bsc-test": "truffle run verify ShortCoins ADai Dai AaveLendingPool LendingPoolAddressesProvider PriceOracle --network binanceTest",
+    "verify-upgradeable-contracts-bsc-test": "truffle run verify LongShort@0x2248dfe5e78597d9E9bE2fC7932a01c3Dc10b684 --network binanceTest"
   },
   "dependencies": {
     "@chainlink/contracts": "^0.0.8",
@@ -24,6 +28,7 @@
     "@nomiclabs/buidler-waffle": "^2.0.0",
     "@truffle/hdwallet-provider": "^1.2.1",
     "chai": "^4.2.0",
-    "ethereum-waffle": "^3.0.0"
+    "ethereum-waffle": "^3.0.0",
+    "truffle-plugin-verify": "^0.5.4"
   }
 }
