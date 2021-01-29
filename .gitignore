@@ -6,5 +6,9 @@ artifacts
 # Truffle
 build
 
+# Openzeppelin
+.openzeppelin/dev-*.json
+!.openzeppelin/dev-97.json
+
 # Secrets
 secretsManager.js

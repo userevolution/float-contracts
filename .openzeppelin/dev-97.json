@@ -1,0 +1,229 @@
+{
+  "contracts": {
+    "LongShort": {
+      "address": "0x2248dfe5e78597d9E9bE2fC7932a01c3Dc10b684",
+      "constructorCode": "608060405234801561001057600080fd5b50611e64806100206000396000f3fe",
+      "bodyBytecodeHash": "13b2bc838f1cf2f457cbbd43d0b21328cb2c530c53474a42bf635401f7431a5d",
+      "localBytecodeHash": "f345bd2962baf03e69c636d330c68d3d2a211f55131af3637f2a9c7fe2f43ade",
+      "deployedBytecodeHash": "f345bd2962baf03e69c636d330c68d3d2a211f55131af3637f2a9c7fe2f43ade",
+      "types": {
+        "t_bool": {
+          "id": "t_bool",
+          "kind": "elementary",
+          "label": "bool"
+        },
+        "t_uint256": {
+          "id": "t_uint256",
+          "kind": "elementary",
+          "label": "uint256"
+        },
+        "t_array:50<t_uint256>": {
+          "id": "t_array:50<t_uint256>",
+          "valueType": "t_uint256",
+          "length": "50",
+          "kind": "array",
+          "label": "uint256[50]"
+        },
+        "t_address": {
+          "id": "t_address",
+          "kind": "elementary",
+          "label": "address"
+        }
+      },
+      "storage": [
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol",
+          "label": "initialized",
+          "astId": 10475,
+          "type": "t_bool",
+          "src": "757:24:16"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol",
+          "label": "initializing",
+          "astId": 10478,
+          "type": "t_bool",
+          "src": "876:25:16"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol",
+          "label": "______gap",
+          "astId": 10543,
+          "type": "t_array:50<t_uint256>",
+          "src": "1982:29:16"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "priceFeed",
+          "astId": 58,
+          "type": "t_address",
+          "src": "3677:40:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "baseEntryFee",
+          "astId": 76,
+          "type": "t_uint256",
+          "src": "4088:27:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "entryFeeMultiplier",
+          "astId": 78,
+          "type": "t_uint256",
+          "src": "4147:33:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "baseExitFee",
+          "astId": 80,
+          "type": "t_uint256",
+          "src": "4232:26:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "badLiquidityExitFee",
+          "astId": 82,
+          "type": "t_uint256",
+          "src": "4290:34:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "assetPrice",
+          "astId": 84,
+          "type": "t_uint256",
+          "src": "4507:25:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "totalValueLocked",
+          "astId": 86,
+          "type": "t_uint256",
+          "src": "4539:31:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "longValue",
+          "astId": 88,
+          "type": "t_uint256",
+          "src": "4576:24:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "shortValue",
+          "astId": 90,
+          "type": "t_uint256",
+          "src": "4606:25:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "longTokens",
+          "astId": 92,
+          "type": "t_address",
+          "src": "4745:27:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "shortTokens",
+          "astId": 94,
+          "type": "t_address",
+          "src": "4778:29:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "longTokenPrice",
+          "astId": 96,
+          "type": "t_uint256",
+          "src": "4813:29:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "shortTokenPrice",
+          "astId": 98,
+          "type": "t_uint256",
+          "src": "4848:30:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "daiContract",
+          "astId": 100,
+          "type": "t_address",
+          "src": "4907:25:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "aaveLendingContract",
+          "astId": 102,
+          "type": "t_address",
+          "src": "4938:43:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "adaiContract",
+          "astId": 104,
+          "type": "t_address",
+          "src": "4987:25:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "provider",
+          "astId": 106,
+          "type": "t_address",
+          "src": "5018:45:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "aaveLendingContractCore",
+          "astId": 108,
+          "type": "t_address",
+          "src": "5069:38:1"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
+    }
+  },
+  "solidityLibs": {},
+  "proxies": {
+    "float-capital/LongShort": [
+      {
+        "address": "0x60250481EcE03F321c12134FACC0fDfA9F95012C",
+        "version": "0.1.0",
+        "implementation": "0x2248dfe5e78597d9E9bE2fC7932a01c3Dc10b684",
+        "admin": "0x1A01C52355fBd697CC13FE29e061438902Bf3bB7",
+        "kind": "Upgradeable"
+      }
+    ]
+  },
+  "manifestVersion": "2.2",
+  "version": "0.1.0",
+  "proxyAdmin": {
+    "address": "0x1A01C52355fBd697CC13FE29e061438902Bf3bB7"
+  }
+}

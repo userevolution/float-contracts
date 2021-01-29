@@ -14,7 +14,7 @@ const { add, push, create } = scripts;
 
 const SIMULATED_INSTANT_APY = 10;
 
-const deployContracts = async (options, accounts) => {
+const deployContracts = async (options, accounts, deployer) => {
   add({
     contractsData: [
       { name: "LongShort", alias: "LongShort" },
@@ -98,6 +98,6 @@ module.exports = async function(deployer, networkName, accounts) {
       network: networkName,
       from: accounts[0],
     });
-    await deploy({ network, txParams }, accounts);
+    await deployContracts({ network, txParams }, accounts, deployer);
   });
 };

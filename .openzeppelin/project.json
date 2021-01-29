@@ -3,6 +3,7 @@
   "name": "float-capital",
   "version": "0.1.0",
   "contracts": {
+    "LongShort": "LongShort"
   },
   "dependencies": {},
   "compiler": {
