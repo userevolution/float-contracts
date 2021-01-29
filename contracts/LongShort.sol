@@ -3,6 +3,7 @@ pragma solidity 0.6.12;
 
 import "@nomiclabs/buidler/console.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol";
 import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
 
 import "./interfaces/IAaveLendingPool.sol";
@@ -68,7 +69,7 @@ import "./ShortCoins.sol";
  * Layer 2 solutions
  * Remove safe Math library
  */
-contract LongShort {
+contract LongShort is Initializable {
     using SafeMath for uint256;
     // Oracle
     AggregatorV3Interface internal priceFeed;
@@ -161,7 +162,7 @@ contract LongShort {
      * Address: 0x2445F2466898565374167859Ae5e3a231e48BB41
      * TODO: weigh up pros/cons of making this upgradable
      */
-    constructor(
+    function setup(
         address _longCoins,
         address _shortCoins,
         address daiAddress,
@@ -175,7 +176,7 @@ contract LongShort {
         uint256 _entryFeeMultiplier,
         uint256 _baseExitFee,
         uint256 _badLiquidityExitFee
-    ) public {
+    ) public initializer {
         priceFeed = AggregatorV3Interface(_priceOracle);
 
         // Will need to make sure we are a minter! and pauser!

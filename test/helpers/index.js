@@ -80,7 +80,11 @@ const initializeWithFeeArguments = async (
     from: admin,
   });
 
-  const longShort = await LongShort.new(
+  const longShort = await LongShort.new({
+    from: admin,
+  });
+
+  await longShort.setup(
     long.address,
     short.address,
     dai.address,

@@ -1,0 +1,14 @@
+{
+  "manifestVersion": "2.2",
+  "name": "float-capital",
+  "version": "0.1.0",
+  "contracts": {
+  },
+  "dependencies": {},
+  "compiler": {
+    "manager": "openzeppelin",
+    "compilerSettings": {
+      "optimizer": {}
+    }
+  }
+}

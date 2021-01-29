@@ -8,13 +8,28 @@ const LendingPoolAddressesProvider = artifacts.require(
   "LendingPoolAddressesProvider"
 );
 const PriceOracle = artifacts.require("PriceOracle");
+// Load zos scripts and truffle wrapper function
+const { scripts, ConfigManager } = require("@openzeppelin/cli");
+const { add, push, create } = scripts;
 
 const SIMULATED_INSTANT_APY = 10;
 
-module.exports = async function(deployer) {
+const deployContracts = async (options, accounts) => {
+  add({
+    contractsData: [
+      { name: "LongShort", alias: "LongShort" },
+      // { name: "LongCoins", alias: "LongCoins" },
+      // { name: "ShortCoins", alias: "ShortCoins" },
+      // { name: "Dai", alias: "Dai" },
+      // { name: "ADai", alias: "ADai" },
+    ],
+  });
+  await push({ ...options, force: true });
+
   // Long and short coins.
   await deployer.deploy(LongCoins);
   let long = await LongCoins.deployed();
+
   await deployer.deploy(ShortCoins);
   let short = await ShortCoins.deployed();
 
@@ -51,20 +66,38 @@ module.exports = async function(deployer) {
   const _baseExitFee = 50;
   const _badLiquidityExitFee = 50;
 
-  const longShort = await deployer.deploy(
-    LongShort,
-    long.address,
-    short.address,
-    dai.address,
-    aDai.address,
-    LendingPoolAddressesProvider.address,
-    priceOracle.address,
-    _baseEntryFee,
-    _entryFeeMultiplier,
-    _baseExitFee,
-    _badLiquidityExitFee
-  );
+  const longShort = await create({
+    ...options,
+    contractAlias: "LongShort",
+    methodName: "setup",
+    methodArgs: [
+      long.address,
+      short.address,
+      dai.address,
+      aDai.address,
+      LendingPoolAddressesProvider.address,
+      priceOracle.address,
+      _baseEntryFee,
+      _entryFeeMultiplier,
+      _baseExitFee,
+      _badLiquidityExitFee,
+    ],
+  });
 
   await long.setup("long tokens", "LONG", longShort.address);
   await short.setup("short tokens", "SHORT", longShort.address);
+};
+
+module.exports = async function(deployer, networkName, accounts) {
+  deployer.then(async () => {
+    // Don't try to deploy/migrate the contracts for tests
+    if (networkName === "test") {
+      return;
+    }
+    const { network, txParams } = await ConfigManager.initNetworkConfiguration({
+      network: networkName,
+      from: accounts[0],
+    });
+    await deploy({ network, txParams }, accounts);
+  });
 };
