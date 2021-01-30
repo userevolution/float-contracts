@@ -7,9 +7,9 @@
     "compile": "buidler compile",
     "test": "buidler test",
     "coverage": "buidler coverage",
-    "verify-non-upgrade-contracts-goerli": "truffle run verify ShortCoins ADai Dai AaveLendingPool LendingPoolAddressesProvider PriceOracle --network goerli",
+    "verify-non-upgrade-contracts-goerli": "truffle run verify LongCoins ShortCoins ADai Dai AaveLendingPool LendingPoolAddressesProvider PriceOracle --network goerli",
     "verify-upgradeable-contracts-goerli": "truffle run verify LongShort@0xB2f6498F61935638AC025F87e31eb191780dA4C6 --network goerli",
-    "verify-non-upgrade-contracts-bsc-test": "truffle run verify ShortCoins ADai Dai AaveLendingPool LendingPoolAddressesProvider PriceOracle --network binanceTest",
+    "verify-non-upgrade-contracts-bsc-test": "truffle run verify LongCoins ShortCoins ADai Dai AaveLendingPool LendingPoolAddressesProvider PriceOracle --network binanceTest",
     "verify-upgradeable-contracts-bsc-test": "truffle run verify LongShort@0x2248dfe5e78597d9E9bE2fC7932a01c3Dc10b684 --network binanceTest"
   },
   "dependencies": {

@@ -1,0 +1,1193 @@
+{
+  "contractName": "LendingPoolAddressesProvider",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "contract AaveLendingPool",
+          "name": "aaveLendingPoolAddress",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "aaveLendingPool",
+      "outputs": [
+        {
+          "internalType": "contract AaveLendingPool",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [],
+      "name": "getLendingPool",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [],
+      "name": "getLendingPoolCore",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.6.12+commit.27d51765\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"contract AaveLendingPool\",\"name\":\"aaveLendingPoolAddress\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"aaveLendingPool\",\"outputs\":[{\"internalType\":\"contract AaveLendingPool\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getLendingPool\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getLendingPoolCore\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/home/jasoons/Documents/code/longshort/contracts/contracts/mocks/LendingPoolAddressesProvider.sol\":\"LendingPoolAddressesProvider\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/home/jasoons/Documents/code/longshort/contracts/contracts/interfaces/IAaveLendingPool.sol\":{\"keccak256\":\"0xf8dcacb5da1594c2810bacaa06169947c7fbd118679439666839c0c6ad0b760f\",\"urls\":[\"bzz-raw://c29b1ec4139083538e3a0ae8a53357ed176d4682b0bcc38440759c7330158aaa\",\"dweb:/ipfs/QmPboR5XzmTXTkuxquRzstko3KqacogupBXSqbiubS5jGf\"]},\"/home/jasoons/Documents/code/longshort/contracts/contracts/interfaces/ILendingPoolAddressesProvider.sol\":{\"keccak256\":\"0xb0712b5696d750d4f5d6df20004ea82537a5be88ca96d126c03f7b4b2dde36a6\",\"urls\":[\"bzz-raw://a99a329b5d479d88dbdc6d399c7c8982084fede8960b22956ce3710b34767095\",\"dweb:/ipfs/QmY95tTV9ohgz4n3pYJAWdcU7ZogoVL5GyRRvHsiSNYsxb\"]},\"/home/jasoons/Documents/code/longshort/contracts/contracts/mocks/AaveLendingPool.sol\":{\"keccak256\":\"0xa3345a44ed3b79beb9fa492cb1eaa17b85dbddd0f88fe7e2fb458a6c923c1855\",\"urls\":[\"bzz-raw://5f1dc54b3bc91a19bcc6e361a5f13b16f1659d6c064215cf9a46bfb861bc8e34\",\"dweb:/ipfs/QmPXC27oYKtdN1H8FhVeAK3ux7NTXfHcfNhSRkWm4guJUZ\"]},\"/home/jasoons/Documents/code/longshort/contracts/contracts/mocks/LendingPoolAddressesProvider.sol\":{\"keccak256\":\"0x13d41e08a66e19344a54dcbbc8bd30a2545385b35e5b060c42184d4fcc24154a\",\"urls\":[\"bzz-raw://79e4f8e4e2519054723674ac57adefa01b84a22f224b1ff9d6af81839ce0d6e6\",\"dweb:/ipfs/QmU2q82VKVMQ9g4hqVKJPB6eBWEDybEYsUw2GFFKZk1XXX\"]},\"/home/jasoons/Documents/code/longshort/contracts/contracts/mocks/MockERC20.sol\":{\"keccak256\":\"0x3db63fbfa6a28d89375aee9938b4e46f6ce2b0b9ba956fd536caae8af0531022\",\"urls\":[\"bzz-raw://bc3787422784cd461e4c5bc4fe9a196cd663c881bccbd8ac3f3b81062d3a2fd7\",\"dweb:/ipfs/Qmce6fFHxuzY8aJcgWbXhrU89LLrvViJiWihazbAGvGB7w\"]},\"@nomiclabs/buidler/console.sol\":{\"keccak256\":\"0x863a67996ca631927d3f3b889ee8a05caeccce16a32d05e83bb0c91f153643db\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://39841ea1271a71ae087741c27ebd477254612527587fdd9872e12d28c4225cbf\",\"dweb:/ipfs/QmdcrXiPLBSfMcshFHwXU8iBYkSVTn4rSvUCiPnPD28Uhj\"]},\"@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol\":{\"keccak256\":\"0x04d34b3cd5677bea25f8dfceb6dec0eaa071d4d4b789a43f13fe0c415ba4c296\",\"urls\":[\"bzz-raw://e7e8b526a6839e5ba14f0d23a830387fec47f7043ce01d42c9f285b709a9d080\",\"dweb:/ipfs/QmXmhhFmX5gcAvVzNiDPAGA35iHMPNaYtQkACswRHBVTNw\"]}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b506040516101213803806101218339818101604052602081101561003357600080fd5b5051600080546001600160a01b039092166001600160a01b031990921691909117905560bd806100646000396000f3fe6080604052348015600f57600080fd5b5060043610603c5760003560e01c80630261bf8b146041578063e9d337b8146063578063ed6ff760146041575b600080fd5b60476069565b604080516001600160a01b039092168252519081900360200190f35b60476078565b6000546001600160a01b031690565b6000546001600160a01b03168156fea2646970667358221220ef94abbea59fb09b2b22abe5bb1a9631bd8cd7251cbbdc160bc6286cc89bd48164736f6c634300060c0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b5060043610603c5760003560e01c80630261bf8b146041578063e9d337b8146063578063ed6ff760146041575b600080fd5b60476069565b604080516001600160a01b039092168252519081900360200190f35b60476078565b6000546001600160a01b031690565b6000546001600160a01b03168156fea2646970667358221220ef94abbea59fb09b2b22abe5bb1a9631bd8cd7251cbbdc160bc6286cc89bd48164736f6c634300060c0033",
+  "immutableReferences": {},
+  "sourceMap": "116:456:10:-:0;;;234:110;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;234:110:10;299:15;:40;;-1:-1:-1;;;;;299:40:10;;;-1:-1:-1;;;;;;299:40:10;;;;;;;;;116:456;;;;;;",
+  "deployedSourceMap": "116:456:10:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;348:107;;;:::i;:::-;;;;-1:-1:-1;;;;;348:107:10;;;;;;;;;;;;;;191:38;;;:::i;348:107::-;404:7;434:15;-1:-1:-1;;;;;434:15:10;348:107;:::o;191:38::-;;;-1:-1:-1;;;;;191:38:10;;:::o",
+  "source": "pragma solidity ^0.6.0;\n\nimport '../interfaces/ILendingPoolAddressesProvider.sol';\nimport './AaveLendingPool.sol';\n\ncontract LendingPoolAddressesProvider is ILendingPoolAddressesProvider {\n  AaveLendingPool public aaveLendingPool;\n\n  constructor(AaveLendingPool aaveLendingPoolAddress) public {\n    aaveLendingPool = aaveLendingPoolAddress;\n  }\n\n  function getLendingPool() public override view returns (address) {\n    return address(aaveLendingPool);\n  }\n\n  function getLendingPoolCore() public override view returns (address) {\n    return address(aaveLendingPool);\n  }\n}\n",
+  "sourcePath": "/home/jasoons/Documents/code/longshort/contracts/contracts/mocks/LendingPoolAddressesProvider.sol",
+  "ast": {
+    "absolutePath": "/home/jasoons/Documents/code/longshort/contracts/contracts/mocks/LendingPoolAddressesProvider.sol",
+    "exportedSymbols": {
+      "LendingPoolAddressesProvider": [
+        1933
+      ]
+    },
+    "id": 1934,
+    "license": null,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1892,
+        "literals": [
+          "solidity",
+          "^",
+          "0.6",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:23:10"
+      },
+      {
+        "absolutePath": "/home/jasoons/Documents/code/longshort/contracts/contracts/interfaces/ILendingPoolAddressesProvider.sol",
+        "file": "../interfaces/ILendingPoolAddressesProvider.sol",
+        "id": 1893,
+        "nodeType": "ImportDirective",
+        "scope": 1934,
+        "sourceUnit": 1710,
+        "src": "25:57:10",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "absolutePath": "/home/jasoons/Documents/code/longshort/contracts/contracts/mocks/AaveLendingPool.sol",
+        "file": "./AaveLendingPool.sol",
+        "id": 1894,
+        "nodeType": "ImportDirective",
+        "scope": 1934,
+        "sourceUnit": 1885,
+        "src": "83:31:10",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "abstract": false,
+        "baseContracts": [
+          {
+            "arguments": null,
+            "baseName": {
+              "contractScope": null,
+              "id": 1895,
+              "name": "ILendingPoolAddressesProvider",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 1709,
+              "src": "157:29:10",
+              "typeDescriptions": {
+                "typeIdentifier": "t_contract$_ILendingPoolAddressesProvider_$1709",
+                "typeString": "contract ILendingPoolAddressesProvider"
+              }
+            },
+            "id": 1896,
+            "nodeType": "InheritanceSpecifier",
+            "src": "157:29:10"
+          }
+        ],
+        "contractDependencies": [
+          1709
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 1933,
+        "linearizedBaseContracts": [
+          1933,
+          1709
+        ],
+        "name": "LendingPoolAddressesProvider",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "constant": false,
+            "functionSelector": "e9d337b8",
+            "id": 1898,
+            "mutability": "mutable",
+            "name": "aaveLendingPool",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 1933,
+            "src": "191:38:10",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_contract$_AaveLendingPool_$1884",
+              "typeString": "contract AaveLendingPool"
+            },
+            "typeName": {
+              "contractScope": null,
+              "id": 1897,
+              "name": "AaveLendingPool",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 1884,
+              "src": "191:15:10",
+              "typeDescriptions": {
+                "typeIdentifier": "t_contract$_AaveLendingPool_$1884",
+                "typeString": "contract AaveLendingPool"
+              }
+            },
+            "value": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 1907,
+              "nodeType": "Block",
+              "src": "293:51:10",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "id": 1905,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "argumentTypes": null,
+                      "id": 1903,
+                      "name": "aaveLendingPool",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 1898,
+                      "src": "299:15:10",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_contract$_AaveLendingPool_$1884",
+                        "typeString": "contract AaveLendingPool"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "argumentTypes": null,
+                      "id": 1904,
+                      "name": "aaveLendingPoolAddress",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 1900,
+                      "src": "317:22:10",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_contract$_AaveLendingPool_$1884",
+                        "typeString": "contract AaveLendingPool"
+                      }
+                    },
+                    "src": "299:40:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_contract$_AaveLendingPool_$1884",
+                      "typeString": "contract AaveLendingPool"
+                    }
+                  },
+                  "id": 1906,
+                  "nodeType": "ExpressionStatement",
+                  "src": "299:40:10"
+                }
+              ]
+            },
+            "documentation": null,
+            "id": 1908,
+            "implemented": true,
+            "kind": "constructor",
+            "modifiers": [],
+            "name": "",
+            "nodeType": "FunctionDefinition",
+            "overrides": null,
+            "parameters": {
+              "id": 1901,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1900,
+                  "mutability": "mutable",
+                  "name": "aaveLendingPoolAddress",
+                  "nodeType": "VariableDeclaration",
+                  "overrides": null,
+                  "scope": 1908,
+                  "src": "246:38:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_contract$_AaveLendingPool_$1884",
+                    "typeString": "contract AaveLendingPool"
+                  },
+                  "typeName": {
+                    "contractScope": null,
+                    "id": 1899,
+                    "name": "AaveLendingPool",
+                    "nodeType": "UserDefinedTypeName",
+                    "referencedDeclaration": 1884,
+                    "src": "246:15:10",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_contract$_AaveLendingPool_$1884",
+                      "typeString": "contract AaveLendingPool"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "245:40:10"
+            },
+            "returnParameters": {
+              "id": 1902,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "293:0:10"
+            },
+            "scope": 1933,
+            "src": "234:110:10",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "baseFunctions": [
+              1703
+            ],
+            "body": {
+              "id": 1919,
+              "nodeType": "Block",
+              "src": "413:42:10",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "id": 1916,
+                        "name": "aaveLendingPool",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 1898,
+                        "src": "434:15:10",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_contract$_AaveLendingPool_$1884",
+                          "typeString": "contract AaveLendingPool"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_contract$_AaveLendingPool_$1884",
+                          "typeString": "contract AaveLendingPool"
+                        }
+                      ],
+                      "id": 1915,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": true,
+                      "lValueRequested": false,
+                      "nodeType": "ElementaryTypeNameExpression",
+                      "src": "426:7:10",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_type$_t_address_$",
+                        "typeString": "type(address)"
+                      },
+                      "typeName": {
+                        "id": 1914,
+                        "name": "address",
+                        "nodeType": "ElementaryTypeName",
+                        "src": "426:7:10",
+                        "typeDescriptions": {
+                          "typeIdentifier": null,
+                          "typeString": null
+                        }
+                      }
+                    },
+                    "id": 1917,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "typeConversion",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "426:24:10",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "functionReturnParameters": 1913,
+                  "id": 1918,
+                  "nodeType": "Return",
+                  "src": "419:31:10"
+                }
+              ]
+            },
+            "documentation": null,
+            "functionSelector": "0261bf8b",
+            "id": 1920,
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "getLendingPool",
+            "nodeType": "FunctionDefinition",
+            "overrides": {
+              "id": 1910,
+              "nodeType": "OverrideSpecifier",
+              "overrides": [],
+              "src": "381:8:10"
+            },
+            "parameters": {
+              "id": 1909,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "371:2:10"
+            },
+            "returnParameters": {
+              "id": 1913,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1912,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "overrides": null,
+                  "scope": 1920,
+                  "src": "404:7:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1911,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "404:7:10",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "403:9:10"
+            },
+            "scope": 1933,
+            "src": "348:107:10",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "baseFunctions": [
+              1708
+            ],
+            "body": {
+              "id": 1931,
+              "nodeType": "Block",
+              "src": "528:42:10",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "id": 1928,
+                        "name": "aaveLendingPool",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 1898,
+                        "src": "549:15:10",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_contract$_AaveLendingPool_$1884",
+                          "typeString": "contract AaveLendingPool"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_contract$_AaveLendingPool_$1884",
+                          "typeString": "contract AaveLendingPool"
+                        }
+                      ],
+                      "id": 1927,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": true,
+                      "lValueRequested": false,
+                      "nodeType": "ElementaryTypeNameExpression",
+                      "src": "541:7:10",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_type$_t_address_$",
+                        "typeString": "type(address)"
+                      },
+                      "typeName": {
+                        "id": 1926,
+                        "name": "address",
+                        "nodeType": "ElementaryTypeName",
+                        "src": "541:7:10",
+                        "typeDescriptions": {
+                          "typeIdentifier": null,
+                          "typeString": null
+                        }
+                      }
+                    },
+                    "id": 1929,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "typeConversion",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "541:24:10",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "functionReturnParameters": 1925,
+                  "id": 1930,
+                  "nodeType": "Return",
+                  "src": "534:31:10"
+                }
+              ]
+            },
+            "documentation": null,
+            "functionSelector": "ed6ff760",
+            "id": 1932,
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "getLendingPoolCore",
+            "nodeType": "FunctionDefinition",
+            "overrides": {
+              "id": 1922,
+              "nodeType": "OverrideSpecifier",
+              "overrides": [],
+              "src": "496:8:10"
+            },
+            "parameters": {
+              "id": 1921,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "486:2:10"
+            },
+            "returnParameters": {
+              "id": 1925,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1924,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "overrides": null,
+                  "scope": 1932,
+                  "src": "519:7:10",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 1923,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "519:7:10",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "518:9:10"
+            },
+            "scope": 1933,
+            "src": "459:111:10",
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "public"
+          }
+        ],
+        "scope": 1934,
+        "src": "116:456:10"
+      }
+    ],
+    "src": "0:573:10"
+  },
+  "legacyAST": {
+    "attributes": {
+      "absolutePath": "/home/jasoons/Documents/code/longshort/contracts/contracts/mocks/LendingPoolAddressesProvider.sol",
+      "exportedSymbols": {
+        "LendingPoolAddressesProvider": [
+          1933
+        ]
+      },
+      "license": null
+    },
+    "children": [
+      {
+        "attributes": {
+          "literals": [
+            "solidity",
+            "^",
+            "0.6",
+            ".0"
+          ]
+        },
+        "id": 1892,
+        "name": "PragmaDirective",
+        "src": "0:23:10"
+      },
+      {
+        "attributes": {
+          "SourceUnit": 1710,
+          "absolutePath": "/home/jasoons/Documents/code/longshort/contracts/contracts/interfaces/ILendingPoolAddressesProvider.sol",
+          "file": "../interfaces/ILendingPoolAddressesProvider.sol",
+          "scope": 1934,
+          "symbolAliases": [
+            null
+          ],
+          "unitAlias": ""
+        },
+        "id": 1893,
+        "name": "ImportDirective",
+        "src": "25:57:10"
+      },
+      {
+        "attributes": {
+          "SourceUnit": 1885,
+          "absolutePath": "/home/jasoons/Documents/code/longshort/contracts/contracts/mocks/AaveLendingPool.sol",
+          "file": "./AaveLendingPool.sol",
+          "scope": 1934,
+          "symbolAliases": [
+            null
+          ],
+          "unitAlias": ""
+        },
+        "id": 1894,
+        "name": "ImportDirective",
+        "src": "83:31:10"
+      },
+      {
+        "attributes": {
+          "abstract": false,
+          "contractDependencies": [
+            1709
+          ],
+          "contractKind": "contract",
+          "documentation": null,
+          "fullyImplemented": true,
+          "linearizedBaseContracts": [
+            1933,
+            1709
+          ],
+          "name": "LendingPoolAddressesProvider",
+          "scope": 1934
+        },
+        "children": [
+          {
+            "attributes": {
+              "arguments": null
+            },
+            "children": [
+              {
+                "attributes": {
+                  "contractScope": null,
+                  "name": "ILendingPoolAddressesProvider",
+                  "referencedDeclaration": 1709,
+                  "type": "contract ILendingPoolAddressesProvider"
+                },
+                "id": 1895,
+                "name": "UserDefinedTypeName",
+                "src": "157:29:10"
+              }
+            ],
+            "id": 1896,
+            "name": "InheritanceSpecifier",
+            "src": "157:29:10"
+          },
+          {
+            "attributes": {
+              "constant": false,
+              "functionSelector": "e9d337b8",
+              "mutability": "mutable",
+              "name": "aaveLendingPool",
+              "overrides": null,
+              "scope": 1933,
+              "stateVariable": true,
+              "storageLocation": "default",
+              "type": "contract AaveLendingPool",
+              "value": null,
+              "visibility": "public"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "contractScope": null,
+                  "name": "AaveLendingPool",
+                  "referencedDeclaration": 1884,
+                  "type": "contract AaveLendingPool"
+                },
+                "id": 1897,
+                "name": "UserDefinedTypeName",
+                "src": "191:15:10"
+              }
+            ],
+            "id": 1898,
+            "name": "VariableDeclaration",
+            "src": "191:38:10"
+          },
+          {
+            "attributes": {
+              "documentation": null,
+              "implemented": true,
+              "isConstructor": true,
+              "kind": "constructor",
+              "modifiers": [
+                null
+              ],
+              "name": "",
+              "overrides": null,
+              "scope": 1933,
+              "stateMutability": "nonpayable",
+              "virtual": false,
+              "visibility": "public"
+            },
+            "children": [
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "mutability": "mutable",
+                      "name": "aaveLendingPoolAddress",
+                      "overrides": null,
+                      "scope": 1908,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "contract AaveLendingPool",
+                      "value": null,
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "contractScope": null,
+                          "name": "AaveLendingPool",
+                          "referencedDeclaration": 1884,
+                          "type": "contract AaveLendingPool"
+                        },
+                        "id": 1899,
+                        "name": "UserDefinedTypeName",
+                        "src": "246:15:10"
+                      }
+                    ],
+                    "id": 1900,
+                    "name": "VariableDeclaration",
+                    "src": "246:38:10"
+                  }
+                ],
+                "id": 1901,
+                "name": "ParameterList",
+                "src": "245:40:10"
+              },
+              {
+                "attributes": {
+                  "parameters": [
+                    null
+                  ]
+                },
+                "children": [],
+                "id": 1902,
+                "name": "ParameterList",
+                "src": "293:0:10"
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "attributes": {
+                          "argumentTypes": null,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "lValueRequested": false,
+                          "operator": "=",
+                          "type": "contract AaveLendingPool"
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 1898,
+                              "type": "contract AaveLendingPool",
+                              "value": "aaveLendingPool"
+                            },
+                            "id": 1903,
+                            "name": "Identifier",
+                            "src": "299:15:10"
+                          },
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 1900,
+                              "type": "contract AaveLendingPool",
+                              "value": "aaveLendingPoolAddress"
+                            },
+                            "id": 1904,
+                            "name": "Identifier",
+                            "src": "317:22:10"
+                          }
+                        ],
+                        "id": 1905,
+                        "name": "Assignment",
+                        "src": "299:40:10"
+                      }
+                    ],
+                    "id": 1906,
+                    "name": "ExpressionStatement",
+                    "src": "299:40:10"
+                  }
+                ],
+                "id": 1907,
+                "name": "Block",
+                "src": "293:51:10"
+              }
+            ],
+            "id": 1908,
+            "name": "FunctionDefinition",
+            "src": "234:110:10"
+          },
+          {
+            "attributes": {
+              "baseFunctions": [
+                1703
+              ],
+              "documentation": null,
+              "functionSelector": "0261bf8b",
+              "implemented": true,
+              "isConstructor": false,
+              "kind": "function",
+              "modifiers": [
+                null
+              ],
+              "name": "getLendingPool",
+              "scope": 1933,
+              "stateMutability": "view",
+              "virtual": false,
+              "visibility": "public"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "overrides": [
+                    null
+                  ]
+                },
+                "id": 1910,
+                "name": "OverrideSpecifier",
+                "src": "381:8:10"
+              },
+              {
+                "attributes": {
+                  "parameters": [
+                    null
+                  ]
+                },
+                "children": [],
+                "id": 1909,
+                "name": "ParameterList",
+                "src": "371:2:10"
+              },
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "mutability": "mutable",
+                      "name": "",
+                      "overrides": null,
+                      "scope": 1920,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "address",
+                      "value": null,
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "address",
+                          "stateMutability": "nonpayable",
+                          "type": "address"
+                        },
+                        "id": 1911,
+                        "name": "ElementaryTypeName",
+                        "src": "404:7:10"
+                      }
+                    ],
+                    "id": 1912,
+                    "name": "VariableDeclaration",
+                    "src": "404:7:10"
+                  }
+                ],
+                "id": 1913,
+                "name": "ParameterList",
+                "src": "403:9:10"
+              },
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "functionReturnParameters": 1913
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "argumentTypes": null,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "isStructConstructorCall": false,
+                          "lValueRequested": false,
+                          "names": [
+                            null
+                          ],
+                          "tryCall": false,
+                          "type": "address",
+                          "type_conversion": true
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "argumentTypes": [
+                                {
+                                  "typeIdentifier": "t_contract$_AaveLendingPool_$1884",
+                                  "typeString": "contract AaveLendingPool"
+                                }
+                              ],
+                              "isConstant": false,
+                              "isLValue": false,
+                              "isPure": true,
+                              "lValueRequested": false,
+                              "type": "type(address)"
+                            },
+                            "children": [
+                              {
+                                "attributes": {
+                                  "name": "address",
+                                  "type": null
+                                },
+                                "id": 1914,
+                                "name": "ElementaryTypeName",
+                                "src": "426:7:10"
+                              }
+                            ],
+                            "id": 1915,
+                            "name": "ElementaryTypeNameExpression",
+                            "src": "426:7:10"
+                          },
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 1898,
+                              "type": "contract AaveLendingPool",
+                              "value": "aaveLendingPool"
+                            },
+                            "id": 1916,
+                            "name": "Identifier",
+                            "src": "434:15:10"
+                          }
+                        ],
+                        "id": 1917,
+                        "name": "FunctionCall",
+                        "src": "426:24:10"
+                      }
+                    ],
+                    "id": 1918,
+                    "name": "Return",
+                    "src": "419:31:10"
+                  }
+                ],
+                "id": 1919,
+                "name": "Block",
+                "src": "413:42:10"
+              }
+            ],
+            "id": 1920,
+            "name": "FunctionDefinition",
+            "src": "348:107:10"
+          },
+          {
+            "attributes": {
+              "baseFunctions": [
+                1708
+              ],
+              "documentation": null,
+              "functionSelector": "ed6ff760",
+              "implemented": true,
+              "isConstructor": false,
+              "kind": "function",
+              "modifiers": [
+                null
+              ],
+              "name": "getLendingPoolCore",
+              "scope": 1933,
+              "stateMutability": "view",
+              "virtual": false,
+              "visibility": "public"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "overrides": [
+                    null
+                  ]
+                },
+                "id": 1922,
+                "name": "OverrideSpecifier",
+                "src": "496:8:10"
+              },
+              {
+                "attributes": {
+                  "parameters": [
+                    null
+                  ]
+                },
+                "children": [],
+                "id": 1921,
+                "name": "ParameterList",
+                "src": "486:2:10"
+              },
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "constant": false,
+                      "mutability": "mutable",
+                      "name": "",
+                      "overrides": null,
+                      "scope": 1932,
+                      "stateVariable": false,
+                      "storageLocation": "default",
+                      "type": "address",
+                      "value": null,
+                      "visibility": "internal"
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "name": "address",
+                          "stateMutability": "nonpayable",
+                          "type": "address"
+                        },
+                        "id": 1923,
+                        "name": "ElementaryTypeName",
+                        "src": "519:7:10"
+                      }
+                    ],
+                    "id": 1924,
+                    "name": "VariableDeclaration",
+                    "src": "519:7:10"
+                  }
+                ],
+                "id": 1925,
+                "name": "ParameterList",
+                "src": "518:9:10"
+              },
+              {
+                "children": [
+                  {
+                    "attributes": {
+                      "functionReturnParameters": 1925
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "argumentTypes": null,
+                          "isConstant": false,
+                          "isLValue": false,
+                          "isPure": false,
+                          "isStructConstructorCall": false,
+                          "lValueRequested": false,
+                          "names": [
+                            null
+                          ],
+                          "tryCall": false,
+                          "type": "address",
+                          "type_conversion": true
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "argumentTypes": [
+                                {
+                                  "typeIdentifier": "t_contract$_AaveLendingPool_$1884",
+                                  "typeString": "contract AaveLendingPool"
+                                }
+                              ],
+                              "isConstant": false,
+                              "isLValue": false,
+                              "isPure": true,
+                              "lValueRequested": false,
+                              "type": "type(address)"
+                            },
+                            "children": [
+                              {
+                                "attributes": {
+                                  "name": "address",
+                                  "type": null
+                                },
+                                "id": 1926,
+                                "name": "ElementaryTypeName",
+                                "src": "541:7:10"
+                              }
+                            ],
+                            "id": 1927,
+                            "name": "ElementaryTypeNameExpression",
+                            "src": "541:7:10"
+                          },
+                          {
+                            "attributes": {
+                              "argumentTypes": null,
+                              "overloadedDeclarations": [
+                                null
+                              ],
+                              "referencedDeclaration": 1898,
+                              "type": "contract AaveLendingPool",
+                              "value": "aaveLendingPool"
+                            },
+                            "id": 1928,
+                            "name": "Identifier",
+                            "src": "549:15:10"
+                          }
+                        ],
+                        "id": 1929,
+                        "name": "FunctionCall",
+                        "src": "541:24:10"
+                      }
+                    ],
+                    "id": 1930,
+                    "name": "Return",
+                    "src": "534:31:10"
+                  }
+                ],
+                "id": 1931,
+                "name": "Block",
+                "src": "528:42:10"
+              }
+            ],
+            "id": 1932,
+            "name": "FunctionDefinition",
+            "src": "459:111:10"
+          }
+        ],
+        "id": 1933,
+        "name": "ContractDefinition",
+        "src": "116:456:10"
+      }
+    ],
+    "id": 1934,
+    "name": "SourceUnit",
+    "src": "0:573:10"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.6.12+commit.27d51765.Emscripten.clang"
+  },
+  "networks": {
+    "5": {
+      "events": {},
+      "links": {},
+      "address": "0xB5fd923dFB6EF763Ce19142C51804599875Ba306",
+      "transactionHash": "0x69db16c31ebd6d5c5b783f1f20819ddff617331d2bfce2b234eb36e961f289c8"
+    },
+    "97": {
+      "events": {},
+      "links": {},
+      "address": "0x6DF357833166d21A84BC981597E19BDa35a919fA",
+      "transactionHash": "0x8c6b4a0e71531b9ed29eeaac1e116b4dc61d94cc5d26768d8bcb9aebc982bef6"
+    }
+  },
+  "schemaVersion": "3.3.3",
+  "updatedAt": "2021-01-29T14:38:38.833Z",
+  "networkType": "ethereum",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  }
+}
