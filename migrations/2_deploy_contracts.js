@@ -16,13 +16,7 @@ const SIMULATED_INSTANT_APY = 10;
 
 const deployContracts = async (options, accounts, deployer) => {
   add({
-    contractsData: [
-      { name: "LongShort", alias: "LongShort" },
-      // { name: "LongCoins", alias: "LongCoins" },
-      // { name: "ShortCoins", alias: "ShortCoins" },
-      // { name: "Dai", alias: "Dai" },
-      // { name: "ADai", alias: "ADai" },
-    ],
+    contractsData: [{ name: "LongShort", alias: "LongShort" }],
   });
   await push({ ...options, force: true });
 
