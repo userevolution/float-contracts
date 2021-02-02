@@ -109,39 +109,55 @@ contract LongShort is Initializable {
     ILendingPoolAddressesProvider public provider;
     address public aaveLendingContractCore;
 
-    // EVENTS
-    event TokenPriceRefreshed(uint256 longTokenPrice, uint256 shortTokenPrice);
+    uint256 public externalContractCounter;
+
+    event TokenPriceRefreshed(
+        uint256 contractCallCounter,
+        uint256 longTokenPrice,
+        uint256 shortTokenPrice
+    );
     event FeesLevied(
+        uint256 contractCallCounter,
         uint256 totalFees,
         uint256 longPercentage,
         uint256 shortPercentage
     );
     event InterestDistribution(
+        uint256 contractCallCounter,
         uint256 newTotalValueLocked,
         uint256 totalInterest,
         uint256 longPercentage,
         uint256 shortPercentage
     );
-    event PriceUpdate(uint256 oldPrice, uint256 newPrice, address user);
+    event PriceUpdate(
+        uint256 contractCallCounter,
+        uint256 oldPrice,
+        uint256 newPrice,
+        address user
+    );
     event LongMinted(
+        uint256 contractCallCounter,
         uint256 depositAdded,
         uint256 finalDepositAmount,
         uint256 tokensMinted,
         address user
     );
     event ShortMinted(
+        uint256 contractCallCounter,
         uint256 depositAdded,
         uint256 finalDepositAmount,
         uint256 tokensMinted,
         address user
     );
     event LongRedeem(
+        uint256 contractCallCounter,
         uint256 tokensRedeemed,
         uint256 valueOfRedemption,
         uint256 finalRedeemValue,
         address user
     );
     event ShortRedeem(
+        uint256 contractCallCounter,
         uint256 tokensRedeemed,
         uint256 valueOfRedemption,
         uint256 finalRedeemValue,
@@ -153,6 +169,13 @@ contract LongShort is Initializable {
      */
     modifier refreshSystemState() {
         _updateSystemState();
+        _;
+    }
+
+    modifier updateCounterIfExternalCall() {
+        if (msg.sender != address(this)) {
+            externalContractCounter++;
+        }
         _;
     }
 
@@ -256,7 +279,11 @@ contract LongShort is Initializable {
                 shortTokenSupply
             );
         }
-        emit TokenPriceRefreshed(longTokenPrice, shortTokenPrice);
+        emit TokenPriceRefreshed(
+            externalContractCounter,
+            longTokenPrice,
+            shortTokenPrice
+        );
     }
 
     /**
@@ -271,7 +298,12 @@ contract LongShort is Initializable {
     ) internal {
         _increaseLongShortSides(totalFees, longPercentage, shortPercentage);
 
-        emit FeesLevied(totalFees, longPercentage, shortPercentage);
+        emit FeesLevied(
+            externalContractCounter,
+            totalFees,
+            longPercentage,
+            shortPercentage
+        );
     }
 
     /**
@@ -295,6 +327,7 @@ contract LongShort is Initializable {
         totalValueLocked = totalValueWithInterest;
 
         emit InterestDistribution(
+            externalContractCounter,
             totalValueWithInterest,
             interestAccrued,
             longPercentage,
@@ -380,7 +413,7 @@ contract LongShort is Initializable {
      * Updates the value of the long and short sides within the system
      * Note this is public. Anyone can call this function.
      */
-    function _updateSystemState() public {
+    function _updateSystemState() public updateCounterIfExternalCall {
         if (longValue == 0 && shortValue == 0) {
             return;
         }
@@ -388,7 +421,12 @@ contract LongShort is Initializable {
         // TODO: Check why/if this is bad (casting to uint)
         // If a negative int is return this should fail.
         uint256 newPrice = uint256(getLatestPrice());
-        emit PriceUpdate(assetPrice, newPrice, msg.sender);
+        emit PriceUpdate(
+            externalContractCounter,
+            assetPrice,
+            newPrice,
+            msg.sender
+        );
 
         // Adjusts long and short values based on price movements.
         // $1
@@ -533,7 +571,13 @@ contract LongShort is Initializable {
         longValue = longValue.add(finalDepositAmount);
         longTokens.mint(msg.sender, amountToMint);
 
-        emit LongMinted(amount, finalDepositAmount, amountToMint, msg.sender);
+        emit LongMinted(
+            externalContractCounter,
+            amount,
+            finalDepositAmount,
+            amountToMint,
+            msg.sender
+        );
         // Safety Checks
         // Again consider gas implications.
         require(
@@ -569,7 +613,13 @@ contract LongShort is Initializable {
         // NB : Important to refresh the token price before claculating amount to mint?
         // So user is buying them at the new price after their fee has increased the price.
 
-        emit ShortMinted(amount, finalDepositAmount, amountToMint, msg.sender);
+        emit ShortMinted(
+            externalContractCounter,
+            amount,
+            finalDepositAmount,
+            amountToMint,
+            msg.sender
+        );
         // Safety Checks
         require(
             shortTokenPrice ==
@@ -667,6 +717,7 @@ contract LongShort is Initializable {
         _redeem(finalRedeemAmount);
 
         emit LongRedeem(
+            externalContractCounter,
             tokensToRedeem,
             amountToRedeem,
             finalRedeemAmount,
@@ -699,6 +750,7 @@ contract LongShort is Initializable {
         _redeem(finalRedeemAmount);
 
         emit ShortRedeem(
+            externalContractCounter,
             tokensToRedeem,
             amountToRedeem,
             finalRedeemAmount,
