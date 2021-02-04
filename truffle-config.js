@@ -16,15 +16,36 @@ const {
 
 const blockchainNodeHost = process.env.BLOCKCHAIN_NODE_HOST || "localhost";
 
+const defaultLocalhostNetwork = {
+  host: blockchainNodeHost, // Localhost (default: none)
+  port: 8545, // Standard Ethereum port (default: none)
+  network_id: "*", // Any network (default: none)
+  gasPrice: 1000000000, // 0.1 gwei
+};
+
+const providerProxyHandler = (rpcUrl, provider) => {
+  const get = (_target, property) => {
+    if (!provider) {
+      provider = new HDWalletProvider(mnemonic, rpcUrl, 0);
+    }
+    return provider[property];
+  };
+  return { get };
+};
+
+const lazyCreateNetwork = (rpcUrl) => {
+  let provider = undefined;
+  return new Proxy({}, providerProxyHandler(rpcUrl, provider));
+};
+
 module.exports = {
   // See <http://truffleframework.com/docs/advanced/configuration>
   // to customize your Truffle configuration!
   plugins: ["solidity-coverage", "truffle-plugin-verify"],
-  // contracts_build_directory: path.join(__dirname, "artifacts/contracts"),
   networks: {
     mainnet: {
       network_id: 1,
-      provider: new HDWalletProvider(mnemonic, mainnetProviderUrl, 0),
+      provider: lazyCreateNetwork(mainnetProviderUrl),
       // gas: 4700000,
       gasPrice: 45000000000, // 10 gwei
       skipDryRun: true,
@@ -53,50 +74,35 @@ module.exports = {
     // },
     rinkeby: {
       network_id: 4,
-      provider: new HDWalletProvider(mnemonic, rinkebyProviderUrl, 0),
+      provider: lazyCreateNetwork(rinkebyProviderUrl),
       gas: 4700000,
       gasPrice: 10000000000, // 10 gwe
       skipDryRun: true,
     },
     kovan: {
       network_id: 42,
-      provider: new HDWalletProvider(mnemonic, kovanProviderUrl, 0),
+      provider: lazyCreateNetwork(kovanProviderUrl),
       // gas: 47000000,
       gasPrice: 10000000000, // 10 gwei
       skipDryRun: true,
     },
     goerli: {
       network_id: 5,
-      provider: new HDWalletProvider(mnemonic, goerliProviderUrl, 0),
+      provider: lazyCreateNetwork(goerliProviderUrl),
       gas: 8000000,
       gasPrice: 10000000000, // 10 gwei
       skipDryRun: true,
     },
     binanceTest: {
       network_id: 97,
-      provider: new HDWalletProvider(mnemonic, binanceTest, 0),
+      provider: lazyCreateNetwork(binanceTest),
       gas: 8000000,
       gasPrice: 50000000000, // 10 gwei
       skipDryRun: true,
     },
-    development: {
-      host: blockchainNodeHost, // Localhost (default: none)
-      port: 8545, // Standard Ethereum port (default: none)
-      network_id: "*", // Any network (default: none)
-      gasPrice: 1000000000, // 0.1 gwei
-    },
-    graphTesting: {
-      host: blockchainNodeHost, // Localhost (default: none)
-      port: 8545, // Standard Ethereum port (default: none)
-      network_id: "*", // Any network (default: none)
-      gasPrice: 1000000000, // 0.1 gwei
-    },
-    test: {
-      host: blockchainNodeHost, // Localhost (default: none)
-      port: 8545, // Standard Ethereum port (default: none)
-      network_id: "*", // Any network (default: none)
-      gasPrice: 100000000, // 0.1 gwei
-    },
+    development: defaultLocalhostNetwork,
+    graphTesting: defaultLocalhostNetwork,
+    test: defaultLocalhostNetwork,
   },
   mocha: {
     reporter: "eth-gas-reporter",
