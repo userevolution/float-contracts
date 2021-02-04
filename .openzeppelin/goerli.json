@@ -1,11 +1,11 @@
 {
   "contracts": {
     "LongShort": {
-      "address": "0xB2f6498F61935638AC025F87e31eb191780dA4C6",
-      "constructorCode": "608060405234801561001057600080fd5b50611e64806100206000396000f3fe",
-      "bodyBytecodeHash": "13b2bc838f1cf2f457cbbd43d0b21328cb2c530c53474a42bf635401f7431a5d",
-      "localBytecodeHash": "f345bd2962baf03e69c636d330c68d3d2a211f55131af3637f2a9c7fe2f43ade",
-      "deployedBytecodeHash": "f345bd2962baf03e69c636d330c68d3d2a211f55131af3637f2a9c7fe2f43ade",
+      "address": "0x0e0E09fb8Fb133c3A231640Ed6D219Ed17214533",
+      "constructorCode": "608060405234801561001057600080fd5b50612033806100206000396000f3fe",
+      "bodyBytecodeHash": "1c43cccb977471a36f7bd48826cc23d9aaf4e6bc8033332899c948c9d0619c92",
+      "localBytecodeHash": "edf980139e47bd6dd6860bf759c951456bc83d5957f1f80318955f0242b1e4fd",
+      "deployedBytecodeHash": "edf980139e47bd6dd6860bf759c951456bc83d5957f1f80318955f0242b1e4fd",
       "types": {
         "t_bool": {
           "id": "t_bool",
@@ -35,7 +35,7 @@
           "contract": "Initializable",
           "path": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol",
           "label": "initialized",
-          "astId": 10475,
+          "astId": 10564,
           "type": "t_bool",
           "src": "757:24:16"
         },
@@ -43,7 +43,7 @@
           "contract": "Initializable",
           "path": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol",
           "label": "initializing",
-          "astId": 10478,
+          "astId": 10567,
           "type": "t_bool",
           "src": "876:25:16"
         },
@@ -51,7 +51,7 @@
           "contract": "Initializable",
           "path": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol",
           "label": "______gap",
-          "astId": 10543,
+          "astId": 10632,
           "type": "t_array:50<t_uint256>",
           "src": "1982:29:16"
         },
@@ -198,6 +198,14 @@
           "astId": 108,
           "type": "t_address",
           "src": "5069:38:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "externalContractCounter",
+          "astId": 110,
+          "type": "t_uint256",
+          "src": "5114:38:1"
         }
       ],
       "warnings": {
@@ -205,7 +213,22 @@
         "hasSelfDestruct": false,
         "hasDelegateCall": false,
         "hasInitialValuesInDeclarations": false,
-        "uninitializedBaseContracts": []
+        "uninitializedBaseContracts": [],
+        "storageUncheckedVars": [],
+        "storageDiff": [
+          {
+            "action": "append",
+            "updated": {
+              "index": 21,
+              "contract": "LongShort",
+              "path": "contracts/LongShort.sol",
+              "label": "externalContractCounter",
+              "astId": 110,
+              "type": "t_uint256",
+              "src": "5114:38:1"
+            }
+          }
+        ]
       }
     }
   },
@@ -216,6 +239,13 @@
         "address": "0x0dFD477dD71664821DE0c376DD23c3dcdE207448",
         "version": "0.1.0",
         "implementation": "0xB2f6498F61935638AC025F87e31eb191780dA4C6",
+        "admin": "0x3206C7a10A41baEe97438815EbD888473C37Fa02",
+        "kind": "Upgradeable"
+      },
+      {
+        "address": "0xE1994334bEf8D23f31DA873673027977ded345dd",
+        "version": "0.1.0",
+        "implementation": "0x0e0E09fb8Fb133c3A231640Ed6D219Ed17214533",
         "admin": "0x3206C7a10A41baEe97438815EbD888473C37Fa02",
         "kind": "Upgradeable"
       }
