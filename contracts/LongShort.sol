@@ -111,6 +111,12 @@ contract LongShort is Initializable {
 
     uint256 public externalContractCounter;
 
+    event ValueLockedInSystem(
+        uint256 contractCallCounter,
+        uint256 totalValueLocked,
+        uint256 longValue,
+        uint256 shortValue
+    );
     event TokenPriceRefreshed(
         uint256 contractCallCounter,
         uint256 longTokenPrice,
@@ -451,6 +457,12 @@ contract LongShort is Initializable {
         _refreshTokensPrice();
         assetPrice = newPrice;
 
+        emit ValueLockedInSystem(
+            externalContractCounter,
+            totalValueLocked,
+            longValue,
+            shortValue
+        );
         // For extra robustness while testing.
         // TODO: Consider gas cost trade-off of removing
         require(
@@ -578,6 +590,12 @@ contract LongShort is Initializable {
             amountToMint,
             msg.sender
         );
+        emit ValueLockedInSystem(
+            externalContractCounter,
+            totalValueLocked,
+            longValue,
+            shortValue
+        );
         // Safety Checks
         // Again consider gas implications.
         require(
@@ -619,6 +637,13 @@ contract LongShort is Initializable {
             finalDepositAmount,
             amountToMint,
             msg.sender
+        );
+
+        emit ValueLockedInSystem(
+            externalContractCounter,
+            totalValueLocked,
+            longValue,
+            shortValue
         );
         // Safety Checks
         require(
@@ -723,6 +748,13 @@ contract LongShort is Initializable {
             finalRedeemAmount,
             msg.sender
         );
+
+        emit ValueLockedInSystem(
+            externalContractCounter,
+            totalValueLocked,
+            longValue,
+            shortValue
+        );
     }
 
     function redeemShort(uint256 tokensToRedeem) external refreshSystemState {
@@ -755,6 +787,13 @@ contract LongShort is Initializable {
             amountToRedeem,
             finalRedeemAmount,
             msg.sender
+        );
+
+        emit ValueLockedInSystem(
+            externalContractCounter,
+            totalValueLocked,
+            longValue,
+            shortValue
         );
     }
 }
