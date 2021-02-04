@@ -6,10 +6,6 @@ import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol";
 import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
 
-import "./interfaces/IAaveLendingPool.sol";
-import "./interfaces/IADai.sol";
-import "./interfaces/ILendingPoolAddressesProvider.sol";
-
 import "./LongCoins.sol";
 import "./ShortCoins.sol";
 
@@ -76,13 +72,11 @@ contract LongShort is Initializable {
     //////// VARIABLES /////////////////
     ////////////////////////////////////
 
-    // Oracle
-    AggregatorV3Interface internal priceFeed;
-
     // Overall variables
     address public admin; // This will likely be the Gnosis safe
-    mapping(uint256 => bool) public marketExists;
+    uint256 public latestMarket;
     uint256 public totalValueLocked;
+    mapping(uint256 => bool) public marketExists;
 
     // Stable coin we accept deposits in
     // Can we accept multiple deposits?
@@ -93,6 +87,8 @@ contract LongShort is Initializable {
     uint256 public constant feeUnitsOfPrecision = 10000; // [div the above by 10000]
 
     // Market related variables
+    mapping(uint256 => AggregatorV3Interface) internal priceFeed; // Oracle
+
     mapping(uint256 => uint256) public assetPrice;
     mapping(uint256 => uint256) public totalValueLockedInMarket;
     mapping(uint256 => uint256) public longValue;
@@ -118,36 +114,42 @@ contract LongShort is Initializable {
     ////////////////////////////////////
 
     event ValueLockedInSystem(
+        uint256 marketIndex,
         uint256 contractCallCounter,
         uint256 totalValueLockedInMarket,
         uint256 longValue,
         uint256 shortValue
     );
     event TokenPriceRefreshed(
+        uint256 marketIndex,
         uint256 contractCallCounter,
         uint256 longTokenPrice,
         uint256 shortTokenPrice
     );
     event FeesLevied(
+        uint256 marketIndex,
         uint256 contractCallCounter,
         uint256 totalFees,
         uint256 longPercentage,
         uint256 shortPercentage
     );
-    event InterestDistribution(
-        uint256 contractCallCounter,
-        uint256 newtotalValueLockedInMarket,
-        uint256 totalInterest,
-        uint256 longPercentage,
-        uint256 shortPercentage
-    );
+    // event InterestDistribution(
+    //     uint256 marketIndex,
+    //     uint256 contractCallCounter,
+    //     uint256 newtotalValueLockedInMarket,
+    //     uint256 totalInterest,
+    //     uint256 longPercentage,
+    //     uint256 shortPercentage
+    // );
     event PriceUpdate(
+        uint256 marketIndex,
         uint256 contractCallCounter,
         uint256 oldPrice,
         uint256 newPrice,
         address user
     );
     event LongMinted(
+        uint256 marketIndex,
         uint256 contractCallCounter,
         uint256 depositAdded,
         uint256 finalDepositAmount,
@@ -155,6 +157,7 @@ contract LongShort is Initializable {
         address user
     );
     event ShortMinted(
+        uint256 marketIndex,
         uint256 contractCallCounter,
         uint256 depositAdded,
         uint256 finalDepositAmount,
@@ -162,6 +165,7 @@ contract LongShort is Initializable {
         address user
     );
     event LongRedeem(
+        uint256 marketIndex,
         uint256 contractCallCounter,
         uint256 tokensRedeemed,
         uint256 valueOfRedemption,
@@ -169,6 +173,7 @@ contract LongShort is Initializable {
         address user
     );
     event ShortRedeem(
+        uint256 marketIndex,
         uint256 contractCallCounter,
         uint256 tokensRedeemed,
         uint256 valueOfRedemption,
@@ -210,7 +215,6 @@ contract LongShort is Initializable {
     ///// CONTRACT SET-UP //////////////
     ////////////////////////////////////
 
-    // TODO MAKE UPGRADABLE
     function setup(address daiAddress) public initializer {
         // priceFeed = AggregatorV3Interface(_priceOracle);
 
@@ -219,34 +223,63 @@ contract LongShort is Initializable {
         // shortTokens = ShortCoins(_shortCoins);
 
         daiContract = IERC20(daiAddress);
-
-        // baseEntryFee = _baseEntryFee;
-        // entryFeeMultiplier = _entryFeeMultiplier;
-        // baseExitFee = _baseExitFee;
-        // badLiquidityExitFee = _badLiquidityExitFee;
-
-        // Intialize price at $1 per token (adjust decimals)
-        // TODO: we need to ensure 1 dai (18 decimals) =  1 longToken (18 decimals)
-        // NB to ensure this is the case.
-        // 1000000000000000
-        // = 1 long token
-
-        // TODO intitalize base market
-        // longTokenPrice[0] = TEN_TO_THE_18;
-        // shortTokenPrice[0] = TEN_TO_THE_18;
     }
+
+    ////////////////////////////////////
+    /// MULTISIG ADMIN CREATE MARKETS //
+    ////////////////////////////////////
+
+    function newSyntheticMarket(
+        string calldata syntheticName,
+        string calldata syntheticSymbol,
+        address _oracleFeed,
+        uint256 _baseEntryFee,
+        uint256 _badLiquidityEntryFee,
+        uint256 _baseExitFee,
+        uint256 _badLiquidityExitFee
+    ) external adminOnly {
+        uint256 marketNumber = latestMarket.add(1);
+
+        priceFeed[marketNumber] = AggregatorV3Interface(_oracleFeed);
+        baseEntryFee[marketNumber] = _baseEntryFee;
+        badLiquidityEntryFee[marketNumber] = _badLiquidityEntryFee;
+        baseExitFee[marketNumber] = _baseExitFee;
+        badLiquidityExitFee[marketNumber] = _badLiquidityExitFee;
+
+        longTokens[marketNumber] = new LongCoins();
+        longTokens[marketNumber].initialize(
+            string(abi.encodePacked("LONG", syntheticName)),
+            string(abi.encodePacked("L", syntheticSymbol))
+        );
+
+        shortTokens[marketNumber] = new ShortCoins();
+        shortTokens[marketNumber].initialize(
+            string(abi.encodePacked("SHORT", syntheticName)),
+            string(abi.encodePacked("S", syntheticSymbol))
+        );
+
+        longTokenPrice[marketNumber] = TEN_TO_THE_18;
+        shortTokenPrice[marketNumber] = TEN_TO_THE_18;
+
+        marketExists[marketNumber] = true;
+        latestMarket = marketNumber;
+    }
+
+    ////////////////////////////////////
+    //////// HELPER FUNCTIONS //////////
+    ////////////////////////////////////
 
     /**
      * Returns the latest price
      */
-    function getLatestPrice() public view returns (int256) {
+    function getLatestPrice(uint256 marketIndex) public view returns (int256) {
         (
             uint80 roundID,
             int256 price,
             uint256 startedAt,
             uint256 timeStamp,
             uint80 answeredInRound
-        ) = priceFeed.latestRoundData();
+        ) = priceFeed[marketIndex].latestRoundData();
         return price;
     }
 
@@ -298,6 +331,7 @@ contract LongShort is Initializable {
                 .div(shortTokenSupply);
         }
         emit TokenPriceRefreshed(
+            marketIndex,
             externalContractCounter[marketIndex],
             longTokenPrice[marketIndex],
             shortTokenPrice[marketIndex]
@@ -323,6 +357,7 @@ contract LongShort is Initializable {
         );
 
         emit FeesLevied(
+            marketIndex,
             externalContractCounter[marketIndex],
             totalFees,
             longPercentage,
@@ -438,8 +473,9 @@ contract LongShort is Initializable {
 
         // TODO: Check why/if this is bad (casting to uint)
         // If a negative int is return this should fail.
-        uint256 newPrice = uint256(getLatestPrice());
+        uint256 newPrice = uint256(getLatestPrice(marketIndex));
         emit PriceUpdate(
+            marketIndex,
             externalContractCounter[marketIndex],
             assetPrice[marketIndex],
             newPrice,
@@ -461,6 +497,7 @@ contract LongShort is Initializable {
         assetPrice[marketIndex] = newPrice;
 
         emit ValueLockedInSystem(
+            marketIndex,
             externalContractCounter[marketIndex],
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
@@ -485,17 +522,19 @@ contract LongShort is Initializable {
             marketIndex
         ]
             .add(amount);
+
+        totalValueLocked = totalValueLocked.add(amount);
     }
 
     function _feeCalc(
         uint256 marketIndex,
         uint256 fullAmount,
         uint256 feePayableAmount,
-        bool isLong
+        bool isMint
     ) internal returns (uint256) {
         uint256 baseFee = 0;
         uint256 badLiquidityFee = 0;
-        if (isLong) {
+        if (isMint) {
             baseFee = baseEntryFee[marketIndex];
             badLiquidityFee = badLiquidityEntryFee[marketIndex];
         } else {
@@ -516,26 +555,27 @@ contract LongShort is Initializable {
      * Calculates the final amount of deposit net of fees for imbalancing book liquidity
      * Takes into account the consideration where book liquidity is tipped from one side to the other
      */
-    function _calcFinalDepositAmount(
+    function _calcFinalAmount(
         uint256 marketIndex,
         uint256 amount,
         uint256 newAdjustedBeta,
         uint256 oldBeta,
-        bool isLong
+        bool isMint,
+        bool isLongMintOrShortRedeem
     ) internal returns (uint256) {
         uint256 finalDepositAmount = 0;
         uint256 fees = 0;
 
         if (newAdjustedBeta >= TEN_TO_THE_18 || newAdjustedBeta == 0) {
             // case 1: all good liquidity
-            fees = _feeCalc(marketIndex, amount, 0, true);
+            fees = _feeCalc(marketIndex, amount, 0, isMint);
         } else if (oldBeta <= TEN_TO_THE_18) {
             // case 2: all bad liquidity
-            fees = _feeCalc(marketIndex, amount, amount, true);
+            fees = _feeCalc(marketIndex, amount, amount, isMint);
         } else {
             // Case 3: Some good, some bad liquidity
             uint256 feePayablePortion = 0;
-            if (isLong) {
+            if (isLongMintOrShortRedeem) {
                 feePayablePortion = amount.sub(
                     shortValue[marketIndex].sub(longValue[marketIndex])
                 );
@@ -544,14 +584,18 @@ contract LongShort is Initializable {
                     longValue[marketIndex].sub(shortValue[marketIndex])
                 );
             }
-            fees = _feeCalc(marketIndex, amount, feePayablePortion, true);
+            fees = _feeCalc(marketIndex, amount, feePayablePortion, isMint);
         }
 
-        finalDepositAmount = amount.sub(fees);
         // TODO: DECIDE HOW FEES ACCRUE.
+        finalDepositAmount = amount.sub(fees);
         _feesMechanism(marketIndex, fees, 50, 50);
         return finalDepositAmount;
     }
+
+    ////////////////////////////////////
+    /////////// MINT TOKENS ////////////
+    ////////////////////////////////////
 
     /**
      * Create a long position
@@ -561,29 +605,31 @@ contract LongShort is Initializable {
         refreshSystemState(marketIndex)
     {
         _addDeposit(marketIndex, amount);
-        uint256 amountToMint = 0;
         uint256 longBeta = getLongBeta(marketIndex);
         uint256 newAdjustedBeta =
             shortValue[marketIndex].mul(TEN_TO_THE_18).div(
                 longValue[marketIndex].add(amount)
             );
         uint256 finalDepositAmount =
-            _calcFinalDepositAmount(
+            _calcFinalAmount(
                 marketIndex,
                 amount,
                 newAdjustedBeta,
                 longBeta,
+                true,
                 true
             );
 
         _refreshTokensPrice(marketIndex);
-        amountToMint = finalDepositAmount.mul(TEN_TO_THE_18).div(
-            longTokenPrice[marketIndex]
-        );
+        uint256 amountToMint =
+            finalDepositAmount.mul(TEN_TO_THE_18).div(
+                longTokenPrice[marketIndex]
+            );
         longValue[marketIndex] = longValue[marketIndex].add(finalDepositAmount);
         longTokens[marketIndex].mint(msg.sender, amountToMint);
 
         emit LongMinted(
+            marketIndex,
             externalContractCounter[marketIndex],
             amount,
             finalDepositAmount,
@@ -591,24 +637,11 @@ contract LongShort is Initializable {
             msg.sender
         );
         emit ValueLockedInSystem(
+            marketIndex,
             externalContractCounter[marketIndex],
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
             shortValue[marketIndex]
-        );
-        // Safety Checks
-        // Again consider gas implications.
-        require(
-            longTokenPrice[marketIndex] ==
-                longValue[marketIndex].mul(TEN_TO_THE_18).div(
-                    longTokens[marketIndex].totalSupply()
-                ),
-            "Mint affecting price changed (long)"
-        );
-        require(
-            longValue[marketIndex].add(shortValue[marketIndex]) ==
-                totalValueLockedInMarket[marketIndex],
-            "Total locked inconsistent"
         );
     }
 
@@ -620,60 +653,45 @@ contract LongShort is Initializable {
         refreshSystemState(marketIndex)
     {
         _addDeposit(marketIndex, amount);
-        uint256 amountToMint = 0;
-        //uint256 finalDepositAmount = 0;
         uint256 shortBeta = getShortBeta(marketIndex);
         uint256 newAdjustedBeta =
             longValue[marketIndex].mul(TEN_TO_THE_18).div(
                 shortValue[marketIndex].add(amount)
             );
         uint256 finalDepositAmount =
-            _calcFinalDepositAmount(
+            _calcFinalAmount(
                 marketIndex,
                 amount,
                 newAdjustedBeta,
                 shortBeta,
+                true,
                 false
             );
 
         _refreshTokensPrice(marketIndex);
-        amountToMint = finalDepositAmount.mul(TEN_TO_THE_18).div(
-            shortTokenPrice[marketIndex]
-        );
+        uint256 amountToMint =
+            finalDepositAmount.mul(TEN_TO_THE_18).div(
+                shortTokenPrice[marketIndex]
+            );
         shortValue[marketIndex] = shortValue[marketIndex].add(
             finalDepositAmount
         );
         shortTokens[marketIndex].mint(msg.sender, amountToMint);
 
-        // NB : Important to refresh the token price before claculating amount to mint?
-        // So user is buying them at the new price after their fee has increased the price.
-
         emit ShortMinted(
+            marketIndex,
             externalContractCounter[marketIndex],
             amount,
             finalDepositAmount,
             amountToMint,
             msg.sender
         );
-
         emit ValueLockedInSystem(
+            marketIndex,
             externalContractCounter[marketIndex],
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
             shortValue[marketIndex]
-        );
-        // Safety Checks
-        require(
-            shortTokenPrice[marketIndex] ==
-                shortValue[marketIndex].mul(TEN_TO_THE_18).div(
-                    shortTokens[marketIndex].totalSupply()
-                ),
-            "Mint affecting price changed (short)"
-        );
-        require(
-            longValue[marketIndex].add(shortValue[marketIndex]) ==
-                totalValueLockedInMarket[marketIndex],
-            "Total locked inconsistent"
         );
     }
 
@@ -683,46 +701,15 @@ contract LongShort is Initializable {
         ]
             .sub(amount);
 
+        totalValueLocked = totalValueLocked.sub(amount);
+        // Redeem interest token here....
         daiContract.transfer(msg.sender, amount);
     }
 
-    // REFACTOR THIS AND redeem deposit to be CLEAN
-    function _calcFinalRedeemAmount(
-        uint256 marketIndex,
-        uint256 amount,
-        uint256 newAdjustedBeta, // 0.5
-        uint256 oldBeta, // 1
-        bool isLong
-    ) internal returns (uint256) {
-        uint256 fees = 0;
-        uint256 finalRedeemAmount = 0;
+    ////////////////////////////////////
+    /////////// REDEEM TOKENS //////////
+    ////////////////////////////////////
 
-        if (newAdjustedBeta >= TEN_TO_THE_18) {
-            fees = _feeCalc(marketIndex, amount, 0, false);
-        } else if (oldBeta >= TEN_TO_THE_18) {
-            uint256 feePayablePortion = 0;
-            if (isLong) {
-                feePayablePortion = amount.add(shortValue[marketIndex]).sub(
-                    longValue[marketIndex]
-                );
-            } else {
-                feePayablePortion = amount.add(longValue[marketIndex]).sub(
-                    shortValue[marketIndex]
-                );
-            }
-            fees = _feeCalc(marketIndex, amount, feePayablePortion, false);
-        } else {
-            // All is bad liquidity leaving the book.
-            fees = _feeCalc(marketIndex, amount, amount, false);
-        }
-
-        finalRedeemAmount = amount.sub(fees);
-        // TODO: DECIDE HOW FEES ACCRUE.
-        _feesMechanism(marketIndex, fees, 50, 50);
-        return finalRedeemAmount;
-    }
-
-    // TODO: REDO redeem function with similair advanced fees strategy to minting functions.
     function redeemLong(uint256 marketIndex, uint256 tokensToRedeem)
         external
         refreshSystemState(marketIndex)
@@ -740,12 +727,13 @@ contract LongShort is Initializable {
             .div(shortValue[marketIndex]);
 
         uint256 finalRedeemAmount =
-            _calcFinalRedeemAmount(
+            _calcFinalAmount(
                 marketIndex,
                 amountToRedeem,
                 newAdjustedShortBeta,
                 shortBeta,
-                true
+                false,
+                false
             );
 
         longValue[marketIndex] = longValue[marketIndex].sub(amountToRedeem);
@@ -753,6 +741,7 @@ contract LongShort is Initializable {
         _redeem(marketIndex, finalRedeemAmount);
 
         emit LongRedeem(
+            marketIndex,
             externalContractCounter[marketIndex],
             tokensToRedeem,
             amountToRedeem,
@@ -761,6 +750,7 @@ contract LongShort is Initializable {
         );
 
         emit ValueLockedInSystem(
+            marketIndex,
             externalContractCounter[marketIndex],
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
@@ -784,12 +774,13 @@ contract LongShort is Initializable {
             .div(longValue[marketIndex]);
 
         uint256 finalRedeemAmount =
-            _calcFinalRedeemAmount(
+            _calcFinalAmount(
                 marketIndex,
                 amountToRedeem,
                 newAdjustedLongBeta,
                 longBeta,
-                false
+                false,
+                true
             );
 
         shortValue[marketIndex] = shortValue[marketIndex].sub(amountToRedeem);
@@ -797,6 +788,7 @@ contract LongShort is Initializable {
         _redeem(marketIndex, finalRedeemAmount);
 
         emit ShortRedeem(
+            marketIndex,
             externalContractCounter[marketIndex],
             tokensToRedeem,
             amountToRedeem,
@@ -805,6 +797,7 @@ contract LongShort is Initializable {
         );
 
         emit ValueLockedInSystem(
+            marketIndex,
             externalContractCounter[marketIndex],
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
