@@ -35,7 +35,8 @@ contract TokenFactory is Initializable {
     //////////// SET-UP ////////////////
     ////////////////////////////////////
 
-    function setup(address _floatContract) public initializer {
+    function setup(address _admin, address _floatContract) public initializer {
+        admin = _admin;
         floatContract = _floatContract;
     }
 

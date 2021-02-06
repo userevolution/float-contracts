@@ -216,12 +216,14 @@ contract LongShort is Initializable {
     ///// CONTRACT SET-UP //////////////
     ////////////////////////////////////
 
-    function setup(address daiAddress, address _tokenFactory)
-        public
-        initializer
-    {
-        tokenFactory = TokenFactory(_tokenFactory);
+    function setup(
+        address _admin,
+        address daiAddress,
+        address _tokenFactory
+    ) public initializer {
+        admin = _admin;
         daiContract = IERC20(daiAddress);
+        tokenFactory = TokenFactory(_tokenFactory);
     }
 
     ////////////////////////////////////

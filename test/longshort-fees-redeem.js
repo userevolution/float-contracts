@@ -15,7 +15,6 @@ const {
   tokenPriceCalculator,
   simulateTotalValueWithInterest,
   feeCalculation,
-  initializeWithFeeArguments,
 } = require("./helpers");
 
 contract("LongShort", (accounts) => {
@@ -44,13 +43,7 @@ contract("LongShort", (accounts) => {
   const twoHundredMintAmount = "200000000000000000000";
 
   beforeEach(async () => {
-    const result = await initializeWithFeeArguments(
-      admin,
-      _baseEntryFee,
-      _entryFeeMultiplier,
-      _baseExitFee,
-      _badLiquidityExitFee
-    );
+    const result = await initialize(admin);
     longShort = result.longShort;
     long = result.long;
     short = result.short;
