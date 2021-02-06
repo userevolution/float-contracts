@@ -7,13 +7,7 @@ const {
   time,
 } = require("@openzeppelin/test-helpers");
 
-const {
-  initialize,
-  mintAndApprove,
-  SIMULATED_INSTANT_APY,
-  simulateInterestEarned,
-  createSynthetic,
-} = require("./helpers");
+const { initialize, mintAndApprove, createSynthetic } = require("./helpers");
 
 contract("LongShort", (accounts) => {
   let longShort;

@@ -258,6 +258,7 @@ contract LongShort is Initializable {
         longTokenPrice[marketNumber] = TEN_TO_THE_18;
         shortTokenPrice[marketNumber] = TEN_TO_THE_18;
 
+        assetPrice[marketNumber] = uint256(getLatestPrice(marketNumber));
         marketExists[marketNumber] = true;
         latestMarket = marketNumber;
     }
@@ -393,7 +394,6 @@ contract LongShort is Initializable {
         if (assetPrice[marketIndex] == newPrice) {
             return;
         }
-
         // 100% -> 10**18
         // 100% -> 1
         uint256 percentageChange;
@@ -485,7 +485,7 @@ contract LongShort is Initializable {
         // $1.1 10% increase
         // $90 on short side. $110 on the long side.
         if (longValue[marketIndex] > 0 && shortValue[marketIndex] > 0) {
-            _priceChangeMechanism(assetPrice[marketIndex], newPrice);
+            _priceChangeMechanism(marketIndex, newPrice);
         }
 
         // NB: RE ADD INTEREST MECHNAISM, INCLUDE GOVERNANCE TOKENS
