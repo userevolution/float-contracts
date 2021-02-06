@@ -32,10 +32,7 @@ contract("LongShort", (accounts) => {
   beforeEach(async () => {
     const result = await initialize(admin);
     longShort = result.longShort;
-    long = result.long;
-    short = result.short;
     dai = result.dai;
-    priceOracle = result.priceOracle;
   });
 
   it("longshort: contract initialises, Long position can be made", async () => {

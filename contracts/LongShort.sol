@@ -7,7 +7,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol";
 import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
 
 import "./LongCoins.sol";
-import "./ShortCoins.sol";
+import "./TokenFactory.sol";
 
 /**
  * @dev {LongShort} contract, including:
@@ -81,6 +81,7 @@ contract LongShort is Initializable {
     // Stable coin we accept deposits in
     // Can we accept multiple deposits?
     IERC20 public daiContract;
+    TokenFactory public tokenFactory;
 
     ////// Constants ///////
     uint256 public constant TEN_TO_THE_18 = 10**18;
@@ -98,7 +99,7 @@ contract LongShort is Initializable {
     mapping(uint256 => uint256) public externalContractCounter;
 
     mapping(uint256 => LongCoins) public longTokens;
-    mapping(uint256 => ShortCoins) public shortTokens;
+    mapping(uint256 => LongCoins) public shortTokens;
 
     // Fees for entering [make market specific (TODO)]
     mapping(uint256 => uint256) baseEntryFee; // 0.1% [we div by 10000]
@@ -190,12 +191,12 @@ contract LongShort is Initializable {
      */
 
     modifier adminOnly() {
-        require(msg.sender == admin, "Not admin");
+        require(msg.sender == admin);
         _;
     }
 
     modifier doesMarketExist(uint256 marketIndex) {
-        require(marketExists[marketIndex], "Market does not exist");
+        require(marketExists[marketIndex]);
         _;
     }
 
@@ -215,13 +216,11 @@ contract LongShort is Initializable {
     ///// CONTRACT SET-UP //////////////
     ////////////////////////////////////
 
-    function setup(address daiAddress) public initializer {
-        // priceFeed = AggregatorV3Interface(_priceOracle);
-
-        // Will need to make sure we are a minter! and pauser!
-        // longTokens = LongCoins(_longCoins);
-        // shortTokens = ShortCoins(_shortCoins);
-
+    function setup(address daiAddress, address _tokenFactory)
+        public
+        initializer
+    {
+        tokenFactory = TokenFactory(_tokenFactory);
         daiContract = IERC20(daiAddress);
     }
 
@@ -246,16 +245,12 @@ contract LongShort is Initializable {
         baseExitFee[marketNumber] = _baseExitFee;
         badLiquidityExitFee[marketNumber] = _badLiquidityExitFee;
 
-        longTokens[marketNumber] = new LongCoins();
-        longTokens[marketNumber].initialize(
-            string(abi.encodePacked("LONG", syntheticName)),
-            string(abi.encodePacked("L", syntheticSymbol))
+        longTokens[marketNumber] = LongCoins(
+            tokenFactory.createTokenLong(syntheticName, syntheticSymbol)
         );
 
-        shortTokens[marketNumber] = new ShortCoins();
-        shortTokens[marketNumber].initialize(
-            string(abi.encodePacked("SHORT", syntheticName)),
-            string(abi.encodePacked("S", syntheticSymbol))
+        shortTokens[marketNumber] = LongCoins(
+            tokenFactory.createTokenShort(syntheticName, syntheticSymbol)
         );
 
         longTokenPrice[marketNumber] = TEN_TO_THE_18;

@@ -5,38 +5,32 @@ const LONGSHORT_CONTRACT_NAME = "LongShort";
 const ERC20_CONTRACT_NAME = "ERC20PresetMinterPauserUpgradeSafe";
 const PRICE_ORACLE_NAME = "PriceOracle";
 const LONG_COINS = "LongCoins";
-const AAVE_LENDING_POOL = "AaveLendingPool";
-const LENDING_POOL_ADDRESS_PROVIDER = "LendingPoolAddressesProvider";
-const ADAI = "ADai";
+// const AAVE_LENDING_POOL = "AaveLendingPool";
+// const LENDING_POOL_ADDRESS_PROVIDER = "LendingPoolAddressesProvider";
+// const ADAI = "ADai";
 const SIMULATED_INSTANT_APY = 10;
 
 const LongShort = artifacts.require(LONGSHORT_CONTRACT_NAME);
 const erc20 = artifacts.require(LONG_COINS);
 const PriceOracle = artifacts.require(PRICE_ORACLE_NAME);
-const AaveLendingPool = artifacts.require(AAVE_LENDING_POOL);
-const LendingPoolAddressProvider = artifacts.require(
-  LENDING_POOL_ADDRESS_PROVIDER
-);
-const ADai = artifacts.require(ADAI);
+// const AaveLendingPool = artifacts.require(AAVE_LENDING_POOL);
+// const LendingPoolAddressProvider = artifacts.require(
+//   LENDING_POOL_ADDRESS_PROVIDER
+// );
+//const ADai = artifacts.require(ADAI);
 
 const initialize = async (admin) => {
-  return initializeWithFeeArguments(admin, 10, 100, 50, 50);
+  return initializeWithFeeArguments(admin);
 };
 
-const initializeWithFeeArguments = async (
-  admin,
-  _baseEntryFee,
-  _entryFeeMultiplier,
-  _baseExitFee,
-  _badLiquidityExitFee
-) => {
+const initializeWithFeeArguments = async (admin) => {
   // Long and short coins.
-  const long = await erc20.new({
-    from: admin,
-  });
-  const short = await erc20.new({
-    from: admin,
-  });
+  // const long = await erc20.new({
+  //   from: admin,
+  // });
+  // const short = await erc20.new({
+  //   from: admin,
+  // });
 
   // Dai
   const dai = await erc20.new({
@@ -44,77 +38,59 @@ const initializeWithFeeArguments = async (
   });
 
   // aDai
-  aDai = await ADai.new(dai.address, {
-    from: admin,
-  });
+  // aDai = await ADai.new(dai.address, {
+  //   from: admin,
+  // });
 
-  await dai.setup("dai token", "DAI", aDai.address, {
+  await dai.initialize("dai token", "DAI", {
     from: admin,
   });
   // Hack this is result of keccak("MINTER_ROLE")
   //"0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6"
-  await dai.grantRole(
-    "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6",
-    aDai.address,
-    { from: admin }
-  );
+  // await dai.grantRole(
+  //   "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6",
+  //   aDai.address,
+  //   { from: admin }
+  // );
 
   // aave lending pool
-  aaveLendingPool = await AaveLendingPool.new(
-    aDai.address,
-    dai.address,
-    SIMULATED_INSTANT_APY,
-    {
-      from: admin,
-    }
-  );
+  // aaveLendingPool = await AaveLendingPool.new(
+  //   aDai.address,
+  //   dai.address,
+  //   SIMULATED_INSTANT_APY,
+  //   {
+  //     from: admin,
+  //   }
+  // );
 
-  lendingPoolAddressProvider = await LendingPoolAddressProvider.new(
-    aaveLendingPool.address,
-    {
-      from: admin,
-    }
-  );
+  // lendingPoolAddressProvider = await LendingPoolAddressProvider.new(
+  //   aaveLendingPool.address,
+  //   {
+  //     from: admin,
+  //   }
+  // );
 
-  const priceOracle = await PriceOracle.new("1000000000000000000", {
-    from: admin,
-  });
+  // const priceOracle = await PriceOracle.new("1000000000000000000", {
+  //   from: admin,
+  // });
 
   const longShort = await LongShort.new({
     from: admin,
   });
 
-  await longShort.setup(
-    long.address,
-    short.address,
-    dai.address,
-    aDai.address,
-    lendingPoolAddressProvider.address,
-    priceOracle.address,
-    _baseEntryFee,
-    _entryFeeMultiplier,
-    _baseExitFee,
-    _badLiquidityExitFee,
-    {
-      from: admin,
-    }
-  );
+  await longShort.setup(dai.address, {
+    from: admin,
+  });
 
-  await long.setup("long tokens", "LONG", longShort.address, {
-    from: admin,
-  });
-  await short.setup("short tokens", "SHORT", longShort.address, {
-    from: admin,
-  });
+  // await long.setup("long tokens", "LONG", longShort.address, {
+  //   from: admin,
+  // });
+  // await short.setup("short tokens", "SHORT", longShort.address, {
+  //   from: admin,
+  // });
 
   return {
-    longShort,
-    long,
-    short,
     dai,
-    aDai,
-    priceOracle,
-    aaveLendingPool,
   };
 };
 
