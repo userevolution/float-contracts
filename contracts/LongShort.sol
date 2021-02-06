@@ -102,10 +102,10 @@ contract LongShort is Initializable {
     mapping(uint256 => LongCoins) public shortTokens;
 
     // Fees for entering [make market specific (TODO)]
-    mapping(uint256 => uint256) baseEntryFee; // 0.1% [we div by 10000]
-    mapping(uint256 => uint256) badLiquidityEntryFee; // [= +1% fee for every 0.1 you tip the beta]
-    mapping(uint256 => uint256) baseExitFee; // 0.5% [we div by 10000]
-    mapping(uint256 => uint256) badLiquidityExitFee; // Extra charge for removing liquidity from the side with already less depth
+    mapping(uint256 => uint256) public baseEntryFee; // 0.1% [we div by 10000]
+    mapping(uint256 => uint256) public badLiquidityEntryFee; // [= +1% fee for every 0.1 you tip the beta]
+    mapping(uint256 => uint256) public baseExitFee; // 0.5% [we div by 10000]
+    mapping(uint256 => uint256) public badLiquidityExitFee; // Extra charge for removing liquidity from the side with already less depth
 
     // Tokens representing short and long position and cost at which
     // they can be minted or redeemed
