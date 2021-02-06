@@ -77,8 +77,8 @@ const createSynthetic = async (
   const longAddress = await longShort.longTokens.call(currentMarketIndex);
   const shortAddress = await longShort.shortTokens.call(currentMarketIndex);
 
-  const long = new web3.eth.Contract(erc20.abi, longAddress).methods;
-  let short = new web3.eth.Contract(erc20.abi, shortAddress).methods;
+  let long = await erc20.at(longAddress);
+  let short = await erc20.at(shortAddress);
 
   return {
     oracle,

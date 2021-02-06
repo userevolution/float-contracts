@@ -1,6 +1,5 @@
 //usePlugin("@nomiclabs/buidler-waffle");
 usePlugin("@nomiclabs/buidler-truffle5");
-usePlugin("@nomiclabs/buidler-web3");
 usePlugin("solidity-coverage");
 
 // This is a sample Buidler task. To learn how to create your own go to

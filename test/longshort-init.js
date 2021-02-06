@@ -70,7 +70,7 @@ contract("LongShort", (accounts) => {
       from: user1,
     });
 
-    const user1LongTokens = await long.balanceOf(user1).call();
+    const user1LongTokens = await long.balanceOf(user1);
     const user1DaiTokens = await dai.balanceOf(user1);
 
     assert.equal(
@@ -89,7 +89,7 @@ contract("LongShort", (accounts) => {
       from: user1,
     });
 
-    const user1ShortTokens = await short.balanceOf(user1).call();
+    const user1ShortTokens = await short.balanceOf(user1);
     const user1DaiTokens = await dai.balanceOf(user1);
 
     assert.equal(
@@ -108,7 +108,7 @@ contract("LongShort", (accounts) => {
       from: user1,
     });
 
-    const user1ShortTokens = await short.balanceOf(user1).call();
+    const user1ShortTokens = await short.balanceOf(user1);
     assert.equal(
       user1ShortTokens,
       defaultMintAmount,
@@ -148,7 +148,7 @@ contract("LongShort", (accounts) => {
     await longShort.mintLong(marketIndex, new BN(defaultMintAmount), {
       from: user2,
     });
-    const user2LongTokens = await long.balanceOf(user2).call();
+    const user2LongTokens = await long.balanceOf(user2);
     assert.equal(
       user2LongTokens,
       defaultMintAmount,
