@@ -2,7 +2,7 @@ pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol";
 
-import "./LongCoins.sol";
+import "./SyntheticToken.sol";
 
 contract TokenFactory is Initializable {
     ////////////////////////////////////
@@ -52,17 +52,7 @@ contract TokenFactory is Initializable {
     ///////// TOKEN CREATION ///////////
     ////////////////////////////////////
 
-    function createTokenLong(
-        string calldata syntheticName,
-        string calldata syntheticSymbol
-    ) external onlyFLOAT returns (LongCoins) {
-        LongCoins tokenContract;
-        tokenContract = new LongCoins();
-        tokenContract.initialize(
-            string(abi.encodePacked("LONG", syntheticName)),
-            string(abi.encodePacked("L", syntheticSymbol))
-        );
-
+    function setupPermissions(SyntheticToken tokenContract) internal {
         // Give minter roles
         tokenContract.grantRole(DEFAULT_ADMIN_ROLE, floatContract);
         tokenContract.grantRole(MINTER_ROLE, floatContract);
@@ -72,31 +62,34 @@ contract TokenFactory is Initializable {
         tokenContract.revokeRole(DEFAULT_ADMIN_ROLE, address(this));
         tokenContract.revokeRole(MINTER_ROLE, address(this));
         tokenContract.revokeRole(PAUSER_ROLE, address(this));
+    }
 
+    function createTokenLong(
+        string calldata syntheticName,
+        string calldata syntheticSymbol
+    ) external onlyFLOAT returns (SyntheticToken) {
+        SyntheticToken tokenContract;
+        tokenContract = new SyntheticToken();
+        tokenContract.initialize(
+            string(abi.encodePacked("FLOAT UP", syntheticName)),
+            string(abi.encodePacked("fu", syntheticSymbol))
+        );
+        setupPermissions(tokenContract);
         return tokenContract;
     }
 
     function createTokenShort(
         string calldata syntheticName,
         string calldata syntheticSymbol
-    ) external onlyFLOAT returns (LongCoins) {
-        LongCoins tokenContract;
-        tokenContract = new LongCoins();
+    ) external onlyFLOAT returns (SyntheticToken) {
+        SyntheticToken tokenContract;
+        tokenContract = new SyntheticToken();
         tokenContract.initialize(
-            string(abi.encodePacked("SHORT", syntheticName)),
-            string(abi.encodePacked("S", syntheticSymbol))
+            string(abi.encodePacked("FLOAT DOWN ", syntheticName)),
+            string(abi.encodePacked("fd", syntheticSymbol))
         );
 
-        // Give minter roles
-        tokenContract.grantRole(DEFAULT_ADMIN_ROLE, floatContract);
-        tokenContract.grantRole(MINTER_ROLE, floatContract);
-        tokenContract.grantRole(PAUSER_ROLE, floatContract);
-
-        // Revoke roles
-        tokenContract.revokeRole(DEFAULT_ADMIN_ROLE, address(this));
-        tokenContract.revokeRole(MINTER_ROLE, address(this));
-        tokenContract.revokeRole(PAUSER_ROLE, address(this));
-
+        setupPermissions(tokenContract);
         return tokenContract;
     }
 }

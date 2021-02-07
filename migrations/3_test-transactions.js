@@ -1,4 +1,4 @@
-const LongCoins = artifacts.require("LongCoins");
+const SyntheticToken = artifacts.require("SyntheticToken");
 const ShortCoins = artifacts.require("ShortCoins");
 const LongShort = artifacts.require("LongShort");
 const ADai = artifacts.require("ADai");
@@ -18,46 +18,51 @@ const {
   time,
 } = require("@openzeppelin/test-helpers");
 
-const {
-  initialize,
-  mintAndApprove,
-  SIMULATED_INSTANT_APY,
-  simulateInterestEarned,
-  tokenPriceCalculator,
-  simulateTotalValueWithInterest,
-  feeCalculation,
-} = require("../test/helpers");
+const { mintAndApprove } = require("../test/helpers");
 
 module.exports = async function(deployer, network, accounts) {
+  console.log(99);
+
   const admin = accounts[0];
   const user1 = accounts[1];
   const user2 = accounts[2];
   const user3 = accounts[3];
 
+  const currentMarketIndex = 1;
   const oneHundredMintAmount = "100000000000000000000";
 
-  let long = await LongCoins.deployed();
-  let short = await ShortCoins.deployed();
-
-  let dai = await Dai.deployed();
-
-  let aDai = await ADai.deployed();
-
-  const aaveLendingPool = await AaveLendingPool.deployed();
+  console.log(0);
 
   const priceOracle = await PriceOracle.deployed();
 
   const longShort = await LongShort.deployed();
 
+  const daiAddress = await longShort.daiContract.call();
+  let dai = await SyntheticToken.at(daiAddress);
+
+  const longAddress = await longShort.longTokens.call(currentMarketIndex);
+  const shortAddress = await longShort.shortTokens.call(currentMarketIndex);
+
+  let long = await SyntheticToken.at(longAddress);
+  let short = await SyntheticToken.at(shortAddress);
+
   await mintAndApprove(dai, oneHundredMintAmount, user1, longShort.address);
-  await longShort.mintLong(new BN(oneHundredMintAmount), { from: user1 });
+  await longShort.mintLong(currentMarketIndex, new BN(oneHundredMintAmount), {
+    from: user1,
+  });
 
   await mintAndApprove(dai, oneHundredMintAmount, user2, longShort.address);
-  await longShort.mintShort(new BN(oneHundredMintAmount), { from: user2 });
+  await longShort.mintShort(currentMarketIndex, new BN(oneHundredMintAmount), {
+    from: user2,
+  });
+
+  console.log(100);
 
   // Making even more short tokens
   await mintAndApprove(dai, oneHundredMintAmount, user3, longShort.address);
-  await longShort.mintShort(new BN(oneHundredMintAmount), { from: user3 });
+  await longShort.mintShort(currentMarketIndex, new BN(oneHundredMintAmount), {
+    from: user3,
+  });
 
   console.log(1);
 
@@ -67,7 +72,7 @@ module.exports = async function(deployer, network, accounts) {
 
   console.log(2);
 
-  await longShort._updateSystemState();
+  await longShort._updateSystemState(currentMarketIndex);
 
   console.log(3);
 
@@ -77,9 +82,13 @@ module.exports = async function(deployer, network, accounts) {
   });
   console.log(4);
 
-  await longShort.redeemShort(new BN(oneHundredMintAmount), {
-    from: user2,
-  });
+  await longShort.redeemShort(
+    currentMarketIndex,
+    new BN(oneHundredMintAmount),
+    {
+      from: user2,
+    }
+  );
 
   console.log(5);
 };

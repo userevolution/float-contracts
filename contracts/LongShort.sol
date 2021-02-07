@@ -6,7 +6,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol";
 import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
 
-import "./LongCoins.sol";
+import "./SyntheticToken.sol";
 import "./TokenFactory.sol";
 
 /**
@@ -98,8 +98,8 @@ contract LongShort is Initializable {
     mapping(uint256 => uint256) public shortTokenPrice;
     mapping(uint256 => uint256) public externalContractCounter;
 
-    mapping(uint256 => LongCoins) public longTokens;
-    mapping(uint256 => LongCoins) public shortTokens;
+    mapping(uint256 => SyntheticToken) public longTokens;
+    mapping(uint256 => SyntheticToken) public shortTokens;
 
     // Fees for entering [make market specific (TODO)]
     mapping(uint256 => uint256) public baseEntryFee; // 0.1% [we div by 10000]
@@ -135,14 +135,12 @@ contract LongShort is Initializable {
         uint256 longPercentage,
         uint256 shortPercentage
     );
-    // event InterestDistribution(
-    //     uint256 marketIndex,
-    //     uint256 contractCallCounter,
-    //     uint256 newtotalValueLockedInMarket,
-    //     uint256 totalInterest,
-    //     uint256 longPercentage,
-    //     uint256 shortPercentage
-    // );
+    event SyntheticTokenCreated(
+        uint256 marketIndex,
+        address longTokenAddress,
+        address shortTokenAddress,
+        uint256 assetPrice
+    );
     event PriceUpdate(
         uint256 marketIndex,
         uint256 contractCallCounter,
@@ -250,11 +248,11 @@ contract LongShort is Initializable {
         baseExitFee[marketNumber] = _baseExitFee;
         badLiquidityExitFee[marketNumber] = _badLiquidityExitFee;
 
-        longTokens[marketNumber] = LongCoins(
+        longTokens[marketNumber] = SyntheticToken(
             tokenFactory.createTokenLong(syntheticName, syntheticSymbol)
         );
 
-        shortTokens[marketNumber] = LongCoins(
+        shortTokens[marketNumber] = SyntheticToken(
             tokenFactory.createTokenShort(syntheticName, syntheticSymbol)
         );
 
@@ -264,6 +262,13 @@ contract LongShort is Initializable {
         assetPrice[marketNumber] = uint256(getLatestPrice(marketNumber));
         marketExists[marketNumber] = true;
         latestMarket = marketNumber;
+
+        emit SyntheticTokenCreated(
+            marketNumber,
+            address(longTokens[marketNumber]),
+            address(shortTokens[marketNumber]),
+            assetPrice[marketNumber]
+        );
     }
 
     ////////////////////////////////////

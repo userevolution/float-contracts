@@ -4,14 +4,14 @@ const { BN } = require("@openzeppelin/test-helpers");
 const LONGSHORT_CONTRACT_NAME = "LongShort";
 //const ERC20_CONTRACT_NAME = "ERC20PresetMinterPauserUpgradeSafe";
 const PRICE_ORACLE_NAME = "PriceOracle";
-const LONG_COINS = "LongCoins";
+const SYNTHETIC_TOKEN = "SyntheticToken";
 const TOKEN_FACTORY = "TokenFactory";
 
 const SIMULATED_INSTANT_APY = 10;
 const TEN_TO_THE_18 = "1000000000000000000";
 
 const LongShort = artifacts.require(LONGSHORT_CONTRACT_NAME);
-const erc20 = artifacts.require(LONG_COINS);
+const erc20 = artifacts.require(SYNTHETIC_TOKEN);
 const PriceOracle = artifacts.require(PRICE_ORACLE_NAME);
 const TokenFactory = artifacts.require(TOKEN_FACTORY);
 
