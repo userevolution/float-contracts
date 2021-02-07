@@ -114,6 +114,7 @@ contract LongShort is Initializable {
     /////////// EVENTS /////////////////
     ////////////////////////////////////
 
+    event V1();
     event ValueLockedInSystem(
         uint256 marketIndex,
         uint256 contractCallCounter,
@@ -224,6 +225,8 @@ contract LongShort is Initializable {
         admin = _admin;
         daiContract = IERC20(daiAddress);
         tokenFactory = TokenFactory(_tokenFactory);
+
+        emit V1();
     }
 
     ////////////////////////////////////
