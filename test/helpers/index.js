@@ -1,8 +1,6 @@
 const { BN } = require("@openzeppelin/test-helpers");
-// const { time } = require("@openzeppelin/test-helpers");
 
 const LONGSHORT_CONTRACT_NAME = "LongShort";
-//const ERC20_CONTRACT_NAME = "ERC20PresetMinterPauserUpgradeSafe";
 const PRICE_ORACLE_NAME = "PriceOracle";
 const SYNTHETIC_TOKEN = "SyntheticToken";
 const TOKEN_FACTORY = "TokenFactory";
@@ -10,16 +8,16 @@ const TOKEN_FACTORY = "TokenFactory";
 const SIMULATED_INSTANT_APY = 10;
 const TEN_TO_THE_18 = "1000000000000000000";
 
-const LongShort = artifacts.require(LONGSHORT_CONTRACT_NAME);
 const erc20 = artifacts.require(SYNTHETIC_TOKEN);
+const LongShort = artifacts.require(LONGSHORT_CONTRACT_NAME);
 const PriceOracle = artifacts.require(PRICE_ORACLE_NAME);
 const TokenFactory = artifacts.require(TOKEN_FACTORY);
 
 const initialize = async (admin) => {
-  // Dai
   const dai = await erc20.new({
     from: admin,
   });
+
   await dai.initialize("dai token", "DAI", {
     from: admin,
   });
@@ -27,6 +25,7 @@ const initialize = async (admin) => {
   const tokenFactory = await TokenFactory.new({
     from: admin,
   });
+
   const longShort = await LongShort.new({
     from: admin,
   });
@@ -40,8 +39,8 @@ const initialize = async (admin) => {
   });
 
   return {
-    longShort,
     dai,
+    longShort,
     tokenFactory,
   };
 };
@@ -72,8 +71,6 @@ const createSynthetic = async (
   );
 
   const currentMarketIndex = await longShort.latestMarket.call();
-  //console.log(currentMarketIndex.toString());
-
   const longAddress = await longShort.longTokens.call(currentMarketIndex);
   const shortAddress = await longShort.shortTokens.call(currentMarketIndex);
 
@@ -159,12 +156,7 @@ const feeCalculation = (
     }
   }
   // If greater than minFeeThreshold
-  if (
-    amount
-      .add(longValue)
-      .add(shortValue)
-      .gte(minThreshold)
-  ) {
+  if (amount.add(longValue).add(shortValue).gte(minThreshold)) {
     const TEN_TO_THE_18 = "1" + "000000000000000000";
     let betaDiff = new BN(TEN_TO_THE_18).sub(thinBeta); // TODO: when previous beta != 1
 
