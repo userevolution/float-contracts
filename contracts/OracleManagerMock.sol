@@ -1,8 +1,9 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol";
+import "./interfaces/IOracleManager.sol";
 
-contract OracleManagerMock is Initializable {
+contract OracleManagerMock is IOracleManager, Initializable {
     address public admin;
     address public longShortContract;
 
@@ -33,17 +34,23 @@ contract OracleManagerMock is Initializable {
 
     function registerNewMarket(uint256 marketIndex, address marketFeed)
         public
+        override
         longShortOnly
     {
         oracleFeeds[marketIndex] = marketFeed;
         int256 price = oraclePrices[marketFeed];
         // Initialise the price for testing convenience
         if (price == 0) {
-            oraclePrices[marketFeed] = 1000000000000000000;
+            oraclePrices[marketFeed] = 10e18;
         }
     }
 
-    function getLatestPrice(uint256 marketIndex) public view returns (int256) {
+    function getLatestPrice(uint256 marketIndex)
+        public
+        view
+        override
+        returns (int256)
+    {
         address feed = oracleFeeds[marketIndex];
         int256 price = oraclePrices[feed];
         return price;
