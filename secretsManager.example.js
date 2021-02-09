@@ -1,15 +1,10 @@
-const mnemonic =
-  ""; 
-const mainnetProviderUrl =
-  "";
-const rinkebyProviderUrl =
-  "";
-const goerliProviderUrl =
-  "";
-const kovanProviderUrl =
-  "";
+const mnemonic = "";
+const mainnetProviderUrl = "";
+const rinkebyProviderUrl = "";
+const goerliProviderUrl = "";
+const kovanProviderUrl = "";
 const binanceTest = "";
-​
+
 const etherscanApiKey = "";
 const bscscanApiKey = "";
 module.exports = {
