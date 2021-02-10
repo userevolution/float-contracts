@@ -274,6 +274,11 @@ contract LongShort is Initializable {
         marketExists[marketNumber] = true;
         latestMarket = marketNumber;
 
+        staker.addNewStakingFund(
+            address(longTokens[marketNumber]),
+            address(shortTokens[marketNumber])
+        );
+
         emit SyntheticTokenCreated(
             marketNumber,
             address(longTokens[marketNumber]),
@@ -489,6 +494,18 @@ contract LongShort is Initializable {
         doesMarketExist(marketIndex)
         updateCounterIfExternalCall(marketIndex)
     {
+        // This is called right before any state change!
+        // So reward rate can be calculated just in time by
+        // staker without needing to be saved
+        staker.addNewStateForFloatRewards(
+            address(longTokens[marketIndex]),
+            address(shortTokens[marketIndex]),
+            longTokenPrice[marketIndex],
+            shortTokenPrice[marketIndex],
+            longValue[marketIndex],
+            shortValue[marketIndex]
+        );
+
         if (longValue[marketIndex] == 0 && shortValue[marketIndex] == 0) {
             return;
         }
@@ -517,20 +534,6 @@ contract LongShort is Initializable {
 
         _refreshTokensPrice(marketIndex);
         assetPrice[marketIndex] = newPrice;
-
-        // NB NB NB , token prices might change again after fees are FeesLevied
-        // after the mint. NB to figure out how to only call this ONCE.
-        // It should be only called here if this function is called publicly.
-        // Otherwise if systemState update because of mint, redeeem,
-        // this should be called at the end of that...
-        staker.addNewStateForFloatRewards(
-            address(longTokens[marketIndex]),
-            address(shortTokens[marketIndex]),
-            longTokenPrice[marketIndex],
-            shortTokenPrice[marketIndex],
-            longValue[marketIndex],
-            shortValue[marketIndex]
-        );
 
         emit ValueLockedInSystem(
             marketIndex,

@@ -35,7 +35,6 @@ contract Staker is Initializable {
 
     struct RewardState {
         uint256 timestamp;
-        uint256 floatPerSecond;
         uint256 accumulativeFloatPerSecond;
     }
     // token address -> state index -> float reward state
@@ -110,12 +109,10 @@ contract Staker is Initializable {
         // Adding intital synthetic reward params.
         // nextRewardIndex
         syntheticRewardParams[longTokenAddress][0].timestamp = block.timestamp;
-        syntheticRewardParams[longTokenAddress][0].floatPerSecond = 0; // Change me
         syntheticRewardParams[longTokenAddress][0]
             .accumulativeFloatPerSecond = 0;
 
         syntheticRewardParams[shortTokenAddress][0].timestamp = block.timestamp;
-        syntheticRewardParams[shortTokenAddress][0].floatPerSecond = 0; //Change me perhaps
         syntheticRewardParams[shortTokenAddress][0]
             .accumulativeFloatPerSecond = 0;
 
@@ -144,27 +141,6 @@ contract Staker is Initializable {
         return tokenPrice;
     }
 
-    function calculateNewAccumulative(address tokenAddress)
-        internal
-        view
-        returns (uint256)
-    {
-        uint256 timeDelta = calculateTimeDelta(tokenAddress);
-        return
-            syntheticRewardParams[tokenAddress][
-                nextRewardIndex[tokenAddress] - 1
-            ]
-                .accumulativeFloatPerSecond
-                .add(
-                timeDelta.mul(
-                    syntheticRewardParams[tokenAddress][
-                        nextRewardIndex[tokenAddress] - 1
-                    ]
-                        .floatPerSecond
-                )
-            );
-    }
-
     function calculateTimeDelta(address tokenAddress)
         internal
         view
@@ -178,6 +154,21 @@ contract Staker is Initializable {
                 .timestamp;
     }
 
+    function calculateNewAccumulative(address tokenAddress, uint256 tokenPrice)
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 floatPerSecond = calculateFloatPerSecond(tokenPrice);
+        uint256 timeDelta = calculateTimeDelta(tokenAddress);
+        return
+            syntheticRewardParams[tokenAddress][
+                nextRewardIndex[tokenAddress] - 1
+            ]
+                .accumulativeFloatPerSecond
+                .add(timeDelta.mul(floatPerSecond));
+    }
+
     function addNewStateForFloatRewards(
         address longTokenAddress,
         address shortTokenAddress,
@@ -186,47 +177,36 @@ contract Staker is Initializable {
         uint256 longValue,
         uint256 shortValue
     ) external onlyFloat {
-        // Check if timestsamp of previous is equal to timestamp of now (same block update)
-        // If so don't increment the index.
-        // I.e. state updated twice or more in single block (at the same time)
-        if (calculateTimeDelta(longTokenAddress) != 0) {
-            ///// LONG UPDATE /////
-            // set timestamp
-            syntheticRewardParams[longTokenAddress][
-                nextRewardIndex[longTokenAddress]
-            ]
-                .timestamp = block.timestamp;
-            // set rate
-            syntheticRewardParams[longTokenAddress][
-                nextRewardIndex[longTokenAddress]
-            ]
-                .floatPerSecond = calculateFloatPerSecond(longTokenPrice);
-            // Set accumulative
-            syntheticRewardParams[longTokenAddress][
-                nextRewardIndex[longTokenAddress]
-            ]
-                .accumulativeFloatPerSecond = calculateNewAccumulative(
-                longTokenAddress
-            );
+        syntheticRewardParams[longTokenAddress][
+            nextRewardIndex[longTokenAddress]
+        ]
+            .accumulativeFloatPerSecond = calculateNewAccumulative(
+            longTokenAddress,
+            longTokenPrice
+        );
 
-            ///// SHORT UPDATE /////
+        syntheticRewardParams[shortTokenAddress][
+            nextRewardIndex[shortTokenAddress]
+        ]
+            .accumulativeFloatPerSecond = calculateNewAccumulative(
+            shortTokenAddress,
+            shortTokenPrice
+        );
+
+        // If this is the first update this block
+        // then set the new timestamp and increment index.
+        if (calculateTimeDelta(longTokenAddress) != 0) {
+            // set timestamp
+            syntheticRewardParams[longTokenAddress][
+                nextRewardIndex[longTokenAddress]
+            ]
+                .timestamp = block.timestamp;
+
             // set timestamp
             syntheticRewardParams[shortTokenAddress][
                 nextRewardIndex[shortTokenAddress]
             ]
                 .timestamp = block.timestamp;
-            // set rate
-            syntheticRewardParams[shortTokenAddress][
-                nextRewardIndex[shortTokenAddress]
-            ]
-                .floatPerSecond = calculateFloatPerSecond(shortTokenPrice);
-            // Set accumulative
-            syntheticRewardParams[shortTokenAddress][
-                nextRewardIndex[shortTokenAddress]
-            ]
-                .accumulativeFloatPerSecond = calculateNewAccumulative(
-                shortTokenAddress
-            );
 
             // Increase the index for state.
             nextRewardIndex[longTokenAddress] =
@@ -235,18 +215,6 @@ contract Staker is Initializable {
             nextRewardIndex[shortTokenAddress] =
                 nextRewardIndex[shortTokenAddress] +
                 1;
-        } else {
-            // Timestamp and accumulative already updated.
-            // Simply update the to new perSecondRate
-            syntheticRewardParams[longTokenAddress][
-                nextRewardIndex[longTokenAddress] - 1
-            ]
-                .floatPerSecond = calculateFloatPerSecond(longTokenPrice);
-
-            syntheticRewardParams[shortTokenAddress][
-                nextRewardIndex[shortTokenAddress] - 1
-            ]
-                .floatPerSecond = calculateFloatPerSecond(shortTokenPrice);
         }
     }
 
