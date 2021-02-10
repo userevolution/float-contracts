@@ -4,6 +4,7 @@ const LONGSHORT_CONTRACT_NAME = "LongShort";
 const PRICE_ORACLE_NAME = "PriceOracle";
 const SYNTHETIC_TOKEN = "SyntheticToken";
 const TOKEN_FACTORY = "TokenFactory";
+const STAKER = "Staker";
 
 const SIMULATED_INSTANT_APY = 10;
 const TEN_TO_THE_18 = "1000000000000000000";
@@ -12,6 +13,7 @@ const erc20 = artifacts.require(SYNTHETIC_TOKEN);
 const LongShort = artifacts.require(LONGSHORT_CONTRACT_NAME);
 const PriceOracle = artifacts.require(PRICE_ORACLE_NAME);
 const TokenFactory = artifacts.require(TOKEN_FACTORY);
+const Staker = artifacts.require(STAKER);
 
 const initialize = async (admin) => {
   const dai = await erc20.new({
@@ -26,6 +28,10 @@ const initialize = async (admin) => {
     from: admin,
   });
 
+  const staker = await Staker.new({
+    from: admin,
+  });
+
   const longShort = await LongShort.new({
     from: admin,
   });
@@ -34,7 +40,17 @@ const initialize = async (admin) => {
     from: admin,
   });
 
-  await longShort.setup(admin, dai.address, tokenFactory.address, {
+  await longShort.setup(
+    admin,
+    dai.address,
+    tokenFactory.address,
+    staker.address,
+    {
+      from: admin,
+    }
+  );
+
+  await staker.initialize(admin, longShort.address, {
     from: admin,
   });
 
@@ -156,7 +172,12 @@ const feeCalculation = (
     }
   }
   // If greater than minFeeThreshold
-  if (amount.add(longValue).add(shortValue).gte(minThreshold)) {
+  if (
+    amount
+      .add(longValue)
+      .add(shortValue)
+      .gte(minThreshold)
+  ) {
     const TEN_TO_THE_18 = "1" + "000000000000000000";
     let betaDiff = new BN(TEN_TO_THE_18).sub(thinBeta); // TODO: when previous beta != 1
 

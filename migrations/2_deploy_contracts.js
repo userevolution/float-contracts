@@ -1,12 +1,14 @@
 const SYNTHETIC_TOKEN = "SyntheticToken";
 const TOKEN_FACTORY = "TokenFactory";
 const PRICE_ORACLE_NAME = "PriceOracle";
+const STAKER = "Staker";
 
 const LongShort = artifacts.require("LongShort");
 
 const SyntheticToken = artifacts.require(SYNTHETIC_TOKEN);
 const TokenFactory = artifacts.require(TOKEN_FACTORY);
 const PriceOracle = artifacts.require(PRICE_ORACLE_NAME);
+const Staker = artifacts.require(STAKER);
 
 // Load zos scripts and truffle wrapper function
 const { scripts, ConfigManager } = require("@openzeppelin/cli");
@@ -34,16 +36,24 @@ const deployContracts = async (options, accounts, deployer) => {
     from: admin,
   });
 
+  const staker = await Staker.new({
+    from: admin,
+  });
+
   const longShort = await create({
     ...options,
     contractAlias: "LongShort",
     methodName: "setup",
-    methodArgs: [admin, dai.address, tokenFactory.address],
+    methodArgs: [admin, dai.address, tokenFactory.address, staker.address],
   });
 
   const longShortInstance = await LongShort.at(longShort.address);
 
   await tokenFactory.setup(admin, longShort.address, {
+    from: admin,
+  });
+
+  await staker.initialize(admin, longShort.address, {
     from: admin,
   });
 
