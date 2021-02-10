@@ -600,7 +600,8 @@ contract LongShort is Initializable {
          uint256 fees = 0; // amount paid in fees
          uint256 feeGap = 0; // amount that can be spent before higher fees
 
-        if (isMint == isLong) { // long mint or short redeem
+		bool isLongMintOrShortRedeem = isMint == isLong;
+        if (isLongMintOrShortRedeem) {
             if (shortValue > longValue) {
                 feeGap = shortValue - longValue;
             }
