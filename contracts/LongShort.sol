@@ -335,7 +335,7 @@ contract LongShort is Initializable {
     }
 
     /**
-     * Adjusts the relevant token price.
+     * Adjusts the long/short token prices according to supply and value.
      */
     function _refreshTokensPrice(uint256 marketIndex) internal {
         uint256 longTokenSupply = longTokens[marketIndex].totalSupply();
@@ -359,9 +359,8 @@ contract LongShort is Initializable {
     }
 
     /**
-     * Fees for depositing or leaving the pool if you are not a
-     * liquidity taker and not a liquidity maker...
-     * This is v1 mechanism
+     * Controls what happens with mint/redeem fees.
+     * This is a v1 mechanism.
      */
     function _feesMechanism(
         uint256 marketIndex,
@@ -386,8 +385,7 @@ contract LongShort is Initializable {
     }
 
     /**
-     * Generic function to add value to the system
-     * Interest or fees
+     * Splits the given amount between the long/short sides.
      */
     function _increaseLongShortSides(
         uint256 marketIndex,
@@ -396,6 +394,7 @@ contract LongShort is Initializable {
         uint256 shortPercentage
     ) internal {
         require(100 == shortPercentage.add(longPercentage)); // Possibly remove this check as internal function. Save gas.
+
         if (amount != 0) {
             uint256 longSideIncrease = amount.mul(longPercentage).div(100);
             uint256 shortSideIncrease = amount.sub(longSideIncrease);
@@ -531,7 +530,10 @@ contract LongShort is Initializable {
         );
     }
 
-    function _addDeposit(uint256 marketIndex, uint256 amount) internal {
+    /*
+     * Locks DAI from the sender into the given market.
+     */
+    function _depositDai(uint256 marketIndex, uint256 amount) internal {
         require(amount > 0, "User needs to add positive amount");
 
         daiContract.transferFrom(msg.sender, address(this), amount);
@@ -545,72 +547,93 @@ contract LongShort is Initializable {
         totalValueLocked = totalValueLocked.add(amount);
     }
 
-    function _feeCalc(
+    /*
+     * Returns locked DAI from the market to the sender.
+     */
+    function _withdrawDai(uint256 marketIndex, uint256 amount) internal {
+        totalValueLockedInMarket[marketIndex] = 
+            totalValueLockedInMarket[marketIndex].sub(amount);
+
+        totalValueLocked = totalValueLocked.sub(amount);
+
+        // Redeem interest token here....
+        daiContract.transfer(msg.sender, amount);
+    }
+
+
+    /*
+     * Calculates fees for the given base amount and an additional penalty
+     * amount that extra fees are paid on. Users are penalised for imbalancing
+     * the market.
+     */
+    function _getFeesForAmounts(
         uint256 marketIndex,
-        uint256 fullAmount,
-        uint256 feePayableAmount,
-        bool isMint
+        uint256 baseAmount, // e18
+        uint256 penaltyAmount, // e18
+        bool isMint // true for mint, false for redeem
     ) internal returns (uint256) {
-        uint256 baseFee = 0;
-        uint256 badLiquidityFee = 0;
+        uint256 baseRate = 0; // base fee pcnt paid for all actions
+        uint256 penaltyRate = 0; // penalty fee pcnt paid for imbalancing
+
         if (isMint) {
-            baseFee = baseEntryFee[marketIndex];
-            badLiquidityFee = badLiquidityEntryFee[marketIndex];
+            baseRate = baseEntryFee[marketIndex];
+            penaltyRate = badLiquidityEntryFee[marketIndex];
         } else {
-            baseFee = baseExitFee[marketIndex];
-            badLiquidityFee = badLiquidityExitFee[marketIndex];
+            baseRate = baseExitFee[marketIndex];
+            penaltyRate = badLiquidityExitFee[marketIndex];
         }
-        // base 0.5% fee
-        uint256 fees = fullAmount.mul(baseFee).div(feeUnitsOfPrecision);
 
-        // Extra 0.5% fee on deisrable liquidity leaving the book
-        uint256 additionalFees =
-            feePayableAmount.mul(badLiquidityFee).div(feeUnitsOfPrecision);
+        uint256 baseFee = baseAmount
+            .mul(baseRate)
+            .div(feeUnitsOfPrecision);
 
-        return fees.add(additionalFees);
+        uint256 penaltyFee = penaltyAmount
+            .mul(penaltyRate)
+            .div(feeUnitsOfPrecision);
+
+        return baseFee.add(penaltyFee);
     }
 
     /**
-     * Calculates the final amount of deposit net of fees for imbalancing book liquidity
-     * Takes into account the consideration where book liquidity is tipped from one side to the other
-     */
-    function _calcFinalAmount(
-        uint256 marketIndex,
-        uint256 amount,
-        uint256 newAdjustedBeta,
-        uint256 oldBeta,
-        bool isMint,
-        bool isLongMintOrShortRedeem
-    ) internal returns (uint256) {
-        uint256 finalDepositAmount = 0;
-        uint256 fees = 0;
+      * Calculates fees for the given mint/redeem amount. Users are penalised
+      * with higher fees for imbalancing the market.
+      */
+     function _getFeesForAction(
+         uint256 marketIndex,
+         uint256 amount, // 1e18
+         uint256 longValue, // 1e18
+         uint256 shortValue, // 1e18
+         bool isMint, // true for mint, false for redeem
+         bool isLong // true for long side, false for short side
+     ) internal returns (uint256) {
+         // Edge-case: no penalties for minting in a 0-value market.
+         if (isMint && (longValue == 0) && (shortValue == 0)) {
+            return _getFeesForAmounts(marketIndex, amount, 0, isMint);
+         }
 
-        if (newAdjustedBeta >= TEN_TO_THE_18 || newAdjustedBeta == 0) {
-            // case 1: all good liquidity
-            fees = _feeCalc(marketIndex, amount, 0, isMint);
-        } else if (oldBeta <= TEN_TO_THE_18) {
-            // case 2: all bad liquidity
-            fees = _feeCalc(marketIndex, amount, amount, isMint);
-        } else {
-            // Case 3: Some good, some bad liquidity
-            uint256 feePayablePortion = 0;
-            if (isLongMintOrShortRedeem) {
-                feePayablePortion = amount.sub(
-                    shortValue[marketIndex].sub(longValue[marketIndex])
-                );
-            } else {
-                feePayablePortion = amount.sub(
-                    longValue[marketIndex].sub(shortValue[marketIndex])
-                );
+         uint256 fees = 0; // amount paid in fees
+         uint256 feeGap = 0; // amount that can be spent before higher fees
+
+		bool isLongMintOrShortRedeem = isMint == isLong;
+        if (isLongMintOrShortRedeem) {
+            if (shortValue > longValue) {
+                feeGap = shortValue - longValue;
             }
-            fees = _feeCalc(marketIndex, amount, feePayablePortion, isMint);
+        } else { // long redeem or short mint
+            if (longValue > shortValue) {
+                feeGap = longValue - shortValue;
+            }
         }
 
-        // TODO: DECIDE HOW FEES ACCRUE.
-        finalDepositAmount = amount.sub(fees);
-        _feesMechanism(marketIndex, fees, 50, 50);
-        return finalDepositAmount;
-    }
+        // Case 1: fee gap is big enough that user pays no penalty fees
+        if (feeGap >= amount) {
+            return _getFeesForAmounts(marketIndex, amount, 0, isMint); 
+        // Case 2: user pays penalty fees on the remained after fee gap
+        } else {
+            return _getFeesForAmounts(
+                marketIndex, amount, amount.sub(feeGap), isMint);
+        }
+     }
 
     ////////////////////////////////////
     /////////// MINT TOKENS ////////////
@@ -623,36 +646,29 @@ contract LongShort is Initializable {
         external
         refreshSystemState(marketIndex)
     {
-        _addDeposit(marketIndex, amount);
-        uint256 longBeta = getLongBeta(marketIndex);
-        uint256 newAdjustedBeta =
-            shortValue[marketIndex].mul(TEN_TO_THE_18).div(
-                longValue[marketIndex].add(amount)
-            );
-        uint256 finalDepositAmount =
-            _calcFinalAmount(
-                marketIndex,
-                amount,
-                newAdjustedBeta,
-                longBeta,
-                true,
-                true
-            );
+        // Deposit DAI and compute fees.
+        _depositDai(marketIndex, amount);
+        uint256 fees = _getFeesForAction(marketIndex, amount, 
+            longValue[marketIndex], shortValue[marketIndex], true, true);
+        uint256 remaining = amount.sub(fees);
 
+        // TODO: decide on minting fees mechanism,
+        _feesMechanism(marketIndex, fees, 50, 50);
         _refreshTokensPrice(marketIndex);
-        uint256 amountToMint =
-            finalDepositAmount.mul(TEN_TO_THE_18).div(
-                longTokenPrice[marketIndex]
-            );
-        longValue[marketIndex] = longValue[marketIndex].add(finalDepositAmount);
-        longTokens[marketIndex].mint(msg.sender, amountToMint);
+
+        // Mint long tokens with remaining value.
+        uint256 tokens = remaining
+            .mul(TEN_TO_THE_18)
+            .div(longTokenPrice[marketIndex]);
+        longTokens[marketIndex].mint(msg.sender, tokens);
+        longValue[marketIndex] = longValue[marketIndex].add(remaining);
 
         emit LongMinted(
             marketIndex,
             externalContractCounter[marketIndex],
             amount,
-            finalDepositAmount,
-            amountToMint,
+            remaining,
+            tokens,
             msg.sender
         );
         emit ValueLockedInSystem(
@@ -671,40 +687,32 @@ contract LongShort is Initializable {
         external
         refreshSystemState(marketIndex)
     {
-        _addDeposit(marketIndex, amount);
-        uint256 shortBeta = getShortBeta(marketIndex);
-        uint256 newAdjustedBeta =
-            longValue[marketIndex].mul(TEN_TO_THE_18).div(
-                shortValue[marketIndex].add(amount)
-            );
-        uint256 finalDepositAmount =
-            _calcFinalAmount(
-                marketIndex,
-                amount,
-                newAdjustedBeta,
-                shortBeta,
-                true,
-                false
-            );
+        // Deposit DAI and compute fees.
+        _depositDai(marketIndex, amount);
+        uint256 fees = _getFeesForAction(marketIndex, amount, 
+            longValue[marketIndex], shortValue[marketIndex], true, false);
+        uint256 remaining = amount.sub(fees);
 
+        // TODO: decide on minting fees mechanism.
+        _feesMechanism(marketIndex, fees, 50, 50);
         _refreshTokensPrice(marketIndex);
-        uint256 amountToMint =
-            finalDepositAmount.mul(TEN_TO_THE_18).div(
-                shortTokenPrice[marketIndex]
-            );
-        shortValue[marketIndex] = shortValue[marketIndex].add(
-            finalDepositAmount
-        );
-        shortTokens[marketIndex].mint(msg.sender, amountToMint);
+
+        // Mint short tokens with remaining value.
+        uint256 tokens = remaining
+            .mul(TEN_TO_THE_18)
+            .div(shortTokenPrice[marketIndex]);
+        shortTokens[marketIndex].mint(msg.sender, tokens);
+        shortValue[marketIndex] = shortValue[marketIndex].add(remaining);
 
         emit ShortMinted(
             marketIndex,
             externalContractCounter[marketIndex],
             amount,
-            finalDepositAmount,
-            amountToMint,
+            remaining,
+            tokens,
             msg.sender
         );
+
         emit ValueLockedInSystem(
             marketIndex,
             externalContractCounter[marketIndex],
@@ -712,17 +720,6 @@ contract LongShort is Initializable {
             longValue[marketIndex],
             shortValue[marketIndex]
         );
-    }
-
-    function _redeem(uint256 marketIndex, uint256 amount) internal {
-        totalValueLockedInMarket[marketIndex] = totalValueLockedInMarket[
-            marketIndex
-        ]
-            .sub(amount);
-
-        totalValueLocked = totalValueLocked.sub(amount);
-        // Redeem interest token here....
-        daiContract.transfer(msg.sender, amount);
     }
 
     ////////////////////////////////////
@@ -733,38 +730,31 @@ contract LongShort is Initializable {
         external
         refreshSystemState(marketIndex)
     {
-        // This will revert unless user gives permission to contract to burn these tokens.
+        // Burn tokens - will revert unless user gives permission to contract.
         longTokens[marketIndex].burnFrom(msg.sender, tokensToRedeem);
 
-        uint256 shortBeta = getShortBeta(marketIndex);
-        uint256 newAdjustedShortBeta = 0;
-        uint256 amountToRedeem =
-            tokensToRedeem.mul(longTokenPrice[marketIndex]).div(TEN_TO_THE_18);
+        // Compute fees.
+        uint256 amount = tokensToRedeem
+            .mul(longTokenPrice[marketIndex])
+            .div(TEN_TO_THE_18);
+        uint256 fees = _getFeesForAction(marketIndex, amount,
+            longValue[marketIndex], shortValue[marketIndex], false, true);
+        uint256 remaining = amount.sub(fees);
 
-        newAdjustedShortBeta = (longValue[marketIndex].sub(amountToRedeem))
-            .mul(TEN_TO_THE_18)
-            .div(shortValue[marketIndex]);
+        // TODO: decide on redeeming fees mechanism.
+        _feesMechanism(marketIndex, fees, 50, 50);
 
-        uint256 finalRedeemAmount =
-            _calcFinalAmount(
-                marketIndex,
-                amountToRedeem,
-                newAdjustedShortBeta,
-                shortBeta,
-                false,
-                false
-            );
-
-        longValue[marketIndex] = longValue[marketIndex].sub(amountToRedeem);
+        // Withdraw DAI with remaining amount.
+        longValue[marketIndex] = longValue[marketIndex].sub(amount);
         _refreshTokensPrice(marketIndex);
-        _redeem(marketIndex, finalRedeemAmount);
+        _withdrawDai(marketIndex, remaining);
 
         emit LongRedeem(
             marketIndex,
             externalContractCounter[marketIndex],
             tokensToRedeem,
-            amountToRedeem,
-            finalRedeemAmount,
+            amount,
+            remaining,
             msg.sender
         );
 
@@ -781,37 +771,31 @@ contract LongShort is Initializable {
         external
         refreshSystemState(marketIndex)
     {
-        shortTokens[marketIndex].burnFrom(msg.sender, tokensToRedeem); // burning 50 tokens
+        // Burn tokens - will revert unless user gives permission to contract.
+        shortTokens[marketIndex].burnFrom(msg.sender, tokensToRedeem);
 
-        uint256 longBeta = getLongBeta(marketIndex);
-        uint256 newAdjustedLongBeta = 0;
-        uint256 amountToRedeem =
-            tokensToRedeem.mul(shortTokenPrice[marketIndex]).div(TEN_TO_THE_18);
+        // Compute fees.
+        uint256 amount = tokensToRedeem
+            .mul(shortTokenPrice[marketIndex])
+            .div(TEN_TO_THE_18);
+        uint256 fees = _getFeesForAction(marketIndex, amount,
+            longValue[marketIndex], shortValue[marketIndex], false, false);
+        uint256 remaining = amount.sub(fees);
 
-        newAdjustedLongBeta = (shortValue[marketIndex].sub(amountToRedeem))
-            .mul(TEN_TO_THE_18)
-            .div(longValue[marketIndex]);
+        // TODO: decide on redeeming fees mechanism.
+        _feesMechanism(marketIndex, fees, 50, 50);
 
-        uint256 finalRedeemAmount =
-            _calcFinalAmount(
-                marketIndex,
-                amountToRedeem,
-                newAdjustedLongBeta,
-                longBeta,
-                false,
-                true
-            );
-
-        shortValue[marketIndex] = shortValue[marketIndex].sub(amountToRedeem);
+        // Withdraw DAI with remaining amount.
+        shortValue[marketIndex] = shortValue[marketIndex].sub(amount);
         _refreshTokensPrice(marketIndex);
-        _redeem(marketIndex, finalRedeemAmount);
+        _withdrawDai(marketIndex, remaining);
 
         emit ShortRedeem(
             marketIndex,
             externalContractCounter[marketIndex],
             tokensToRedeem,
-            amountToRedeem,
-            finalRedeemAmount,
+            amount,
+            remaining,
             msg.sender
         );
 
