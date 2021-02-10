@@ -46,27 +46,6 @@ const deployContracts = async (options, accounts, deployer) => {
   await tokenFactory.setup(admin, longShort.address, {
     from: admin,
   });
-
-  // Deploy a synthetic market:
-  const syntheticSymbol = "FTSE100";
-  const syntheticName = "FTSE";
-  const _baseEntryFee = 0;
-  const _badLiquidityEntryFee = 50;
-  const _baseExitFee = 30;
-  const _badLiquidityExitFee = 50;
-
-  const priceOracle = await deployer.deploy(PriceOracle, "1000000000000000000");
-
-  await longShortInstance.newSyntheticMarket(
-    syntheticName,
-    syntheticSymbol,
-    priceOracle.address,
-    _baseEntryFee,
-    _badLiquidityEntryFee,
-    _baseExitFee,
-    _badLiquidityExitFee,
-    { from: admin }
-  );
 };
 
 module.exports = async function(deployer, networkName, accounts) {
