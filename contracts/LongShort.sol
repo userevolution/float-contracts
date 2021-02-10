@@ -509,7 +509,7 @@ contract LongShort is Initializable {
             _priceChangeMechanism(marketIndex, newPrice);
         }
 
-        // NB: RE ADD INTEREST MECHNAISM, INCLUDE GOVERNANCE TOKENS
+        // TODO: Interest mechanism and governance tokens.
 
         _refreshTokensPrice(marketIndex);
         assetPrice[marketIndex] = newPrice;
@@ -531,14 +531,15 @@ contract LongShort is Initializable {
     }
 
     /*
-     * Locks DAI from the sender into the given market.
+     * Locks funds from the sender into the given market.
+     * TODO: generalise so we aren't locked into DAI.
      */
-    function _depositDai(uint256 marketIndex, uint256 amount) internal {
+    function _depositFunds(uint256 marketIndex, uint256 amount) internal {
         require(amount > 0, "User needs to add positive amount");
 
+        // TODO: Interest mechanism, probably lend coins to venus.
         daiContract.transferFrom(msg.sender, address(this), amount);
-        // INSERT INTEREST MECHANISM HERE
-
+        
         totalValueLockedInMarket[marketIndex] = totalValueLockedInMarket[
             marketIndex
         ]
@@ -548,15 +549,16 @@ contract LongShort is Initializable {
     }
 
     /*
-     * Returns locked DAI from the market to the sender.
+     * Returns locked funds from the market to the sender.
+     * TODO: generalise so we aren't locked into DAI.
      */
-    function _withdrawDai(uint256 marketIndex, uint256 amount) internal {
+    function _withdrawFunds(uint256 marketIndex, uint256 amount) internal {
         totalValueLockedInMarket[marketIndex] = 
             totalValueLockedInMarket[marketIndex].sub(amount);
 
         totalValueLocked = totalValueLocked.sub(amount);
 
-        // Redeem interest token here....
+        // TODO: May need to liquidate venus coins if we're out of funds.
         daiContract.transfer(msg.sender, amount);
     }
 
@@ -606,8 +608,9 @@ contract LongShort is Initializable {
          bool isMint, // true for mint, false for redeem
          bool isLong // true for long side, false for short side
      ) internal returns (uint256) {
-         // Edge-case: no penalties for minting in a 0-value market.
-         if (isMint && (longValue == 0) && (shortValue == 0)) {
+         // Edge-case: no penalties for minting in a 1-sided market.
+         // TODO: Is this what we want for new markets?
+         if (isMint && (longValue == 0 || shortValue == 0)) {
             return _getFeesForAmounts(marketIndex, amount, 0, isMint);
          }
 
@@ -647,7 +650,7 @@ contract LongShort is Initializable {
         refreshSystemState(marketIndex)
     {
         // Deposit DAI and compute fees.
-        _depositDai(marketIndex, amount);
+        _depositFunds(marketIndex, amount);
         uint256 fees = _getFeesForAction(marketIndex, amount, 
             longValue[marketIndex], shortValue[marketIndex], true, true);
         uint256 remaining = amount.sub(fees);
@@ -688,7 +691,7 @@ contract LongShort is Initializable {
         refreshSystemState(marketIndex)
     {
         // Deposit DAI and compute fees.
-        _depositDai(marketIndex, amount);
+        _depositFunds(marketIndex, amount);
         uint256 fees = _getFeesForAction(marketIndex, amount, 
             longValue[marketIndex], shortValue[marketIndex], true, false);
         uint256 remaining = amount.sub(fees);
@@ -747,7 +750,7 @@ contract LongShort is Initializable {
         // Withdraw DAI with remaining amount.
         longValue[marketIndex] = longValue[marketIndex].sub(amount);
         _refreshTokensPrice(marketIndex);
-        _withdrawDai(marketIndex, remaining);
+        _withdrawFunds(marketIndex, remaining);
 
         emit LongRedeem(
             marketIndex,
@@ -788,7 +791,7 @@ contract LongShort is Initializable {
         // Withdraw DAI with remaining amount.
         shortValue[marketIndex] = shortValue[marketIndex].sub(amount);
         _refreshTokensPrice(marketIndex);
-        _withdrawDai(marketIndex, remaining);
+        _withdrawFunds(marketIndex, remaining);
 
         emit ShortRedeem(
             marketIndex,
