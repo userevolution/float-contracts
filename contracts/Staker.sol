@@ -28,27 +28,24 @@ contract Staker is Initializable {
     mapping(address => mapping(address => uint256)) public userAmountStaked; // synthetic token type -> user -> amount staked
     mapping(address => mapping(address => uint256)) public userTimestampOfStake; // synthetic token -> user -> avaiable withdrawl time
     // More state needed here.
+    // mapping(address => mapping(address => uint256)) public userLastMintTime; // synthetic token -> user -> Last time of mint
 
-    // mapping(uint256 => )
+    // Keep track of user latest starting reward state. (index)
+    // User last end reward state (index)
 
-    // struct{
-    //     t =
-    //     r =
-    //     imbalnce, tokenprice
-    // }
-
-    // function calculateRValue(token price, imbalance, time, market){
-    //     return r;
-    // }
-
-    // function updateSystemTimestampState(token price, imbalance, time, market) extneral onlyCllableByLongShortContract{
-    //     calculateRValue()
-
-    //     write to state.
-    // }
+    struct RewardState {
+        uint256 timestamp;
+        uint256 floatPerSecond;
+        uint256 accumulativeFloatPerSecond;
+    }
+    // token address -> state index -> float reward state
+    mapping(address => mapping(uint256 => RewardState))
+        public syntheticRewardParams;
+    // token address -> last state reward index set
+    mapping(address => uint256) public nextRewardIndex;
 
     ///////// LongShort Contract ///////////
-    LongShort public longShortContract;
+    LongShort public floatContract;
 
     ////////////////////////////////////
     /////////// EVENTS /////////////////
@@ -70,16 +67,21 @@ contract Staker is Initializable {
         _;
     }
 
+    modifier onlyFloat() {
+        require(msg.sender == address(floatContract));
+        _;
+    }
+
     ////////////////////////////////////
     ///// CONTRACT SET-UP //////////////
     ////////////////////////////////////
 
-    function initialize(address _admin, address _longShortContract)
+    function initialize(address _admin, address _floatContract)
         public
         initializer
     {
         admin = _admin;
-        longShortContract = LongShort(_longShortContract);
+        floatContract = LongShort(_floatContract);
 
         emit DeployV0();
     }
@@ -96,16 +98,157 @@ contract Staker is Initializable {
     /////////// STAKING SETUP //////////
     ////////////////////////////////////
 
-    function addNewStakingFund(address tokenAddress, uint256 marketIndex)
-        external
-        onlyAdmin
-    {
+    function addNewStakingFund(
+        address longTokenAddress,
+        address shortTokenAddress
+    ) external onlyFloat {
+        // use market index for time and
+        syntheticValid[longTokenAddress] = true;
+        syntheticValid[shortTokenAddress] = true;
         // Implement adding the new synthetic here.
+
+        // Adding intital synthetic reward params.
+        // nextRewardIndex
+        syntheticRewardParams[longTokenAddress][0].timestamp = block.timestamp;
+        syntheticRewardParams[longTokenAddress][0].floatPerSecond = 0; // Change me
+        syntheticRewardParams[longTokenAddress][0]
+            .accumulativeFloatPerSecond = 0;
+
+        syntheticRewardParams[shortTokenAddress][0].timestamp = block.timestamp;
+        syntheticRewardParams[shortTokenAddress][0].floatPerSecond = 0; //Change me perhaps
+        syntheticRewardParams[shortTokenAddress][0]
+            .accumulativeFloatPerSecond = 0;
+
+        nextRewardIndex[longTokenAddress] = 1;
+        nextRewardIndex[shortTokenAddress] = 1;
     }
 
     ////////////////////////////////////
     /////////// HELPER FUNCTIONS ///////
     ////////////////////////////////////
+
+    function calculateFloatPerSecond(uint256 tokenPrice)
+        internal
+        view
+        returns (uint256)
+    {
+        // Note this function will be depedant on other things.
+        // I.e. See latex paper for full details
+        // Lets assume𝑟is some function of
+        // 1)  the order book imbalance
+        // 2)  the price of the token stake
+        // (3)  perhaps time (awarding early adopters more)
+        // (4)  Perhaps which market
+        // (5)  scalar for imbalance
+        // (6) amount already locked from that token
+        return tokenPrice;
+    }
+
+    function calculateNewAccumulative(address tokenAddress)
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 timeDelta = calculateTimeDelta(tokenAddress);
+        return
+            syntheticRewardParams[tokenAddress][
+                nextRewardIndex[tokenAddress] - 1
+            ]
+                .accumulativeFloatPerSecond
+                .add(
+                timeDelta.mul(
+                    syntheticRewardParams[tokenAddress][
+                        nextRewardIndex[tokenAddress] - 1
+                    ]
+                        .floatPerSecond
+                )
+            );
+    }
+
+    function calculateTimeDelta(address tokenAddress)
+        internal
+        view
+        returns (uint256)
+    {
+        return
+            block.timestamp -
+            syntheticRewardParams[tokenAddress][
+                nextRewardIndex[tokenAddress] - 1
+            ]
+                .timestamp;
+    }
+
+    function addNewStateForFloatRewards(
+        address longTokenAddress,
+        address shortTokenAddress,
+        uint256 longTokenPrice,
+        uint256 shortTokenPrice,
+        uint256 longValue,
+        uint256 shortValue
+    ) external onlyFloat {
+        // Check if timestsamp of previous is equal to timestamp of now (same block update)
+        // If so don't increment the index.
+        // I.e. state updated twice or more in single block (at the same time)
+        if (calculateTimeDelta(longTokenAddress) != 0) {
+            ///// LONG UPDATE /////
+            // set timestamp
+            syntheticRewardParams[longTokenAddress][
+                nextRewardIndex[longTokenAddress]
+            ]
+                .timestamp = block.timestamp;
+            // set rate
+            syntheticRewardParams[longTokenAddress][
+                nextRewardIndex[longTokenAddress]
+            ]
+                .floatPerSecond = calculateFloatPerSecond(longTokenPrice);
+            // Set accumulative
+            syntheticRewardParams[longTokenAddress][
+                nextRewardIndex[longTokenAddress]
+            ]
+                .accumulativeFloatPerSecond = calculateNewAccumulative(
+                longTokenAddress
+            );
+
+            ///// SHORT UPDATE /////
+            // set timestamp
+            syntheticRewardParams[shortTokenAddress][
+                nextRewardIndex[shortTokenAddress]
+            ]
+                .timestamp = block.timestamp;
+            // set rate
+            syntheticRewardParams[shortTokenAddress][
+                nextRewardIndex[shortTokenAddress]
+            ]
+                .floatPerSecond = calculateFloatPerSecond(shortTokenPrice);
+            // Set accumulative
+            syntheticRewardParams[shortTokenAddress][
+                nextRewardIndex[shortTokenAddress]
+            ]
+                .accumulativeFloatPerSecond = calculateNewAccumulative(
+                shortTokenAddress
+            );
+
+            // Increase the index for state.
+            nextRewardIndex[longTokenAddress] =
+                nextRewardIndex[longTokenAddress] +
+                1;
+            nextRewardIndex[shortTokenAddress] =
+                nextRewardIndex[shortTokenAddress] +
+                1;
+        } else {
+            // Timestamp and accumulative already updated.
+            // Simply update the to new perSecondRate
+            syntheticRewardParams[longTokenAddress][
+                nextRewardIndex[longTokenAddress] - 1
+            ]
+                .floatPerSecond = calculateFloatPerSecond(longTokenPrice);
+
+            syntheticRewardParams[shortTokenAddress][
+                nextRewardIndex[shortTokenAddress] - 1
+            ]
+                .floatPerSecond = calculateFloatPerSecond(shortTokenPrice);
+        }
+    }
 
     ////////////////////////////////////
     /////////// STAKING ////////////////
