@@ -139,7 +139,14 @@ contract LongShort is Initializable {
         uint256 marketIndex,
         address longTokenAddress,
         address shortTokenAddress,
-        uint256 assetPrice
+        uint256 assetPrice,
+        string name,
+        string symbol,
+        address oracleAddress,
+        uint256 baseEntryFee,
+        uint256 badLiquidityEntryFee,
+        uint256 baseExitFee,
+        uint256 badLiquidityExitFee
     );
     event PriceUpdate(
         uint256 marketIndex,
@@ -267,7 +274,14 @@ contract LongShort is Initializable {
             marketNumber,
             address(longTokens[marketNumber]),
             address(shortTokens[marketNumber]),
-            assetPrice[marketNumber]
+            assetPrice[marketNumber],
+            syntheticName,
+            syntheticSymbol,
+            _oracleFeed,
+            _baseEntryFee,
+            _badLiquidityEntryFee,
+            _baseExitFee,
+            _badLiquidityExitFee
         );
     }
 
