@@ -169,6 +169,22 @@ contract Staker is Initializable {
                 .add(timeDelta.mul(floatPerSecond));
     }
 
+    function setRewardObjects(address tokenAddress, uint256 tokenPrice)
+        internal
+    {
+        // Set accumulative
+        syntheticRewardParams[tokenAddress][nextRewardIndex[tokenAddress]]
+            .accumulativeFloatPerSecond = calculateNewAccumulative(
+            tokenAddress,
+            tokenPrice
+        );
+        // set timestsamp
+        syntheticRewardParams[tokenAddress][nextRewardIndex[tokenAddress]]
+            .timestamp = block.timestamp;
+        // set next index
+        nextRewardIndex[tokenAddress] = nextRewardIndex[tokenAddress] + 1;
+    }
+
     function addNewStateForFloatRewards(
         address longTokenAddress,
         address shortTokenAddress,
@@ -177,44 +193,11 @@ contract Staker is Initializable {
         uint256 longValue,
         uint256 shortValue
     ) external onlyFloat {
-        syntheticRewardParams[longTokenAddress][
-            nextRewardIndex[longTokenAddress]
-        ]
-            .accumulativeFloatPerSecond = calculateNewAccumulative(
-            longTokenAddress,
-            longTokenPrice
-        );
-
-        syntheticRewardParams[shortTokenAddress][
-            nextRewardIndex[shortTokenAddress]
-        ]
-            .accumulativeFloatPerSecond = calculateNewAccumulative(
-            shortTokenAddress,
-            shortTokenPrice
-        );
-
         // If this is the first update this block
-        // then set the new timestamp and increment index.
+        // calculate the accumulative.
         if (calculateTimeDelta(longTokenAddress) != 0) {
-            // set timestamp
-            syntheticRewardParams[longTokenAddress][
-                nextRewardIndex[longTokenAddress]
-            ]
-                .timestamp = block.timestamp;
-
-            // set timestamp
-            syntheticRewardParams[shortTokenAddress][
-                nextRewardIndex[shortTokenAddress]
-            ]
-                .timestamp = block.timestamp;
-
-            // Increase the index for state.
-            nextRewardIndex[longTokenAddress] =
-                nextRewardIndex[longTokenAddress] +
-                1;
-            nextRewardIndex[shortTokenAddress] =
-                nextRewardIndex[shortTokenAddress] +
-                1;
+            setRewardObjects(longTokenAddress, longTokenPrice);
+            setRewardObjects(shortTokenAddress, shortTokenPrice);
         }
     }
 
