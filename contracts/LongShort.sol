@@ -275,6 +275,7 @@ contract LongShort is Initializable {
         latestMarket = marketNumber;
 
         staker.addNewStakingFund(
+            marketNumber,
             address(longTokens[marketNumber]),
             address(shortTokens[marketNumber])
         );
@@ -560,7 +561,7 @@ contract LongShort is Initializable {
 
         // TODO: Interest mechanism, probably lend coins to venus.
         daiContract.transferFrom(msg.sender, address(this), amount);
-        
+
         totalValueLockedInMarket[marketIndex] = totalValueLockedInMarket[
             marketIndex
         ]
@@ -574,8 +575,10 @@ contract LongShort is Initializable {
      * TODO: generalise so we aren't locked into DAI.
      */
     function _withdrawFunds(uint256 marketIndex, uint256 amount) internal {
-        totalValueLockedInMarket[marketIndex] = 
-            totalValueLockedInMarket[marketIndex].sub(amount);
+        totalValueLockedInMarket[marketIndex] = totalValueLockedInMarket[
+            marketIndex
+        ]
+            .sub(amount);
 
         totalValueLocked = totalValueLocked.sub(amount);
 
@@ -614,20 +617,20 @@ contract LongShort is Initializable {
     }
 
     /**
-      * Calculates fees for the given mint/redeem amount. Users are penalised
-      * with higher fees for imbalancing the market.
-      */
-     function _getFeesForAction(
-         uint256 marketIndex,
-         uint256 amount, // 1e18
-         uint256 longValue, // 1e18
-         uint256 shortValue, // 1e18
-         bool isMint, // true for mint, false for redeem
-         bool isLong // true for long side, false for short side
-     ) internal returns (uint256) {
-         // Edge-case: no penalties for minting in a 1-sided market.
-         // TODO: Is this what we want for new markets?
-         if (isMint && (longValue == 0 || shortValue == 0)) {
+     * Calculates fees for the given mint/redeem amount. Users are penalised
+     * with higher fees for imbalancing the market.
+     */
+    function _getFeesForAction(
+        uint256 marketIndex,
+        uint256 amount, // 1e18
+        uint256 longValue, // 1e18
+        uint256 shortValue, // 1e18
+        bool isMint, // true for mint, false for redeem
+        bool isLong // true for long side, false for short side
+    ) internal returns (uint256) {
+        // Edge-case: no penalties for minting in a 1-sided market.
+        // TODO: Is this what we want for new markets?
+        if (isMint && (longValue == 0 || shortValue == 0)) {
             return _getFeesForAmounts(marketIndex, amount, 0, isMint);
         }
 
@@ -674,8 +677,15 @@ contract LongShort is Initializable {
     {
         // Deposit DAI and compute fees.
         _depositFunds(marketIndex, amount);
-        uint256 fees = _getFeesForAction(marketIndex, amount, 
-            longValue[marketIndex], shortValue[marketIndex], true, true);
+        uint256 fees =
+            _getFeesForAction(
+                marketIndex,
+                amount,
+                longValue[marketIndex],
+                shortValue[marketIndex],
+                true,
+                true
+            );
         uint256 remaining = amount.sub(fees);
 
         // TODO: decide on minting fees mechanism,
@@ -714,8 +724,15 @@ contract LongShort is Initializable {
     {
         // Deposit DAI and compute fees.
         _depositFunds(marketIndex, amount);
-        uint256 fees = _getFeesForAction(marketIndex, amount, 
-            longValue[marketIndex], shortValue[marketIndex], true, false);
+        uint256 fees =
+            _getFeesForAction(
+                marketIndex,
+                amount,
+                longValue[marketIndex],
+                shortValue[marketIndex],
+                true,
+                false
+            );
         uint256 remaining = amount.sub(fees);
 
         // TODO: decide on minting fees mechanism.

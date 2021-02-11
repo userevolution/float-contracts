@@ -35,6 +35,8 @@ contract Staker is Initializable {
         uint256 timestamp;
         uint256 accumulativeFloatPerSecond;
     }
+
+    mapping(address => uint256) public marketIndexOfToken;
     // token address -> state index -> float reward state
     mapping(address => mapping(uint256 => RewardState))
         public syntheticRewardParams;
@@ -107,11 +109,14 @@ contract Staker is Initializable {
     ////////////////////////////////////
 
     function addNewStakingFund(
+        uint256 marketIndex,
         address longTokenAddress,
         address shortTokenAddress
     ) external onlyFloat {
         syntheticValid[longTokenAddress] = true;
         syntheticValid[shortTokenAddress] = true;
+        marketIndexOfToken[longTokenAddress] = marketIndex;
+        marketIndexOfToken[shortTokenAddress] = marketIndex;
 
         syntheticRewardParams[longTokenAddress][0].timestamp = block.timestamp;
         syntheticRewardParams[longTokenAddress][0]
@@ -259,7 +264,7 @@ contract Staker is Initializable {
     Users can call this same function to "top-up" their stake.
     */
     function stake(address tokenAddress, uint256 amount)
-        external
+        public
         onlyValidSynthetic(tokenAddress)
     {
         ERC20PresetMinterPauserUpgradeSafe(tokenAddress).transferFrom(
@@ -292,6 +297,28 @@ contract Staker is Initializable {
             1;
 
         emit StakeAdded(msg.sender, tokenAddress, amount);
+    }
+
+    /*
+    Staking function.
+    This is a more gas heavy staking function.
+    It ensures the user starts earning FLOAT immediately 
+    As opposed to from the next state point generated.
+    */
+    function stakeAndEarnImmediately(address tokenAddress, uint256 amount)
+        external
+        onlyValidSynthetic(tokenAddress)
+    {
+        //First update state.
+        floatContract._updateSystemState(marketIndexOfToken[tokenAddress]);
+
+        // Stake for user.
+        stake(tokenAddress, amount);
+
+        // Now we can set the users reward state to the just created state.
+        userIndexOfLastClaimedReward[tokenAddress][
+            msg.sender
+        ] = latestRewardIndex[tokenAddress];
     }
 
     ////////////////////////////////////
