@@ -58,7 +58,7 @@ contract("LongShort", (accounts) => {
     priceOracle = synthResult.oracle;
     marketIndex = synthResult.currentMarketIndex;
 
-    // Variables for exit fees.
+    // Variables for redeem fees.
     baseExitFee = await longShort.baseExitFee.call(marketIndex);
     badLiquidityExitFee = await longShort.badLiquidityExitFee.call(marketIndex);
     feeUnitsOfPrecision = await longShort.feeUnitsOfPrecision.call();
@@ -204,7 +204,7 @@ contract("LongShort", (accounts) => {
   );
 
   it(
-    "case 2: extra fees when completely imbalancing market",
+    "case 2: penalty fees when completely imbalancing market",
     testRedeemFees({
       mintLong: oneHundred,
       mintShort: twoHundred,
@@ -216,7 +216,7 @@ contract("LongShort", (accounts) => {
   );
 
   it(
-    "case 2: extra fees when completely imbalancing market (flipped)",
+    "case 2: penalty fees when completely imbalancing market (flipped)",
     testRedeemFees({
       mintLong: twoHundred,
       mintShort: oneHundred,
@@ -228,7 +228,7 @@ contract("LongShort", (accounts) => {
   );
 
   it(
-    "case 2: extra fees when partially imbalancing market",
+    "case 2: penalty fees when partially imbalancing market",
     testRedeemFees({
       mintLong: oneHundredAndFifty,
       mintShort: oneHundred,
@@ -240,7 +240,7 @@ contract("LongShort", (accounts) => {
   );
 
   it(
-    "case 2: extra fees when partially imbalancing market (flipped)",
+    "case 2: penalty fees when partially imbalancing market (flipped)",
     testRedeemFees({
       mintLong: oneHundred,
       mintShort: oneHundredAndFifty,
@@ -248,6 +248,30 @@ contract("LongShort", (accounts) => {
       redeemShort: oneHundred,
       expectedBaseFeeAmount: oneHundred,
       expectedExtraFeeAmount: fifty,
+    })
+  );
+
+  it(
+    "case 2: edge-case where longValue == shortValue",
+    testRedeemFees({
+      mintLong: twoHundred,
+      mintShort: twoHundred,
+      redeemLong: oneHundred,
+      redeemShort: 0,
+      expectedBaseFeeAmount: oneHundred,
+      expectedExtraFeeAmount: oneHundred,
+    })
+  );
+
+  it(
+    "case 2: edge-case where longValue == shortValue (flipped)",
+    testRedeemFees({
+      mintLong: twoHundred,
+      mintShort: twoHundred,
+      redeemLong: 0,
+      redeemShort: oneHundred,
+      expectedBaseFeeAmount: oneHundred,
+      expectedExtraFeeAmount: oneHundred,
     })
   );
 });
