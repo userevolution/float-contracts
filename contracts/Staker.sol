@@ -41,7 +41,7 @@ contract Staker is Initializable {
     mapping(address => mapping(uint256 => RewardState))
         public syntheticRewardParams;
     // token address -> last state reward index set
-    mapping(address => uint256) public nextRewardIndex;
+    mapping(address => uint256) public latestRewardIndex;
 
     ///////// LongShort Contract ///////////
     LongShort public floatContract;
@@ -106,8 +106,6 @@ contract Staker is Initializable {
         syntheticValid[shortTokenAddress] = true;
         // Implement adding the new synthetic here.
 
-        // Adding intital synthetic reward params.
-        // nextRewardIndex
         syntheticRewardParams[longTokenAddress][0].timestamp = block.timestamp;
         syntheticRewardParams[longTokenAddress][0]
             .accumulativeFloatPerSecond = 0;
@@ -115,9 +113,6 @@ contract Staker is Initializable {
         syntheticRewardParams[shortTokenAddress][0].timestamp = block.timestamp;
         syntheticRewardParams[shortTokenAddress][0]
             .accumulativeFloatPerSecond = 0;
-
-        nextRewardIndex[longTokenAddress] = 1;
-        nextRewardIndex[shortTokenAddress] = 1;
     }
 
     ////////////////////////////////////
@@ -148,9 +143,7 @@ contract Staker is Initializable {
     {
         return
             block.timestamp -
-            syntheticRewardParams[tokenAddress][
-                nextRewardIndex[tokenAddress] - 1
-            ]
+            syntheticRewardParams[tokenAddress][latestRewardIndex[tokenAddress]]
                 .timestamp;
     }
 
@@ -162,9 +155,7 @@ contract Staker is Initializable {
         uint256 floatPerSecond = calculateFloatPerSecond(tokenPrice);
         uint256 timeDelta = calculateTimeDelta(tokenAddress);
         return
-            syntheticRewardParams[tokenAddress][
-                nextRewardIndex[tokenAddress] - 1
-            ]
+            syntheticRewardParams[tokenAddress][latestRewardIndex[tokenAddress]]
                 .accumulativeFloatPerSecond
                 .add(timeDelta.mul(floatPerSecond));
     }
@@ -172,17 +163,18 @@ contract Staker is Initializable {
     function setRewardObjects(address tokenAddress, uint256 tokenPrice)
         internal
     {
+        // set next index
+        latestRewardIndex[tokenAddress] = latestRewardIndex[tokenAddress] + 1;
+
         // Set accumulative
-        syntheticRewardParams[tokenAddress][nextRewardIndex[tokenAddress]]
+        syntheticRewardParams[tokenAddress][latestRewardIndex[tokenAddress]]
             .accumulativeFloatPerSecond = calculateNewAccumulative(
             tokenAddress,
             tokenPrice
         );
         // set timestsamp
-        syntheticRewardParams[tokenAddress][nextRewardIndex[tokenAddress]]
+        syntheticRewardParams[tokenAddress][latestRewardIndex[tokenAddress]]
             .timestamp = block.timestamp;
-        // set next index
-        nextRewardIndex[tokenAddress] = nextRewardIndex[tokenAddress] + 1;
     }
 
     function addNewStateForFloatRewards(
