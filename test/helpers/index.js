@@ -1,4 +1,5 @@
 const { BN } = require("@openzeppelin/test-helpers");
+const { web3 } = require("@nomiclabs/buidler-web3");
 
 const LONGSHORT_CONTRACT_NAME = "LongShort";
 const PRICE_ORACLE_NAME = "PriceOracle";
@@ -212,6 +213,52 @@ const feeCalculation = (
   return fees;
 };
 
+const logGasPrices = async (
+  functionName,
+  receipt,
+  ethPriceUsd,
+  bnbPriceUsd,
+  ethGasPriceGwei,
+  bnbGasPriceGwei
+) => {
+  const ONE_GWEI = new BN("1000000000");
+  const ONE_ETH = new BN("1000000000000000000");
+  console.log(`Assessing gas for: ${functionName}`);
+
+  const gasUsed = receipt.receipt.gasUsed;
+  console.log(`GasUsed: ${gasUsed}`);
+
+  console.log(`------Cost for ETH Mainnet------`);
+  console.log(`gas price gwei: ${ethGasPriceGwei}`);
+  const totalCostEth = new BN(gasUsed).mul(
+    new BN(ethGasPriceGwei).mul(ONE_GWEI)
+  );
+  console.log(`USD Price: $${ethPriceUsd}`);
+  const ethCost =
+    Number(
+      totalCostEth
+        .mul(new BN(ethPriceUsd))
+        .mul(new BN(100))
+        .div(ONE_ETH)
+    ) / 100;
+  console.log(`Cost on ETH Mainnet: $${ethCost}`);
+
+  console.log(`------Cost for BSC ------`);
+  console.log(`gas price gwei: ${bnbGasPriceGwei}`);
+  const totalCostBsc = new BN(gasUsed).mul(
+    new BN(bnbGasPriceGwei).mul(ONE_GWEI)
+  );
+  console.log(`BNB Price: $${bnbPriceUsd}`);
+  const bscCost =
+    Number(
+      totalCostBsc
+        .mul(new BN(bnbPriceUsd))
+        .mul(new BN(100))
+        .div(ONE_ETH)
+    ) / 100;
+  console.log(`Cost on BSC: $${bscCost}`);
+};
+
 module.exports = {
   initialize,
   mintAndApprove,
@@ -221,4 +268,5 @@ module.exports = {
   simulateTotalValueWithInterest,
   feeCalculation,
   createSynthetic,
+  logGasPrices,
 };
