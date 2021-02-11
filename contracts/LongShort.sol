@@ -8,6 +8,7 @@ import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
 
 import "./SyntheticToken.sol";
 import "./TokenFactory.sol";
+import "./Staker.sol";
 
 /**
  * @dev {LongShort} contract, including:
@@ -82,6 +83,7 @@ contract LongShort is Initializable {
     // Can we accept multiple deposits?
     IERC20 public daiContract;
     TokenFactory public tokenFactory;
+    Staker public staker;
 
     ////// Constants ///////
     uint256 public constant TEN_TO_THE_18 = 10**18;
@@ -225,11 +227,13 @@ contract LongShort is Initializable {
     function setup(
         address _admin,
         address daiAddress,
-        address _tokenFactory
+        address _tokenFactory,
+        address _staker
     ) public initializer {
         admin = _admin;
         daiContract = IERC20(daiAddress);
         tokenFactory = TokenFactory(_tokenFactory);
+        staker = Staker(_staker);
 
         emit V1();
     }
@@ -269,6 +273,11 @@ contract LongShort is Initializable {
         assetPrice[marketNumber] = uint256(getLatestPrice(marketNumber));
         marketExists[marketNumber] = true;
         latestMarket = marketNumber;
+
+        staker.addNewStakingFund(
+            address(longTokens[marketNumber]),
+            address(shortTokens[marketNumber])
+        );
 
         emit SyntheticTokenCreated(
             marketNumber,
@@ -485,6 +494,18 @@ contract LongShort is Initializable {
         doesMarketExist(marketIndex)
         updateCounterIfExternalCall(marketIndex)
     {
+        // This is called right before any state change!
+        // So reward rate can be calculated just in time by
+        // staker without needing to be saved
+        staker.addNewStateForFloatRewards(
+            address(longTokens[marketIndex]),
+            address(shortTokens[marketIndex]),
+            longTokenPrice[marketIndex],
+            shortTokenPrice[marketIndex],
+            longValue[marketIndex],
+            shortValue[marketIndex]
+        );
+
         if (longValue[marketIndex] == 0 && shortValue[marketIndex] == 0) {
             return;
         }
