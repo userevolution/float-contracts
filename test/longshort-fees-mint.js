@@ -11,7 +11,6 @@ const { initialize, mintAndApprove, createSynthetic } = require("./helpers");
 
 contract("LongShort", (accounts) => {
   let longShort;
-  let dai;
 
   const syntheticName = "FTSE100";
   const syntheticSymbol = "FTSE";
@@ -31,7 +30,6 @@ contract("LongShort", (accounts) => {
   beforeEach(async () => {
     const result = await initialize(admin);
     longShort = result.longShort;
-    dai = result.dai;
   });
 
   // Generic test runner that checks whether the expected base and extra fee
@@ -67,8 +65,9 @@ contract("LongShort", (accounts) => {
       );
 
       // Variables for synthetic token queries.
-      let long = synthResult.long;
-      let short = synthResult.short;
+      let fund = synthResult.fundToken;
+      let long = synthResult.longToken;
+      let short = synthResult.shortToken;
       let marketIndex = synthResult.currentMarketIndex;
 
       // Variables for mint fees.
@@ -78,7 +77,7 @@ contract("LongShort", (accounts) => {
 
       // Mint the initial long tokens.
       if (initialMintLong != 0) {
-        await mintAndApprove(dai, initialMintLong, user1, longShort.address);
+        await mintAndApprove(fund, initialMintLong, user1, longShort.address);
         await longShort.mintLong(marketIndex, new BN(initialMintLong), {
           from: user1,
         });
@@ -86,7 +85,7 @@ contract("LongShort", (accounts) => {
 
       // Mint the initial short tokens.
       if (initialMintShort != 0) {
-        await mintAndApprove(dai, initialMintShort, user2, longShort.address);
+        await mintAndApprove(fund, initialMintShort, user2, longShort.address);
         await longShort.mintShort(marketIndex, new BN(initialMintShort), {
           from: user2,
         });
@@ -107,7 +106,7 @@ contract("LongShort", (accounts) => {
 
       // Mint the long tokens.
       if (mintLong != 0) {
-        await mintAndApprove(dai, mintLong, user1, longShort.address);
+        await mintAndApprove(fund, mintLong, user1, longShort.address);
         await longShort.mintLong(marketIndex, new BN(mintLong), {
           from: user1,
         });
@@ -115,7 +114,7 @@ contract("LongShort", (accounts) => {
 
       // Mint the short tokens.
       if (mintShort != 0) {
-        await mintAndApprove(dai, mintShort, user2, longShort.address);
+        await mintAndApprove(fund, mintShort, user2, longShort.address);
         await longShort.mintShort(marketIndex, new BN(mintShort), {
           from: user2,
         });

@@ -18,14 +18,6 @@ const Staker = artifacts.require(STAKER);
 const FloatToken = artifacts.require(FLOAT_TOKEN);
 
 const initialize = async (admin) => {
-  const dai = await erc20.new({
-    from: admin,
-  });
-
-  await dai.initialize("dai token", "DAI", {
-    from: admin,
-  });
-
   const tokenFactory = await TokenFactory.new({
     from: admin,
   });
@@ -50,22 +42,15 @@ const initialize = async (admin) => {
     from: admin,
   });
 
-  await longShort.setup(
-    admin,
-    dai.address,
-    tokenFactory.address,
-    staker.address,
-    {
-      from: admin,
-    }
-  );
+  await longShort.setup(admin, tokenFactory.address, staker.address, {
+    from: admin,
+  });
 
   await staker.initialize(admin, longShort.address, floatToken.address, {
     from: admin,
   });
 
   return {
-    dai,
     longShort,
     tokenFactory,
   };
@@ -85,9 +70,18 @@ const createSynthetic = async (
     from: admin,
   });
 
+  const fundToken = await erc20.new({
+    from: admin,
+  });
+
+  await fundToken.initialize("fund token", "FND", {
+    from: admin,
+  });
+
   await longShort.newSyntheticMarket(
     syntheticName,
     syntheticSymbol,
+    fundToken.address,
     oracle.address,
     _baseEntryFee,
     _badLiquidityEntryFee,
@@ -100,14 +94,15 @@ const createSynthetic = async (
   const longAddress = await longShort.longTokens.call(currentMarketIndex);
   const shortAddress = await longShort.shortTokens.call(currentMarketIndex);
 
-  let long = await erc20.at(longAddress);
-  let short = await erc20.at(shortAddress);
+  let longToken = await erc20.at(longAddress);
+  let shortToken = await erc20.at(shortAddress);
 
   return {
     oracle,
     currentMarketIndex,
-    long,
-    short,
+    longToken,
+    shortToken,
+    fundToken,
   };
 };
 
@@ -182,12 +177,7 @@ const feeCalculation = (
     }
   }
   // If greater than minFeeThreshold
-  if (
-    amount
-      .add(longValue)
-      .add(shortValue)
-      .gte(minThreshold)
-  ) {
+  if (amount.add(longValue).add(shortValue).gte(minThreshold)) {
     const TEN_TO_THE_18 = "1" + "000000000000000000";
     let betaDiff = new BN(TEN_TO_THE_18).sub(thinBeta); // TODO: when previous beta != 1
 

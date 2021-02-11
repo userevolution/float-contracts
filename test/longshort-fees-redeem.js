@@ -11,11 +11,11 @@ const { initialize, mintAndApprove, createSynthetic } = require("./helpers");
 
 contract("LongShort", (accounts) => {
   let longShort;
-  let long;
-  let short;
-  let dai;
   let priceOracle;
   let marketIndex;
+  let long;
+  let short;
+  let fund;
 
   const syntheticName = "FTSE100";
   const syntheticSymbol = "FTSE";
@@ -40,7 +40,6 @@ contract("LongShort", (accounts) => {
   beforeEach(async () => {
     const result = await initialize(admin);
     longShort = result.longShort;
-    dai = result.dai;
 
     const synthResult = await createSynthetic(
       admin,
@@ -53,8 +52,9 @@ contract("LongShort", (accounts) => {
       _badLiquidityExitFee
     );
 
-    long = synthResult.long;
-    short = synthResult.short;
+    fund = synthResult.fundToken;
+    long = synthResult.longToken;
+    short = synthResult.shortToken;
     priceOracle = synthResult.oracle;
     marketIndex = synthResult.currentMarketIndex;
 
@@ -86,13 +86,13 @@ contract("LongShort", (accounts) => {
       );
 
       // Mint the long tokens.
-      await mintAndApprove(dai, mintLong, user1, longShort.address);
+      await mintAndApprove(fund, mintLong, user1, longShort.address);
       await longShort.mintLong(marketIndex, new BN(mintLong), {
         from: user1,
       });
 
       // Mint the short tokens.
-      await mintAndApprove(dai, mintShort, user2, longShort.address);
+      await mintAndApprove(fund, mintShort, user2, longShort.address);
       await longShort.mintShort(marketIndex, new BN(mintShort), {
         from: user2,
       });
@@ -135,10 +135,10 @@ contract("LongShort", (accounts) => {
       // The fee is the redeem amount less the user's DAI balance change.
       let userBalance, userFee;
       if (redeemShort == 0) {
-        userBalance = await dai.balanceOf(user1);
+        userBalance = await fund.balanceOf(user1);
         userFee = new BN(redeemLong).sub(userBalance);
       } else {
-        userBalance = await dai.balanceOf(user2);
+        userBalance = await fund.balanceOf(user2);
         userFee = new BN(redeemShort).sub(userBalance);
       }
 

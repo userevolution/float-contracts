@@ -50,7 +50,7 @@ const deployContracts = async (options, accounts, deployer) => {
     ...options,
     contractAlias: "LongShort",
     methodName: "setup",
-    methodArgs: [admin, dai.address, tokenFactory.address, staker.address],
+    methodArgs: [admin, tokenFactory.address, staker.address],
   });
 
   const longShortInstance = await LongShort.at(longShort.address);
@@ -68,7 +68,7 @@ const deployContracts = async (options, accounts, deployer) => {
   });
 };
 
-module.exports = async function(deployer, networkName, accounts) {
+module.exports = async function (deployer, networkName, accounts) {
   deployer.then(async () => {
     // Don't try to deploy/migrate the contracts for tests
     if (networkName === "test") {

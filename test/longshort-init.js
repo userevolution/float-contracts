@@ -11,11 +11,11 @@ const { initialize, mintAndApprove, createSynthetic } = require("./helpers");
 
 contract("LongShort", (accounts) => {
   let longShort;
-  let long;
-  let short;
-  let dai;
   let priceOracle;
   let marketIndex;
+  let long;
+  let short;
+  let fund;
 
   const syntheticName = "FTSE100";
   const syntheticSymbol = "FTSE";
@@ -37,7 +37,6 @@ contract("LongShort", (accounts) => {
   beforeEach(async () => {
     const result = await initialize(admin);
     longShort = result.longShort;
-    dai = result.dai;
 
     const synthResult = await createSynthetic(
       admin,
@@ -50,14 +49,15 @@ contract("LongShort", (accounts) => {
       _badLiquidityExitFee
     );
 
-    long = synthResult.long;
-    short = synthResult.short;
+    fund = synthResult.fundToken;
+    long = synthResult.longToken;
+    short = synthResult.shortToken;
     priceOracle = synthResult.oracle;
     marketIndex = synthResult.currentMarketIndex;
   });
 
   it("longshort: contract initialises, Long position can be made", async () => {
-    await mintAndApprove(dai, defaultMintAmount, user1, longShort.address);
+    await mintAndApprove(fund, defaultMintAmount, user1, longShort.address);
 
     // Create a long position
     await longShort.mintLong(marketIndex, new BN(defaultMintAmount), {
@@ -65,18 +65,18 @@ contract("LongShort", (accounts) => {
     });
 
     const user1LongTokens = await long.balanceOf(user1);
-    const user1DaiTokens = await dai.balanceOf(user1);
+    const user1FundTokens = await fund.balanceOf(user1);
 
     assert.equal(
       user1LongTokens,
       defaultMintAmount,
       "Correct tokens not minted on initialization"
     );
-    assert.equal(user1DaiTokens, 0, "Tokens not taken when minting position");
+    assert.equal(user1FundTokens, 0, "Tokens not taken when minting position");
   });
 
   it("longshort: contract initialises, short position can be created.", async () => {
-    await mintAndApprove(dai, defaultMintAmount, user1, longShort.address);
+    await mintAndApprove(fund, defaultMintAmount, user1, longShort.address);
 
     // Create a short position
     await longShort.mintShort(marketIndex, new BN(defaultMintAmount), {
@@ -84,18 +84,18 @@ contract("LongShort", (accounts) => {
     });
 
     const user1ShortTokens = await short.balanceOf(user1);
-    const user1DaiTokens = await dai.balanceOf(user1);
+    const user1FundTokens = await fund.balanceOf(user1);
 
     assert.equal(
       user1ShortTokens,
       defaultMintAmount,
       "Correct tokens not minted on initialization"
     );
-    assert.equal(user1DaiTokens, 0, "Tokens not taken when minting position");
+    assert.equal(user1FundTokens, 0, "Tokens not taken when minting position");
   });
 
   it("longshort: contract initialises,long short sides both created. Token price and value correct.", async () => {
-    await mintAndApprove(dai, defaultMintAmount, user1, longShort.address);
+    await mintAndApprove(fund, defaultMintAmount, user1, longShort.address);
 
     // Create a short position
     await longShort.mintShort(marketIndex, new BN(defaultMintAmount), {
@@ -136,7 +136,7 @@ contract("LongShort", (accounts) => {
     );
 
     // Now long position comes in.
-    await mintAndApprove(dai, defaultMintAmount, user2, longShort.address);
+    await mintAndApprove(fund, defaultMintAmount, user2, longShort.address);
     // Create a long position
     // Price always starts at $1 per side.
     await longShort.mintLong(marketIndex, new BN(defaultMintAmount), {

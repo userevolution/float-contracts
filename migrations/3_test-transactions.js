@@ -24,6 +24,7 @@ const deployTestMarket = async (
   syntheticSymbol,
   syntheticName,
   longShortInstance,
+  fundTokenInstance,
   deployer
 ) => {
   // Deploy a synthetic market:
@@ -38,6 +39,7 @@ const deployTestMarket = async (
   await longShortInstance.newSyntheticMarket(
     syntheticName,
     syntheticSymbol,
+    fundTokenInstance.address,
     priceOracle.address,
     _baseEntryFee,
     _badLiquidityEntryFee,
@@ -45,7 +47,7 @@ const deployTestMarket = async (
     _badLiquidityExitFee
   );
 };
-module.exports = async function(deployer, network, accounts) {
+module.exports = async function (deployer, network, accounts) {
   console.log(99);
 
   const admin = accounts[0];
@@ -66,8 +68,9 @@ module.exports = async function(deployer, network, accounts) {
   const currentMarketIndex = (await longShort.latestMarket()).toNumber();
   console.log("current", { currentMarketIndex });
 
-  const daiAddress = await longShort.daiContract.call();
-  let dai = await SyntheticToken.at(daiAddress);
+  let dai = await SyntheticToken.deployed();
+  const daiAddress = dai.address;
+
   for (let marketIndex = 1; marketIndex <= currentMarketIndex; ++marketIndex) {
     const longAddress = await longShort.longTokens.call(marketIndex);
     const shortAddress = await longShort.shortTokens.call(marketIndex);

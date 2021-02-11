@@ -11,11 +11,11 @@ const { initialize, mintAndApprove, createSynthetic } = require("./helpers");
 
 contract("LongShort", (accounts) => {
   let longShort;
-  let long;
-  let short;
-  let dai;
   let priceOracle;
   let marketIndex;
+  let long;
+  let short;
+  let fund;
 
   const syntheticName = "FTSE100";
   const syntheticSymbol = "FTSE";
@@ -26,7 +26,7 @@ contract("LongShort", (accounts) => {
   const _baseExitFee = 50;
   const _badLiquidityExitFee = 50;
 
-  const defaultMintAmount = "100000000000000000000"; // 100 dai etc.
+  const defaultMintAmount = "100000000000000000000"; // 100 fund etc.
 
   const ninetyPercentDefaultMintAmount = "90000000000000000000";
   const hundredTenPercentDefaultMintAmount = "110000000000000000000";
@@ -43,7 +43,6 @@ contract("LongShort", (accounts) => {
   beforeEach(async () => {
     const result = await initialize(admin);
     longShort = result.longShort;
-    dai = result.dai;
 
     const synthResult = await createSynthetic(
       admin,
@@ -56,25 +55,26 @@ contract("LongShort", (accounts) => {
       _badLiquidityExitFee
     );
 
-    long = synthResult.long;
-    short = synthResult.short;
+    fund = synthResult.fundToken;
+    long = synthResult.longToken;
+    short = synthResult.shortToken;
     priceOracle = synthResult.oracle;
     marketIndex = synthResult.currentMarketIndex;
   });
 
   // also tests full exposure value change on price increase
   it("longshort: Initialize base case", async () => {
-    await mintAndApprove(dai, defaultMintAmount, user1, longShort.address);
+    await mintAndApprove(fund, defaultMintAmount, user1, longShort.address);
     await longShort.mintLong(marketIndex, new BN(defaultMintAmount), {
       from: user1,
     });
 
-    await mintAndApprove(dai, defaultMintAmount, user2, longShort.address);
+    await mintAndApprove(fund, defaultMintAmount, user2, longShort.address);
     await longShort.mintShort(marketIndex, new BN(defaultMintAmount), {
       from: user2,
     });
 
-    // 100 dai
+    // 100 fund tokens
     const longVal = await longShort.longValue.call(marketIndex); // $100
     const shortVal = await longShort.shortValue.call(marketIndex); // $100
 
@@ -88,14 +88,14 @@ contract("LongShort", (accounts) => {
     const newLongVal = await longShort.longValue.call(marketIndex); // $110
     const newShortVal = await longShort.shortValue.call(marketIndex); // $90
 
-    // 110 dai
+    // 110 fund tokens
     assert.equal(
       newLongVal.toString(),
       "110000000000000000000",
       "Longvalue change not correct"
     );
 
-    // 90 dai
+    // 90 fund tokens
     assert.equal(
       newShortVal.toString(),
       "90000000000000000000",
@@ -104,7 +104,7 @@ contract("LongShort", (accounts) => {
   });
 
   it("longshort: Values change correctly on full exposure when price is adjusted downwards", async () => {
-    // 100 dai in each of long and short
+    // 100 fund tokens in each of long and short
     await mintLongShort2(
       marketIndex,
       user1,
@@ -120,14 +120,14 @@ contract("LongShort", (accounts) => {
     const newLongVal = await longShort.longValue.call(marketIndex);
     const newShortVal = await longShort.shortValue.call(marketIndex);
 
-    // 90 dai
+    // 90 fund tokens
     assert.equal(
       newLongVal.toString(),
       "90000000000000000000",
       "Longvalue change not correct"
     );
 
-    // 110 dai
+    // 110 fund tokens
     assert.equal(
       newShortVal.toString(),
       "110000000000000000000",
@@ -136,7 +136,7 @@ contract("LongShort", (accounts) => {
   });
 
   it("longshort: Values change according to beta when price adjusted upwards", async () => {
-    // 110 dai in short, 90 dai in long. mint short first to avoid fees / tipping
+    // 110 fund in short, 90 fund in long. mint short first to avoid fees / tipping
     await mintLongShort2(
       marketIndex,
       user1,
@@ -152,14 +152,14 @@ contract("LongShort", (accounts) => {
     const newLongVal = await longShort.longValue.call(marketIndex);
     const newShortVal = await longShort.shortValue.call(marketIndex);
 
-    // 99 dai
+    // 99 fund tokens
     assert.equal(
       newLongVal.toString(),
       "99000000000000000000",
       "Longvalue change not correct"
     );
 
-    // 101 dai
+    // 101 fund tokens
     assert.equal(
       newShortVal.toString(),
       "101000000000000000000",
@@ -168,7 +168,7 @@ contract("LongShort", (accounts) => {
   });
 
   it("longshort: Values change according to beta when price adjusted downwards", async () => {
-    // 110 dai in short, 90 dai in long. mint short first to avoid fees / tipping
+    // 110 fund in short, 90 fund in long. mint short first to avoid fees / tipping
     await mintLongShort2(
       marketIndex,
       user1,
@@ -184,14 +184,14 @@ contract("LongShort", (accounts) => {
     const newLongVal = await longShort.longValue.call(marketIndex);
     const newShortVal = await longShort.shortValue.call(marketIndex);
 
-    // 81 dai
+    // 81 fund
     assert.equal(
       newLongVal.toString(),
       "81000000000000000000",
       "Longvalue change not correct"
     );
 
-    // 119 dai
+    // 119 fund
     assert.equal(
       newShortVal.toString(),
       "119000000000000000000",
@@ -200,7 +200,7 @@ contract("LongShort", (accounts) => {
   });
 
   it("longshort: Price movements of 100% or greater upwards induce short liquidation", async () => {
-    // 100 dai in short, 100 dai in long
+    // 100 fund in short, 100 fund in long
     await mintLongShort2(
       marketIndex,
       user1,
@@ -216,30 +216,30 @@ contract("LongShort", (accounts) => {
     const newLongVal = await longShort.longValue.call(marketIndex);
     const newShortVal = await longShort.shortValue.call(marketIndex);
 
-    // 200 dai
+    // 200 fund
     assert.equal(
       newLongVal.toString(),
       "200000000000000000000",
       "Longvalue change not correct"
     );
-    // 0 dai
+    // 0 fund
     assert.equal(newShortVal.toString(), "0", "Short value change correct");
 
     await priceOracle.increasePrice(hundredPercentMovement);
     await longShort._updateSystemState(marketIndex);
 
-    // 200 dai
+    // 200 fund
     assert.equal(
       newLongVal.toString(),
       "200000000000000000000",
       "Longvalue change not correct"
     );
-    // 0 dai
+    // 0 fund
     assert.equal(newShortVal.toString(), "0", "Short value change correct");
   });
 
   it("longshort: Price movements of 100% downwards induce long liquidation", async () => {
-    // 100 dai in short, 100 dai in long
+    // 100 fund in short, 100 fund in long
     await mintLongShort2(
       marketIndex,
       user1,
@@ -255,9 +255,9 @@ contract("LongShort", (accounts) => {
     const newLongVal = await longShort.longValue.call(marketIndex);
     const newShortVal = await longShort.shortValue.call(marketIndex);
 
-    // 0 dai
+    // 0 fund
     assert.equal(newLongVal.toString(), "0", "Longvalue change not correct");
-    // 200 dai
+    // 200 fund
     assert.equal(
       newShortVal.toString(),
       "200000000000000000000",
@@ -266,8 +266,8 @@ contract("LongShort", (accounts) => {
   });
 
   it("longshort: Price changes induce no value change when only long has liquidity", async () => {
-    // 100 dai to long
-    await mintAndApprove(dai, defaultMintAmount, user1, longShort.address);
+    // 100 fund to long
+    await mintAndApprove(fund, defaultMintAmount, user1, longShort.address);
     await longShort.mintLong(marketIndex, new BN(defaultMintAmount), {
       from: user1,
     });
@@ -278,32 +278,32 @@ contract("LongShort", (accounts) => {
     const newLongVal = await longShort.longValue.call(marketIndex);
     const newShortVal = await longShort.shortValue.call(marketIndex);
 
-    // 100 dai
+    // 100 fund
     assert.equal(
       newLongVal.toString(),
       defaultMintAmount,
       "Longvalue change not correct"
     );
 
-    // 0 dai
+    // 0 fund
     assert.equal(newShortVal.toString(), "0", "Short value change correct");
 
     await priceOracle.decreasePrice(hundredPercentMovement);
 
-    // 100 dai
+    // 100 fund
     assert.equal(
       newLongVal.toString(),
       defaultMintAmount,
       "Longvalue change not correct"
     );
 
-    // 0 dai
+    // 0 fund
     assert.equal(newShortVal.toString(), "0", "Short value change correct");
   });
 
   it("longshort: Price changes induce no value change when only short has liquidity", async () => {
-    // 100 dai to short
-    await mintAndApprove(dai, defaultMintAmount, user1, longShort.address);
+    // 100 fund to short
+    await mintAndApprove(fund, defaultMintAmount, user1, longShort.address);
     await longShort.mintShort(marketIndex, new BN(defaultMintAmount), {
       from: user1,
     });
@@ -314,10 +314,10 @@ contract("LongShort", (accounts) => {
     const newLongVal = await longShort.longValue.call(marketIndex);
     const newShortVal = await longShort.shortValue.call(marketIndex);
 
-    // 0 dai
+    // 0 fund
     assert.equal(newLongVal.toString(), "0", "Longvalue change not correct");
 
-    // 100 dai
+    // 100 fund
     assert.equal(
       newShortVal.toString(),
       defaultMintAmount,
@@ -325,10 +325,10 @@ contract("LongShort", (accounts) => {
     );
     await priceOracle.decreasePrice(hundredPercentMovement);
 
-    // 100 dai
+    // 100 fund
     assert.equal(newLongVal.toString(), 0, "Longvalue change not correct");
 
-    // 0 dai
+    // 0 fund
     assert.equal(
       newShortVal.toString(),
       defaultMintAmount,
@@ -346,23 +346,23 @@ contract("LongShort", (accounts) => {
   ) => {
     if (longFirst) {
       // user 1
-      await mintAndApprove(dai, longAmount, longUser, longShort.address);
+      await mintAndApprove(fund, longAmount, longUser, longShort.address);
       await longShort.mintLong(marketIndex, new BN(longAmount), {
         from: longUser,
       });
       // user 2
-      await mintAndApprove(dai, shortAmount, shortUser, longShort.address);
+      await mintAndApprove(fund, shortAmount, shortUser, longShort.address);
       await longShort.mintShort(marketIndex, new BN(shortAmount), {
         from: shortUser,
       });
     } else {
       // user 2
-      await mintAndApprove(dai, shortAmount, shortUser, longShort.address);
+      await mintAndApprove(fund, shortAmount, shortUser, longShort.address);
       await longShort.mintShort(marketIndex, new BN(shortAmount), {
         from: shortUser,
       });
       // user 1
-      await mintAndApprove(dai, longAmount, longUser, longShort.address);
+      await mintAndApprove(fund, longAmount, longUser, longShort.address);
       await longShort.mintLong(marketIndex, new BN(longAmount), {
         from: longUser,
       });

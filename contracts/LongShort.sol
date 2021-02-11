@@ -73,25 +73,21 @@ contract LongShort is Initializable {
     //////// VARIABLES /////////////////
     ////////////////////////////////////
 
-    // Overall variables
+    // Global state.
     address public admin; // This will likely be the Gnosis safe
     uint256 public latestMarket;
     uint256 public totalValueLocked;
     mapping(uint256 => bool) public marketExists;
 
-    // Stable coin we accept deposits in
-    // Can we accept multiple deposits?
-    IERC20 public daiContract;
+    // Factory for dynamically creating synthetic long/short tokens.
     TokenFactory public tokenFactory;
     Staker public staker;
 
-    ////// Constants ///////
+    // Fixed-precision constants.
     uint256 public constant TEN_TO_THE_18 = 10**18;
-    uint256 public constant feeUnitsOfPrecision = 10000; // [div the above by 10000]
+    uint256 public constant feeUnitsOfPrecision = 10000;
 
-    // Market related variables
-    mapping(uint256 => AggregatorV3Interface) internal priceFeed; // Oracle
-
+    // Market state.
     mapping(uint256 => uint256) public assetPrice;
     mapping(uint256 => uint256) public totalValueLockedInMarket;
     mapping(uint256 => uint256) public longValue;
@@ -99,18 +95,19 @@ contract LongShort is Initializable {
     mapping(uint256 => uint256) public longTokenPrice;
     mapping(uint256 => uint256) public shortTokenPrice;
     mapping(uint256 => uint256) public externalContractCounter;
+    mapping(uint256 => IERC20) public fundTokens;
+    mapping(uint256 => AggregatorV3Interface) internal priceFeed;
 
+    // Synthetic long/short tokens users can mint and redeem.
     mapping(uint256 => SyntheticToken) public longTokens;
     mapping(uint256 => SyntheticToken) public shortTokens;
 
-    // Fees for entering [make market specific (TODO)]
-    mapping(uint256 => uint256) public baseEntryFee; // 0.1% [we div by 10000]
-    mapping(uint256 => uint256) public badLiquidityEntryFee; // [= +1% fee for every 0.1 you tip the beta]
-    mapping(uint256 => uint256) public baseExitFee; // 0.5% [we div by 10000]
-    mapping(uint256 => uint256) public badLiquidityExitFee; // Extra charge for removing liquidity from the side with already less depth
-
-    // Tokens representing short and long position and cost at which
-    // they can be minted or redeemed
+    // Fees for minting/redeeming long/short tokens. Users are penalised
+    // with extra fees for imbalancing the market.
+    mapping(uint256 => uint256) public baseEntryFee;
+    mapping(uint256 => uint256) public badLiquidityEntryFee;
+    mapping(uint256 => uint256) public baseExitFee;
+    mapping(uint256 => uint256) public badLiquidityExitFee;
 
     ////////////////////////////////////
     /////////// EVENTS /////////////////
@@ -226,12 +223,10 @@ contract LongShort is Initializable {
 
     function setup(
         address _admin,
-        address daiAddress,
         address _tokenFactory,
         address _staker
     ) public initializer {
         admin = _admin;
-        daiContract = IERC20(daiAddress);
         tokenFactory = TokenFactory(_tokenFactory);
         staker = Staker(_staker);
 
@@ -245,6 +240,7 @@ contract LongShort is Initializable {
     function newSyntheticMarket(
         string calldata syntheticName,
         string calldata syntheticSymbol,
+        address _fundToken,
         address _oracleFeed,
         uint256 _baseEntryFee,
         uint256 _badLiquidityEntryFee,
@@ -253,32 +249,43 @@ contract LongShort is Initializable {
     ) external adminOnly {
         uint256 marketNumber = latestMarket.add(1);
 
-        priceFeed[marketNumber] = AggregatorV3Interface(_oracleFeed);
+        // Initial minting/redeeming fees.
         baseEntryFee[marketNumber] = _baseEntryFee;
-        badLiquidityEntryFee[marketNumber] = _badLiquidityEntryFee;
         baseExitFee[marketNumber] = _baseExitFee;
+        badLiquidityEntryFee[marketNumber] = _badLiquidityEntryFee;
         badLiquidityExitFee[marketNumber] = _badLiquidityExitFee;
 
+        // Initial market state.
+        fundTokens[marketNumber] = IERC20(_fundToken);
+        priceFeed[marketNumber] = AggregatorV3Interface(_oracleFeed);
+
+        // Create new synthetic long token.
         longTokens[marketNumber] = SyntheticToken(
             tokenFactory.createTokenLong(syntheticName, syntheticSymbol)
         );
 
+        // Create new synthetic short token.
         shortTokens[marketNumber] = SyntheticToken(
             tokenFactory.createTokenShort(syntheticName, syntheticSymbol)
         );
 
+        // Initial market state.
         longTokenPrice[marketNumber] = TEN_TO_THE_18;
         shortTokenPrice[marketNumber] = TEN_TO_THE_18;
-
         assetPrice[marketNumber] = uint256(getLatestPrice(marketNumber));
-        marketExists[marketNumber] = true;
-        latestMarket = marketNumber;
 
+        // Update global state.
+        latestMarket = marketNumber;
+        marketExists[marketNumber] = true;
+
+        // Add new staker funds with fresh synthetic tokens.
         staker.addNewStakingFund(
             address(longTokens[marketNumber]),
             address(shortTokens[marketNumber])
         );
 
+        // TODO(guy): Update this event to track _fundToken address, need to
+        // change the graph handlers and schema to track that too.
         emit SyntheticTokenCreated(
             marketNumber,
             address(longTokens[marketNumber]),
@@ -553,14 +560,13 @@ contract LongShort is Initializable {
 
     /*
      * Locks funds from the sender into the given market.
-     * TODO: generalise so we aren't locked into DAI.
      */
     function _depositFunds(uint256 marketIndex, uint256 amount) internal {
         require(amount > 0, "User needs to add positive amount");
 
         // TODO: Interest mechanism, probably lend coins to venus.
-        daiContract.transferFrom(msg.sender, address(this), amount);
-        
+        fundTokens[marketIndex].transferFrom(msg.sender, address(this), amount);
+
         totalValueLockedInMarket[marketIndex] = totalValueLockedInMarket[
             marketIndex
         ]
@@ -571,16 +577,17 @@ contract LongShort is Initializable {
 
     /*
      * Returns locked funds from the market to the sender.
-     * TODO: generalise so we aren't locked into DAI.
      */
     function _withdrawFunds(uint256 marketIndex, uint256 amount) internal {
-        totalValueLockedInMarket[marketIndex] = 
-            totalValueLockedInMarket[marketIndex].sub(amount);
+        totalValueLockedInMarket[marketIndex] = totalValueLockedInMarket[
+            marketIndex
+        ]
+            .sub(amount);
 
         totalValueLocked = totalValueLocked.sub(amount);
 
         // TODO: May need to liquidate venus coins if we're out of funds.
-        daiContract.transfer(msg.sender, amount);
+        fundTokens[marketIndex].transfer(msg.sender, amount);
     }
 
     /*
@@ -614,20 +621,20 @@ contract LongShort is Initializable {
     }
 
     /**
-      * Calculates fees for the given mint/redeem amount. Users are penalised
-      * with higher fees for imbalancing the market.
-      */
-     function _getFeesForAction(
-         uint256 marketIndex,
-         uint256 amount, // 1e18
-         uint256 longValue, // 1e18
-         uint256 shortValue, // 1e18
-         bool isMint, // true for mint, false for redeem
-         bool isLong // true for long side, false for short side
-     ) internal returns (uint256) {
-         // Edge-case: no penalties for minting in a 1-sided market.
-         // TODO: Is this what we want for new markets?
-         if (isMint && (longValue == 0 || shortValue == 0)) {
+     * Calculates fees for the given mint/redeem amount. Users are penalised
+     * with higher fees for imbalancing the market.
+     */
+    function _getFeesForAction(
+        uint256 marketIndex,
+        uint256 amount, // 1e18
+        uint256 longValue, // 1e18
+        uint256 shortValue, // 1e18
+        bool isMint, // true for mint, false for redeem
+        bool isLong // true for long side, false for short side
+    ) internal returns (uint256) {
+        // Edge-case: no penalties for minting in a 1-sided market.
+        // TODO: Is this what we want for new markets?
+        if (isMint && (longValue == 0 || shortValue == 0)) {
             return _getFeesForAmounts(marketIndex, amount, 0, isMint);
         }
 
@@ -674,8 +681,15 @@ contract LongShort is Initializable {
     {
         // Deposit DAI and compute fees.
         _depositFunds(marketIndex, amount);
-        uint256 fees = _getFeesForAction(marketIndex, amount, 
-            longValue[marketIndex], shortValue[marketIndex], true, true);
+        uint256 fees =
+            _getFeesForAction(
+                marketIndex,
+                amount,
+                longValue[marketIndex],
+                shortValue[marketIndex],
+                true,
+                true
+            );
         uint256 remaining = amount.sub(fees);
 
         // TODO: decide on minting fees mechanism,
@@ -714,8 +728,15 @@ contract LongShort is Initializable {
     {
         // Deposit DAI and compute fees.
         _depositFunds(marketIndex, amount);
-        uint256 fees = _getFeesForAction(marketIndex, amount, 
-            longValue[marketIndex], shortValue[marketIndex], true, false);
+        uint256 fees =
+            _getFeesForAction(
+                marketIndex,
+                amount,
+                longValue[marketIndex],
+                shortValue[marketIndex],
+                true,
+                false
+            );
         uint256 remaining = amount.sub(fees);
 
         // TODO: decide on minting fees mechanism.
