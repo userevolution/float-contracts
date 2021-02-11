@@ -207,17 +207,17 @@ contract Staker is Initializable {
         return accumDelta * userAmountStaked[tokenAddress][msg.sender];
     }
 
-    function creditAccumulatedFloat(address fundAdress) internal {
-        uint256 accumulatedFloat = calculateAccumulatedFloat(fundAdress);
+    function creditAccumulatedFloat(address tokenAddress) internal {
+        uint256 additionalFloat = calculateAccumulatedFloat(tokenAddress);
         // Set the user has claimed up until now.
-        userIndexOfLastClaimedReward[fundAddress][
+        userIndexOfLastClaimedReward[tokenAddress][
             msg.sender
         ] = latestRewardIndex[tokenAddress];
 
         // Add float to their balance.
         accumulatedFloat[msg.sender] =
             accumulatedFloat[msg.sender] +
-            accumulatedFloat;
+            additionalFloat;
     }
 
     ////////////////////////////////////
@@ -227,30 +227,30 @@ contract Staker is Initializable {
     /*
     Staking function. 
     */
-    function stake(address fundAddress, uint256 amount)
+    function stake(address tokenAddress, uint256 amount)
         external
-        onlyValidSynthetic(fundAddress)
+        onlyValidSynthetic(tokenAddress)
     {
-        ERC20PresetMinterPauserUpgradeSafe(fundAddress).transferFrom(
+        ERC20PresetMinterPauserUpgradeSafe(tokenAddress).transferFrom(
             msg.sender,
             address(this),
             amount
         );
 
         // If they already have staked, calculate and award them their float.
-        if (userAmountStaked[fundAddress][msg.sender] > 0) {
-            creditAccumulatedFloat(fundAddress);
+        if (userAmountStaked[tokenAddress][msg.sender] > 0) {
+            creditAccumulatedFloat(tokenAddress);
         }
 
-        userAmountStaked[fundAddress][msg.sender] = userAmountStaked[
-            fundAddress
+        userAmountStaked[tokenAddress][msg.sender] = userAmountStaked[
+            tokenAddress
         ][msg.sender]
             .add(amount);
 
         // We are currently smashing them out of earnings till the next state update.
         // Figure out what happens when they fall inbetween state updates.
         // Note this also effects top up people.
-        userIndexOfLastClaimedReward[fundAddress][msg.sender] =
+        userIndexOfLastClaimedReward[tokenAddress][msg.sender] =
             latestRewardIndex[tokenAddress] +
             1;
         // User starts earning from next update state object.
@@ -268,14 +268,14 @@ contract Staker is Initializable {
     /*
     Withdraw function
     */
-    function withdraw(address fundAddress) external {
+    function withdraw(address tokenAddress) external {
         require(
-            userAmountStaked[fundAddress][msg.sender] > 0,
+            userAmountStaked[tokenAddress][msg.sender] > 0,
             "nothing to withdraw"
         );
-        uint256 amount = userAmountStaked[fundAddress][msg.sender];
-        userAmountStaked[fundAddress][msg.sender] = 0;
-        ERC20PresetMinterPauserUpgradeSafe(fundAddress).transfer(
+        uint256 amount = userAmountStaked[tokenAddress][msg.sender];
+        userAmountStaked[tokenAddress][msg.sender] = 0;
+        ERC20PresetMinterPauserUpgradeSafe(tokenAddress).transfer(
             msg.sender,
             amount
         );
