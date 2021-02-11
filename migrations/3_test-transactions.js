@@ -42,16 +42,16 @@ module.exports = async function(deployer, network, accounts) {
   const oneHundredMintAmount = "100000000000000000000";
 
   const longShort = await LongShort.deployed();
-  // await deployTestMarket("FTSE100", "FTSE", longShort, deployer);
-  // await deployTestMarket("GOLD", "GOLD", longShort, deployer);
-  // await deployTestMarket("SP", "S&P500", longShort, deployer);
+  await deployTestMarket("FTSE100", "FTSE", longShort, deployer);
+  await deployTestMarket("GOLD", "GOLD", longShort, deployer);
+  await deployTestMarket("SP", "S&P500", longShort, deployer);
   const currentMarketIndex = (await longShort.latestMarket()).toNumber();
 
   const daiAddress = await longShort.daiContract.call();
   let dai = await SyntheticToken.at(daiAddress);
 
   // console.log("accounts", accounts);
-  for (let marketIndex = 2; marketIndex <= currentMarketIndex; ++marketIndex) {
+  for (let marketIndex = 1; marketIndex <= currentMarketIndex; ++marketIndex) {
     const longAddress = await longShort.longTokens.call(marketIndex);
     const shortAddress = await longShort.shortTokens.call(marketIndex);
     const priceOracleAddress = await longShort.priceFeed.call(marketIndex);
