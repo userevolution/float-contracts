@@ -25,13 +25,10 @@ contract Staker is Initializable {
     mapping(address => bool) syntheticValid;
 
     ///////// User Specific ///////////
+    mapping(address => uint256) public accumulatedFloat;
     mapping(address => mapping(address => uint256)) public userAmountStaked; // synthetic token type -> user -> amount staked
-    mapping(address => mapping(address => uint256)) public userTimestampOfStake; // synthetic token -> user -> avaiable withdrawl time
-    // More state needed here.
-    // mapping(address => mapping(address => uint256)) public userLastMintTime; // synthetic token -> user -> Last time of mint
-
-    // Keep track of user latest starting reward state. (index)
-    // User last end reward state (index)
+    mapping(address => mapping(address => uint256))
+        public userIndexOfLastClaimedReward;
 
     struct RewardState {
         uint256 timestamp;
@@ -193,6 +190,36 @@ contract Staker is Initializable {
         }
     }
 
+    function calculateAccumulatedFloat(address tokenAddress)
+        internal
+        returns (uint256)
+    {
+        uint256 accumDelta =
+            syntheticRewardParams[tokenAddress][latestRewardIndex[tokenAddress]]
+                .accumulativeFloatPerSecond
+                .sub(
+                syntheticRewardParams[tokenAddress][
+                    userIndexOfLastClaimedReward[tokenAddress][msg.sender]
+                ]
+                    .accumulativeFloatPerSecond
+            );
+
+        return accumDelta * userAmountStaked[tokenAddress][msg.sender];
+    }
+
+    function creditAccumulatedFloat(address fundAdress) internal {
+        uint256 accumulatedFloat = calculateAccumulatedFloat(fundAdress);
+        // Set the user has claimed up until now.
+        userIndexOfLastClaimedReward[fundAddress][
+            msg.sender
+        ] = latestRewardIndex[tokenAddress];
+
+        // Add float to their balance.
+        accumulatedFloat[msg.sender] =
+            accumulatedFloat[msg.sender] +
+            accumulatedFloat;
+    }
+
     ////////////////////////////////////
     /////////// STAKING ////////////////
     ////////////////////////////////////
@@ -210,11 +237,24 @@ contract Staker is Initializable {
             amount
         );
 
+        // If they already have staked, calculate and award them their float.
+        if (userAmountStaked[fundAddress][msg.sender] > 0) {
+            creditAccumulatedFloat(fundAddress);
+        }
+
         userAmountStaked[fundAddress][msg.sender] = userAmountStaked[
             fundAddress
         ][msg.sender]
             .add(amount);
-        userTimestampOfStake[fundAddress][msg.sender] = block.timestamp;
+
+        // We are currently smashing them out of earnings till the next state update.
+        // Figure out what happens when they fall inbetween state updates.
+        // Note this also effects top up people.
+        userIndexOfLastClaimedReward[fundAddress][msg.sender] =
+            latestRewardIndex[tokenAddress] +
+            1;
+        // User starts earning from next update state object.
+        // Currently imperfect.
 
         // Update token generation itntervals
         // Update time of last mint.
@@ -243,5 +283,16 @@ contract Staker is Initializable {
         // Update token generation itntervals
         // Update time of last mint.
         // Mint FLOAT tokens, send
+    }
+
+    /*
+    Mint function.
+    Decide whether internal and when to use.
+    */
+    function mintFloat() external {
+        require(accumulatedFloat[msg.sender] > 0, "no float");
+        uint256 floatToMint = accumulatedFloat[msg.sender];
+        accumulatedFloat[msg.sender] = 0;
+        // mint and send user floatToMint
     }
 }
