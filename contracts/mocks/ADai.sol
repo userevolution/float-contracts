@@ -1,12 +1,13 @@
-pragma solidity ^0.6.0;
+//SPDX-License-Identifier: Unlicense
+pragma solidity 0.7.6;
 
-import "@nomiclabs/buidler/console.sol";
+import "hardhat/console.sol";
 import "../interfaces/IADai.sol";
 import "./MockERC20.sol";
 
-// import '@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20.sol';
+// import '@openzeppelin/contracts-upgradeable/token/ERC20/ERC20.sol';
 
-//import '@nomiclabs/buidler/console.sol';
+//import 'hardhat/console.sol';
 
 // MOCK ONLY
 contract ADai is MockERC20 {

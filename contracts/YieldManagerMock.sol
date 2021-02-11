@@ -1,9 +1,10 @@
-pragma solidity 0.6.12;
+//SPDX-License-Identifier: Unlicense
+pragma solidity 0.7.6;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 
-import "@openzeppelin/contracts-ethereum-package/contracts/presets/ERC20PresetMinterPauser.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-upgradeable/presets/ERC20PresetMinterPauserUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 
 import "./interfaces/IYieldManager.sol";
 
@@ -19,7 +20,7 @@ I do think it is a good thing to test that the yield could increase between two 
   (which should be possible with current lending markets since interactions with the yield platform can happen inbetween)
  */
 contract YieldManagerMock is IYieldManager, Initializable {
-    using SafeMath for uint256;
+    using SafeMathUpgradeable for uint256;
 
     address public admin;
     address public longShortContract;
@@ -52,7 +53,7 @@ contract YieldManagerMock is IYieldManager, Initializable {
         totalHeld[tokenAddress] = currentTotalHeld.add(
             currentTotalHeld.mul(percentage).div(interestScalarDenominator)
         );
-        timeYieldWasLastSettled[tokenAddress] = now;
+        timeYieldWasLastSettled[tokenAddress] = block.timestamp;
     }
 
     function setYieldRateIncreasePerSecond(
@@ -93,7 +94,7 @@ contract YieldManagerMock is IYieldManager, Initializable {
                 totalHeld[erc20Token]
                     .mul(
                     interestScalarTime[erc20Token].mul(
-                        now.sub(timeYieldWasLastSettled[erc20Token])
+                        block.timestamp.sub(timeYieldWasLastSettled[erc20Token])
                     )
                 )
                     .div(interestScalarDenominator)

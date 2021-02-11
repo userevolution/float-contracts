@@ -33,7 +33,7 @@
       "storage": [
         {
           "contract": "Initializable",
-          "path": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol",
+          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
           "label": "initialized",
           "astId": 10564,
           "type": "t_bool",
@@ -41,7 +41,7 @@
         },
         {
           "contract": "Initializable",
-          "path": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol",
+          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
           "label": "initializing",
           "astId": 10567,
           "type": "t_bool",
@@ -49,7 +49,7 @@
         },
         {
           "contract": "Initializable",
-          "path": "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol",
+          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
           "label": "______gap",
           "astId": 10632,
           "type": "t_array:50<t_uint256>",
