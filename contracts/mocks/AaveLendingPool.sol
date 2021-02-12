@@ -1,12 +1,13 @@
-pragma solidity ^0.6.0;
+//SPDX-License-Identifier: Unlicense
+pragma solidity 0.7.6;
 
 import "../interfaces/IAaveLendingPool.sol";
 import "./MockERC20.sol";
-// import '@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20.sol';
-import "@nomiclabs/buidler/console.sol";
+// import '@openzeppelin/contracts-upgradeable/token/ERC20/ERC20.sol';
+import "hardhat/console.sol";
 
 contract AaveLendingPool is IAaveLendingPool {
-    using SafeMath for uint256;
+    using SafeMathUpgradeable for uint256;
 
     MockERC20 public aDai;
     MockERC20 public dai;

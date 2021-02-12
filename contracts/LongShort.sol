@@ -1,9 +1,9 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity 0.6.12;
+pragma solidity 0.7.6;
 
-import "@nomiclabs/buidler/console.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol";
+import "hardhat/console.sol";
+import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
 
 import "./SyntheticToken.sol";
@@ -67,7 +67,7 @@ import "./Staker.sol";
  * Remove safe Math library
  */
 contract LongShort is Initializable {
-    using SafeMath for uint256;
+    using SafeMathUpgradeable for uint256;
 
     ////////////////////////////////////
     //////// VARIABLES /////////////////
@@ -113,7 +113,7 @@ contract LongShort is Initializable {
     /////////// EVENTS /////////////////
     ////////////////////////////////////
 
-    event V1();
+    event V1(); // TODO: add all init variables here!
     event ValueLockedInSystem(
         uint256 marketIndex,
         uint256 contractCallCounter,
@@ -280,6 +280,7 @@ contract LongShort is Initializable {
 
         // Add new staker funds with fresh synthetic tokens.
         staker.addNewStakingFund(
+            marketNumber,
             address(longTokens[marketNumber]),
             address(shortTokens[marketNumber])
         );

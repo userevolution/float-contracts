@@ -1,22 +1,9 @@
 const SyntheticToken = artifacts.require("SyntheticToken");
-const ShortCoins = artifacts.require("ShortCoins");
-const LongShort = artifacts.require("LongShort");
-const ADai = artifacts.require("ADai");
-const Dai = artifacts.require("Dai");
-const AaveLendingPool = artifacts.require("AaveLendingPool");
-const LendingPoolAddressesProvider = artifacts.require(
-  "LendingPoolAddressesProvider"
-);
-const PriceOracle = artifacts.require("PriceOracle");
 
-const {
-  BN,
-  expectRevert,
-  ether,
-  expectEvent,
-  balance,
-  time,
-} = require("@openzeppelin/test-helpers");
+const PriceOracle = artifacts.require("PriceOracle");
+const LongShort = artifacts.require("LongShort");
+
+const { BN } = require("@openzeppelin/test-helpers");
 
 const { mintAndApprove } = require("../test/helpers");
 
@@ -54,7 +41,6 @@ const deployTestMarket = async (
 module.exports = async function (deployer, network, accounts) {
   console.log(99);
 
-  const admin = accounts[0];
   const user1 = accounts[1];
   const user2 = accounts[2];
   const user3 = accounts[3];
@@ -70,11 +56,12 @@ module.exports = async function (deployer, network, accounts) {
   await deployTestMarket("GOLD", "GOLD", longShort, dai, deployer);
   await deployTestMarket("SP", "S&P500", longShort, dai, deployer);
   const currentMarketIndex = (await longShort.latestMarket()).toNumber();
-  console.log("current", { currentMarketIndex });
 
   for (let marketIndex = 1; marketIndex <= currentMarketIndex; ++marketIndex) {
     const longAddress = await longShort.longTokens.call(marketIndex);
     const shortAddress = await longShort.shortTokens.call(marketIndex);
+    const priceOracleAddress = await longShort.priceFeed.call(marketIndex);
+    const priceOracle = await PriceOracle.at(priceOracleAddress);
 
     let long = await SyntheticToken.at(longAddress);
     let short = await SyntheticToken.at(shortAddress);

@@ -1,4 +1,5 @@
-pragma solidity 0.6.12;
+//SPDX-License-Identifier: Unlicense
+pragma solidity 0.7.6;
 
 abstract contract IOracleManager {
     function registerNewMarket(uint256 marketIndex, address marketFeed)

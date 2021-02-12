@@ -1,4 +1,5 @@
-pragma solidity 0.6.12;
+//SPDX-License-Identifier: Unlicense
+pragma solidity 0.7.6;
 
 import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
 
@@ -10,15 +11,15 @@ contract PriceOracle is AggregatorV3Interface {
         assetPrice = _initialPrice;
     }
 
-    function decimals() external override view returns (uint8) {
+    function decimals() external view override returns (uint8) {
         return 10;
     }
 
-    function description() external override view returns (string memory) {
+    function description() external view override returns (string memory) {
         return "mystring";
     }
 
-    function version() external override view returns (uint256) {
+    function version() external view override returns (uint256) {
         return 10;
     }
 
@@ -27,8 +28,8 @@ contract PriceOracle is AggregatorV3Interface {
     // which could be misinterpreted as actual reported values.
     function getRoundData(uint80 _roundId)
         external
-        override
         view
+        override
         returns (
             uint80 roundId,
             int256 answer,
@@ -42,8 +43,8 @@ contract PriceOracle is AggregatorV3Interface {
 
     function latestRoundData()
         external
-        override
         view
+        override
         returns (
             uint80 roundId,
             int256 answer,

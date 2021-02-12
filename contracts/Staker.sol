@@ -1,6 +1,7 @@
-pragma solidity 0.6.12;
+//SPDX-License-Identifier: Unlicense
+pragma solidity 0.7.6;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/presets/ERC20PresetMinterPauser.sol";
+import "@openzeppelin/contracts-upgradeable/presets/ERC20PresetMinterPauserUpgradeable.sol";
 import "./LongShort.sol";
 import "./FloatToken.sol";
 
@@ -15,7 +16,7 @@ import "./FloatToken.sol";
 
 /** @title Staker Contract (name is WIP) */
 contract Staker is Initializable {
-    using SafeMath for uint256;
+    using SafeMathUpgradeable for uint256;
 
     ////////////////////////////////////
     //////// VARIABLES /////////////////
@@ -35,6 +36,8 @@ contract Staker is Initializable {
         uint256 timestamp;
         uint256 accumulativeFloatPerSecond;
     }
+
+    mapping(address => uint256) public marketIndexOfToken;
     // token address -> state index -> float reward state
     mapping(address => mapping(uint256 => RewardState))
         public syntheticRewardParams;
@@ -107,11 +110,14 @@ contract Staker is Initializable {
     ////////////////////////////////////
 
     function addNewStakingFund(
+        uint256 marketIndex,
         address longTokenAddress,
         address shortTokenAddress
     ) external onlyFloat {
         syntheticValid[longTokenAddress] = true;
         syntheticValid[shortTokenAddress] = true;
+        marketIndexOfToken[longTokenAddress] = marketIndex;
+        marketIndexOfToken[shortTokenAddress] = marketIndex;
 
         syntheticRewardParams[longTokenAddress][0].timestamp = block.timestamp;
         syntheticRewardParams[longTokenAddress][0]
@@ -259,10 +265,10 @@ contract Staker is Initializable {
     Users can call this same function to "top-up" their stake.
     */
     function stake(address tokenAddress, uint256 amount)
-        external
+        public
         onlyValidSynthetic(tokenAddress)
     {
-        ERC20PresetMinterPauserUpgradeSafe(tokenAddress).transferFrom(
+        ERC20PresetMinterPauserUpgradeable(tokenAddress).transferFrom(
             msg.sender,
             address(this),
             amount
@@ -294,6 +300,28 @@ contract Staker is Initializable {
         emit StakeAdded(msg.sender, tokenAddress, amount);
     }
 
+    /*
+    Staking function.
+    This is a more gas heavy staking function.
+    It ensures the user starts earning FLOAT immediately 
+    As opposed to from the next state point generated.
+    */
+    function stakeAndEarnImmediately(address tokenAddress, uint256 amount)
+        external
+        onlyValidSynthetic(tokenAddress)
+    {
+        //First update state.
+        floatContract._updateSystemState(marketIndexOfToken[tokenAddress]);
+
+        // Stake for user.
+        stake(tokenAddress, amount);
+
+        // Now we can set the users reward state to the just created state.
+        userIndexOfLastClaimedReward[tokenAddress][
+            msg.sender
+        ] = latestRewardIndex[tokenAddress];
+    }
+
     ////////////////////////////////////
     /////// WITHDRAW n MINT ////////////
     ////////////////////////////////////
@@ -314,7 +342,7 @@ contract Staker is Initializable {
         ][msg.sender]
             .sub(amount);
 
-        ERC20PresetMinterPauserUpgradeSafe(tokenAddress).transfer(
+        ERC20PresetMinterPauserUpgradeable(tokenAddress).transfer(
             msg.sender,
             amount
         );

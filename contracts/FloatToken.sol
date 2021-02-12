@@ -1,8 +1,9 @@
-pragma solidity 0.6.12;
+//SPDX-License-Identifier: Unlicense
+pragma solidity 0.7.6;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/presets/ERC20PresetMinterPauser.sol";
+import "@openzeppelin/contracts-upgradeable/presets/ERC20PresetMinterPauserUpgradeable.sol";
 
-contract FloatToken is ERC20PresetMinterPauserUpgradeSafe {
+contract FloatToken is ERC20PresetMinterPauserUpgradeable {
     function setup(
         string calldata name,
         string calldata symbol,

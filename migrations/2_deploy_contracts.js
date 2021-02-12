@@ -1,4 +1,4 @@
-const SYNTHETIC_TOKEN = "SyntheticToken";
+const SYNTHETIC_TOKEN = "Dai";
 const TOKEN_FACTORY = "TokenFactory";
 const PRICE_ORACLE_NAME = "PriceOracle";
 const STAKER = "Staker";
@@ -6,7 +6,7 @@ const FLOAT_TOKEN = "FloatToken";
 
 const LongShort = artifacts.require("LongShort");
 
-const SyntheticToken = artifacts.require(SYNTHETIC_TOKEN);
+const Dai = artifacts.require(SYNTHETIC_TOKEN);
 const TokenFactory = artifacts.require(TOKEN_FACTORY);
 const PriceOracle = artifacts.require(PRICE_ORACLE_NAME);
 const Staker = artifacts.require(STAKER);
@@ -27,12 +27,10 @@ const deployContracts = async (options, accounts, deployer) => {
   await push({ ...options, force: true });
 
   // Dai
-  await deployer.deploy(SyntheticToken);
-  let dai = await SyntheticToken.deployed();
+  await deployer.deploy(Dai);
+  let dai = await Dai.deployed();
 
   await dai.initialize("dai token", "DAI");
-
-  // const priceOracle = await deployer.deploy(PriceOracle, "1000000000000000000");
 
   const tokenFactory = await TokenFactory.new({
     from: admin,
