@@ -1,6 +1,7 @@
 //usePlugin("@nomiclabs/buidler-waffle");
 require("@nomiclabs/hardhat-truffle5");
 require("solidity-coverage");
+require("hardhat-gas-reporter");
 
 // This is a sample Buidler task. To learn how to create your own go to
 // https://buidler.dev/guides/create-task.html
@@ -26,5 +27,12 @@ module.exports = {
         runs: 200,
       },
     },
+  },
+  gasReporter: {
+    // Disabled by default for faster running of tests
+    enabled: false,
+    currency: "USD",
+    gasPrice: 80,
+    coinmarketcap: "9aacee3e-7c04-4978-8f93-63198c0fbfef",
   },
 };
