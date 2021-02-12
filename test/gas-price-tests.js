@@ -31,6 +31,7 @@ contract("LongShort", (accounts) => {
   let dai;
   let priceOracle;
   let marketIndex;
+  let fund;
 
   const syntheticName = "FTSE100";
   const syntheticSymbol = "FTSE";
@@ -67,6 +68,7 @@ contract("LongShort", (accounts) => {
       _badLiquidityExitFee
     );
 
+    fund = synthResult.fundToken;
     long = synthResult.long;
     short = synthResult.short;
     priceOracle = synthResult.oracle;
@@ -74,7 +76,7 @@ contract("LongShort", (accounts) => {
   });
 
   it("longshort: cost of Minting without oracle movement", async () => {
-    await mintAndApprove(dai, defaultMintAmount, user1, longShort.address);
+    await mintAndApprove(fund, defaultMintAmount, user1, longShort.address);
     const receipt = await longShort.mintLong(
       marketIndex,
       new BN(defaultMintAmount),
@@ -93,17 +95,17 @@ contract("LongShort", (accounts) => {
   });
 
   it("longshort: cost of Minting WITH oracle movement", async () => {
-    await mintAndApprove(dai, defaultMintAmount, user1, longShort.address);
+    await mintAndApprove(fund, defaultMintAmount, user1, longShort.address);
     await longShort.mintLong(marketIndex, new BN(defaultMintAmount), {
       from: user1,
     });
 
-    await mintAndApprove(dai, defaultMintAmount, user2, longShort.address);
+    await mintAndApprove(fund, defaultMintAmount, user2, longShort.address);
     await longShort.mintShort(marketIndex, new BN(defaultMintAmount), {
       from: user2,
     });
 
-    await mintAndApprove(dai, defaultMintAmount, user3, longShort.address);
+    await mintAndApprove(fund, defaultMintAmount, user3, longShort.address);
     // change oracle price.
     await priceOracle.increasePrice(tenPercentMovement);
     const receipt = await longShort.mintLong(

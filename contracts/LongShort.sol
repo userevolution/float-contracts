@@ -95,7 +95,7 @@ contract LongShort is Initializable {
     mapping(uint256 => uint256) public longTokenPrice;
     mapping(uint256 => uint256) public shortTokenPrice;
     mapping(uint256 => uint256) public externalContractCounter;
-    mapping(uint256 => IERC20) public fundTokens;
+    mapping(uint256 => IERC20Upgradeable) public fundTokens;
     mapping(uint256 => AggregatorV3Interface) internal priceFeed;
 
     // Synthetic long/short tokens users can mint and redeem.
@@ -256,7 +256,7 @@ contract LongShort is Initializable {
         badLiquidityExitFee[marketNumber] = _badLiquidityExitFee;
 
         // Initial market state.
-        fundTokens[marketNumber] = IERC20(_fundToken);
+        fundTokens[marketNumber] = IERC20Upgradeable(_fundToken);
         priceFeed[marketNumber] = AggregatorV3Interface(_oracleFeed);
 
         // Create new synthetic long token.
