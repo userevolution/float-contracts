@@ -1,20 +1,21 @@
-pragma solidity ^0.6.0;
+//SPDX-License-Identifier: Unlicense
+pragma solidity 0.7.6;
 
-import '../interfaces/ILendingPoolAddressesProvider.sol';
-import './AaveLendingPool.sol';
+import "../interfaces/ILendingPoolAddressesProvider.sol";
+import "./AaveLendingPool.sol";
 
 contract LendingPoolAddressesProvider is ILendingPoolAddressesProvider {
-  AaveLendingPool public aaveLendingPool;
+    AaveLendingPool public aaveLendingPool;
 
-  constructor(AaveLendingPool aaveLendingPoolAddress) public {
-    aaveLendingPool = aaveLendingPoolAddress;
-  }
+    constructor(AaveLendingPool aaveLendingPoolAddress) public {
+        aaveLendingPool = aaveLendingPoolAddress;
+    }
 
-  function getLendingPool() public override view returns (address) {
-    return address(aaveLendingPool);
-  }
+    function getLendingPool() public view override returns (address) {
+        return address(aaveLendingPool);
+    }
 
-  function getLendingPoolCore() public override view returns (address) {
-    return address(aaveLendingPool);
-  }
+    function getLendingPoolCore() public view override returns (address) {
+        return address(aaveLendingPool);
+    }
 }

@@ -1,6 +1,6 @@
-pragma solidity 0.6.12;
+pragma solidity 0.7.6;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/presets/ERC20PresetMinterPauser.sol";
+import "@openzeppelin/contracts-upgradeable/presets/ERC20PresetMinterPauserUpgradeable.sol";
 
 abstract contract IYieldManager {
     function depositToken(address erc20Token, uint256 amount) public virtual;

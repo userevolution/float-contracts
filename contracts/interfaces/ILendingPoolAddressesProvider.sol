@@ -1,9 +1,10 @@
-pragma solidity ^0.6.0;
+//SPDX-License-Identifier: Unlicense
+pragma solidity 0.7.6;
 
 abstract contract ILendingPoolAddressesProvider {
-  function getLendingPool() public virtual view returns (address);
+    function getLendingPool() public view virtual returns (address);
 
-  function getLendingPoolCore() public virtual view returns (address);
+    function getLendingPoolCore() public view virtual returns (address);
 }
 
 // INSERT LATER INTO NOLOSSDAO

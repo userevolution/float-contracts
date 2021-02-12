@@ -1,6 +1,7 @@
-pragma solidity 0.6.12;
+//SPDX-License-Identifier: Unlicense
+pragma solidity 0.7.6;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/presets/ERC20PresetMinterPauser.sol";
+import "@openzeppelin/contracts-upgradeable/presets/ERC20PresetMinterPauserUpgradeable.sol";
 import "./LongShort.sol";
 import "./FloatToken.sol";
 
@@ -15,7 +16,7 @@ import "./FloatToken.sol";
 
 /** @title Staker Contract (name is WIP) */
 contract Staker is Initializable {
-    using SafeMath for uint256;
+    using SafeMathUpgradeable for uint256;
 
     ////////////////////////////////////
     //////// VARIABLES /////////////////
@@ -267,7 +268,7 @@ contract Staker is Initializable {
         public
         onlyValidSynthetic(tokenAddress)
     {
-        ERC20PresetMinterPauserUpgradeSafe(tokenAddress).transferFrom(
+        ERC20PresetMinterPauserUpgradeable(tokenAddress).transferFrom(
             msg.sender,
             address(this),
             amount
@@ -341,7 +342,7 @@ contract Staker is Initializable {
         ][msg.sender]
             .sub(amount);
 
-        ERC20PresetMinterPauserUpgradeSafe(tokenAddress).transfer(
+        ERC20PresetMinterPauserUpgradeable(tokenAddress).transfer(
             msg.sender,
             amount
         );

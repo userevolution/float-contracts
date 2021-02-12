@@ -1,6 +1,7 @@
-pragma solidity 0.6.12;
+//SPDX-License-Identifier: Unlicense
+pragma solidity 0.7.6;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "./interfaces/IOracleManager.sol";
 
 contract OracleManagerMock is IOracleManager, Initializable {

@@ -1,5 +1,5 @@
 const { BN } = require("@openzeppelin/test-helpers");
-const { web3 } = require("@nomiclabs/buidler-web3");
+const { web3 } = require("@nomiclabs/hardhat-web3");
 
 const LONGSHORT_CONTRACT_NAME = "LongShort";
 const PRICE_ORACLE_NAME = "PriceOracle";

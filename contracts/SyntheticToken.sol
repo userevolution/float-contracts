@@ -1,5 +1,6 @@
-pragma solidity 0.6.12;
+//SPDX-License-Identifier: Unlicense
+pragma solidity 0.7.6;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/presets/ERC20PresetMinterPauser.sol";
+import "@openzeppelin/contracts-upgradeable/presets/ERC20PresetMinterPauserUpgradeable.sol";
 
-contract SyntheticToken is ERC20PresetMinterPauserUpgradeSafe {}
+contract SyntheticToken is ERC20PresetMinterPauserUpgradeable {}

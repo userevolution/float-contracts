@@ -1,9 +1,9 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity 0.6.12;
+pragma solidity 0.7.6;
 
-import "@nomiclabs/buidler/console.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol";
+import "hardhat/console.sol";
+import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
 
 import "./SyntheticToken.sol";
@@ -67,7 +67,7 @@ import "./Staker.sol";
  * Remove safe Math library
  */
 contract LongShort is Initializable {
-    using SafeMath for uint256;
+    using SafeMathUpgradeable for uint256;
 
     ////////////////////////////////////
     //////// VARIABLES /////////////////
@@ -81,7 +81,7 @@ contract LongShort is Initializable {
 
     // Stable coin we accept deposits in
     // Can we accept multiple deposits?
-    IERC20 public daiContract;
+    SyntheticToken public daiContract;
     TokenFactory public tokenFactory;
     Staker public staker;
 
@@ -231,7 +231,7 @@ contract LongShort is Initializable {
         address _staker
     ) public initializer {
         admin = _admin;
-        daiContract = IERC20(daiAddress);
+        daiContract = SyntheticToken(daiAddress);
         tokenFactory = TokenFactory(_tokenFactory);
         staker = Staker(_staker);
 
