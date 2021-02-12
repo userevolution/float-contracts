@@ -275,6 +275,7 @@ contract LongShort is Initializable {
         latestMarket = marketNumber;
 
         staker.addNewStakingFund(
+            marketNumber,
             address(longTokens[marketNumber]),
             address(shortTokens[marketNumber])
         );
