@@ -56,6 +56,7 @@ contract("LongShort", (accounts) => {
     const result = await initialize(admin);
     longShort = result.longShort;
     dai = result.dai;
+    priceOracle = result.oracleManagerMock;
 
     const synthResult = await createSynthetic(
       admin,
@@ -71,7 +72,6 @@ contract("LongShort", (accounts) => {
     fund = synthResult.fundToken;
     long = synthResult.long;
     short = synthResult.short;
-    priceOracle = synthResult.oracle;
     marketIndex = synthResult.currentMarketIndex;
   });
 
@@ -107,7 +107,7 @@ contract("LongShort", (accounts) => {
 
     await mintAndApprove(fund, defaultMintAmount, user3, longShort.address);
     // change oracle price.
-    await priceOracle.increasePrice(tenPercentMovement);
+    await priceOracle.increasePrice("1", tenPercentMovement);
     const receipt = await longShort.mintLong(
       marketIndex,
       new BN(defaultMintAmount),

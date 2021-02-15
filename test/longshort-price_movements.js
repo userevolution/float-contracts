@@ -43,6 +43,7 @@ contract("LongShort", (accounts) => {
   beforeEach(async () => {
     const result = await initialize(admin);
     longShort = result.longShort;
+    priceOracle = result.oracleManagerMock;
 
     const synthResult = await createSynthetic(
       admin,
@@ -58,7 +59,6 @@ contract("LongShort", (accounts) => {
     fund = synthResult.fundToken;
     long = synthResult.longToken;
     short = synthResult.shortToken;
-    priceOracle = synthResult.oracle;
     marketIndex = synthResult.currentMarketIndex;
   });
 
@@ -80,9 +80,9 @@ contract("LongShort", (accounts) => {
 
     assert.equal(longVal.toString(), shortVal.toString(), "Price movement");
 
-    const orcalePrice = await priceOracle.assetPrice.call();
+    const orcalePrice = await priceOracle.getMarketPriceByIndex.call("1");
 
-    await priceOracle.increasePrice(tenPercentMovement);
+    await priceOracle.increasePrice("1", tenPercentMovement);
     await longShort._updateSystemState(marketIndex);
 
     const newLongVal = await longShort.longValue.call(marketIndex); // $110
@@ -114,7 +114,7 @@ contract("LongShort", (accounts) => {
       true
     );
 
-    await priceOracle.decreasePrice(tenPercentMovement);
+    await priceOracle.decreasePrice("1", tenPercentMovement);
     await longShort._updateSystemState(marketIndex);
 
     const newLongVal = await longShort.longValue.call(marketIndex);
@@ -146,7 +146,7 @@ contract("LongShort", (accounts) => {
       false
     );
 
-    await priceOracle.increasePrice(tenPercentMovement);
+    await priceOracle.increasePrice("1", tenPercentMovement);
     await longShort._updateSystemState(marketIndex);
 
     const newLongVal = await longShort.longValue.call(marketIndex);
@@ -178,7 +178,7 @@ contract("LongShort", (accounts) => {
       false
     );
 
-    await priceOracle.decreasePrice(tenPercentMovement);
+    await priceOracle.decreasePrice("1", tenPercentMovement);
     await longShort._updateSystemState(marketIndex);
 
     const newLongVal = await longShort.longValue.call(marketIndex);
@@ -210,7 +210,7 @@ contract("LongShort", (accounts) => {
       false
     );
 
-    await priceOracle.increasePrice(hundredPercentMovement);
+    await priceOracle.increasePrice("1", hundredPercentMovement);
     await longShort._updateSystemState(marketIndex);
 
     const newLongVal = await longShort.longValue.call(marketIndex);
@@ -225,7 +225,7 @@ contract("LongShort", (accounts) => {
     // 0 fund
     assert.equal(newShortVal.toString(), "0", "Short value change correct");
 
-    await priceOracle.increasePrice(hundredPercentMovement);
+    await priceOracle.increasePrice("1", hundredPercentMovement);
     await longShort._updateSystemState(marketIndex);
 
     // 200 fund
@@ -249,7 +249,7 @@ contract("LongShort", (accounts) => {
       false
     );
 
-    await priceOracle.decreasePrice(hundredPercentMovement);
+    await priceOracle.decreasePrice("1", hundredPercentMovement);
     await longShort._updateSystemState(marketIndex);
 
     const newLongVal = await longShort.longValue.call(marketIndex);
@@ -272,7 +272,7 @@ contract("LongShort", (accounts) => {
       from: user1,
     });
 
-    await priceOracle.increasePrice(tenPercentMovement);
+    await priceOracle.increasePrice("1", tenPercentMovement);
     await longShort._updateSystemState(marketIndex);
 
     const newLongVal = await longShort.longValue.call(marketIndex);
@@ -288,7 +288,7 @@ contract("LongShort", (accounts) => {
     // 0 fund
     assert.equal(newShortVal.toString(), "0", "Short value change correct");
 
-    await priceOracle.decreasePrice(hundredPercentMovement);
+    await priceOracle.decreasePrice("1", hundredPercentMovement);
 
     // 100 fund
     assert.equal(
@@ -308,7 +308,7 @@ contract("LongShort", (accounts) => {
       from: user1,
     });
 
-    await priceOracle.increasePrice(tenPercentMovement);
+    await priceOracle.increasePrice("1", tenPercentMovement);
     await longShort._updateSystemState(marketIndex);
 
     const newLongVal = await longShort.longValue.call(marketIndex);
@@ -323,7 +323,7 @@ contract("LongShort", (accounts) => {
       defaultMintAmount,
       "Short value change correct"
     );
-    await priceOracle.decreasePrice(hundredPercentMovement);
+    await priceOracle.decreasePrice("1", hundredPercentMovement);
 
     // 100 fund
     assert.equal(newLongVal.toString(), 0, "Longvalue change not correct");

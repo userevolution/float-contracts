@@ -2,7 +2,8 @@ const { BN } = require("@openzeppelin/test-helpers");
 const { web3 } = require("@nomiclabs/hardhat-web3");
 
 const LONGSHORT_CONTRACT_NAME = "LongShort";
-const PRICE_ORACLE_NAME = "PriceOracle";
+const YIELD_MANAGER = "YieldManagerMock";
+const ORACLE_AGREGATOR = "OracleManagerMock";
 const SYNTHETIC_TOKEN = "SyntheticToken";
 const TOKEN_FACTORY = "TokenFactory";
 const STAKER = "Staker";
@@ -13,7 +14,8 @@ const TEN_TO_THE_18 = "1000000000000000000";
 
 const erc20 = artifacts.require(SYNTHETIC_TOKEN);
 const LongShort = artifacts.require(LONGSHORT_CONTRACT_NAME);
-const PriceOracle = artifacts.require(PRICE_ORACLE_NAME);
+const OracleManagerMock = artifacts.require(ORACLE_AGREGATOR);
+const YieldManager = artifacts.require(YIELD_MANAGER);
 const TokenFactory = artifacts.require(TOKEN_FACTORY);
 const Staker = artifacts.require(STAKER);
 const FloatToken = artifacts.require(FLOAT_TOKEN);
@@ -34,6 +36,12 @@ const initialize = async (admin) => {
   const longShort = await LongShort.new({
     from: admin,
   });
+  const oracleManagerMock = await OracleManagerMock.new({
+    from: admin,
+  });
+  const yieldManager = await YieldManager.new({
+    from: admin,
+  });
 
   await floatToken.setup("Float token", "FLOAT TOKEN", staker.address, {
     from: admin,
@@ -43,9 +51,24 @@ const initialize = async (admin) => {
     from: admin,
   });
 
-  await longShort.setup(admin, tokenFactory.address, staker.address, {
+  await oracleManagerMock.setup(admin, longShort.address, {
     from: admin,
   });
+
+  await yieldManager.setup(admin, longShort.address, {
+    from: admin,
+  });
+
+  await longShort.setup(
+    admin,
+    tokenFactory.address,
+    staker.address,
+    oracleManagerMock.address,
+    yieldManager.address,
+    {
+      from: admin,
+    }
+  );
 
   await staker.initialize(admin, longShort.address, floatToken.address, {
     from: admin,
@@ -54,6 +77,8 @@ const initialize = async (admin) => {
   return {
     longShort,
     tokenFactory,
+    oracleManagerMock,
+    yieldManager,
   };
 };
 
@@ -67,13 +92,12 @@ const createSynthetic = async (
   _baseExitFee,
   _badLiquidityExitFee
 ) => {
-  const oracle = await PriceOracle.new(new BN(TEN_TO_THE_18), {
-    from: admin,
-  });
-
   const fundToken = await erc20.new({
     from: admin,
   });
+
+  // For testing, we will use the fundToken's address as the oracle address. This is likely to chance in the future
+  const priceOracleAddress = fundToken.address;
 
   await fundToken.initialize("fund token", "FND", {
     from: admin,
@@ -83,7 +107,7 @@ const createSynthetic = async (
     syntheticName,
     syntheticSymbol,
     fundToken.address,
-    oracle.address,
+    priceOracleAddress,
     _baseEntryFee,
     _badLiquidityEntryFee,
     _baseExitFee,
@@ -99,7 +123,6 @@ const createSynthetic = async (
   let shortToken = await erc20.at(shortAddress);
 
   return {
-    oracle,
     currentMarketIndex,
     longToken,
     shortToken,
@@ -178,7 +201,12 @@ const feeCalculation = (
     }
   }
   // If greater than minFeeThreshold
-  if (amount.add(longValue).add(shortValue).gte(minThreshold)) {
+  if (
+    amount
+      .add(longValue)
+      .add(shortValue)
+      .gte(minThreshold)
+  ) {
     const TEN_TO_THE_18 = "1" + "000000000000000000";
     let betaDiff = new BN(TEN_TO_THE_18).sub(thinBeta); // TODO: when previous beta != 1
 

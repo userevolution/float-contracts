@@ -25,12 +25,37 @@ contract OracleManagerMock is IOracleManager, Initializable {
         longShortContract = _longShort;
     }
 
+    function getMarketPriceByIndex(uint256 marketIndex)
+        public
+        view
+        returns (int256)
+    {
+        address marketFeed = oracleFeeds[marketIndex];
+        return oraclePrices[marketFeed];
+    }
+
     function setMarketPriceByIndex(uint256 marketIndex, int256 price)
         public
         adminOnly
     {
         address marketFeed = oracleFeeds[marketIndex];
         oraclePrices[marketFeed] = price;
+    }
+
+    function increasePrice(uint256 marketIndex, int256 _percentage) public {
+        address marketFeed = oracleFeeds[marketIndex];
+        int256 assetPrice = oraclePrices[marketFeed];
+        oraclePrices[marketFeed] =
+            assetPrice +
+            ((assetPrice * _percentage) / (10**18));
+    }
+
+    function decreasePrice(uint256 marketIndex, int256 _percentage) public {
+        address marketFeed = oracleFeeds[marketIndex];
+        int256 assetPrice = oraclePrices[marketFeed];
+        oraclePrices[marketFeed] =
+            assetPrice -
+            ((assetPrice * _percentage) / (10**18));
     }
 
     function registerNewMarket(uint256 marketIndex, address marketFeed)
