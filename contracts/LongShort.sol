@@ -9,6 +9,8 @@ import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
 import "./SyntheticToken.sol";
 import "./TokenFactory.sol";
 import "./Staker.sol";
+import "./interfaces/IYieldManager.sol";
+import "./interfaces/IOracleManager.sol";
 
 /**
  * @dev {LongShort} contract, including:
@@ -83,6 +85,10 @@ contract LongShort is Initializable {
     TokenFactory public tokenFactory;
     Staker public staker;
 
+    // Interfaces to dependant contracts
+    IYieldManager public yieldManager;
+    IOracleManager public oracleAgregator;
+
     // Fixed-precision constants.
     uint256 public constant TEN_TO_THE_18 = 10**18;
     uint256 public constant feeUnitsOfPrecision = 10000;
@@ -96,7 +102,6 @@ contract LongShort is Initializable {
     mapping(uint256 => uint256) public shortTokenPrice;
     mapping(uint256 => uint256) public externalContractCounter;
     mapping(uint256 => IERC20Upgradeable) public fundTokens;
-    mapping(uint256 => AggregatorV3Interface) internal priceFeed;
 
     // Synthetic long/short tokens users can mint and redeem.
     mapping(uint256 => SyntheticToken) public longTokens;
@@ -113,7 +118,13 @@ contract LongShort is Initializable {
     /////////// EVENTS /////////////////
     ////////////////////////////////////
 
-    event V1(); // TODO: add all init variables here!
+    event V1(
+        address admin,
+        address tokenFactory,
+        address staker,
+        address yieldManager,
+        address oracleAgregator
+    ); // TODO: add all init variables here!
     event ValueLockedInSystem(
         uint256 marketIndex,
         uint256 contractCallCounter,
@@ -224,13 +235,23 @@ contract LongShort is Initializable {
     function setup(
         address _admin,
         address _tokenFactory,
-        address _staker
+        address _staker,
+        address _oracleAgregator,
+        address _yieldManager
     ) public initializer {
         admin = _admin;
         tokenFactory = TokenFactory(_tokenFactory);
         staker = Staker(_staker);
+        yieldManager = IYieldManager(_yieldManager);
+        oracleAgregator = IOracleManager(_oracleAgregator);
 
-        emit V1();
+        emit V1(
+            _admin,
+            _tokenFactory,
+            _staker,
+            _oracleAgregator,
+            _yieldManager
+        );
     }
 
     ////////////////////////////////////
@@ -257,7 +278,8 @@ contract LongShort is Initializable {
 
         // Initial market state.
         fundTokens[marketNumber] = IERC20Upgradeable(_fundToken);
-        priceFeed[marketNumber] = AggregatorV3Interface(_oracleFeed);
+
+        oracleAgregator.registerNewMarket(marketNumber, _oracleFeed);
 
         // Create new synthetic long token.
         longTokens[marketNumber] = SyntheticToken(
@@ -310,14 +332,7 @@ contract LongShort is Initializable {
      * Returns the latest price
      */
     function getLatestPrice(uint256 marketIndex) public view returns (int256) {
-        (
-            uint80 roundID,
-            int256 price,
-            uint256 startedAt,
-            uint256 timeStamp,
-            uint80 answeredInRound
-        ) = priceFeed[marketIndex].latestRoundData();
-        return price;
+        return oracleAgregator.getLatestPrice(marketIndex);
     }
 
     /**
