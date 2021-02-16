@@ -78,15 +78,16 @@ contract LongShort is Initializable {
     // Global state.
     address public admin; // This will likely be the Gnosis safe
     uint256 public latestMarket;
-    uint256 public totalValueLocked;
+    uint256 public totalValueLocked; // TODO(guy): per fund token!
     mapping(uint256 => bool) public marketExists;
 
     // Factory for dynamically creating synthetic long/short tokens.
     TokenFactory public tokenFactory;
+
+    // Staker for controlling governance token issuance.
     Staker public staker;
 
-    // Interfaces to dependant contracts
-    IYieldManager public yieldManager;
+    // Oracle for pulling underlying price data.
     IOracleManager public oracleAgregator;
 
     // Fixed-precision constants.
@@ -102,6 +103,7 @@ contract LongShort is Initializable {
     mapping(uint256 => uint256) public shortTokenPrice;
     mapping(uint256 => uint256) public externalContractCounter;
     mapping(uint256 => IERC20Upgradeable) public fundTokens;
+    mapping(uint256 => IYieldManager) public yieldManagers;
 
     // Synthetic long/short tokens users can mint and redeem.
     mapping(uint256 => SyntheticToken) public longTokens;
@@ -122,7 +124,6 @@ contract LongShort is Initializable {
         address admin,
         address tokenFactory,
         address staker,
-        address yieldManager,
         address oracleAgregator
     );
     event ValueLockedInSystem(
@@ -236,22 +237,14 @@ contract LongShort is Initializable {
         address _admin,
         address _tokenFactory,
         address _staker,
-        address _oracleAgregator,
-        address _yieldManager
+        address _oracleAgregator
     ) public initializer {
         admin = _admin;
         tokenFactory = TokenFactory(_tokenFactory);
         staker = Staker(_staker);
-        yieldManager = IYieldManager(_yieldManager);
         oracleAgregator = IOracleManager(_oracleAgregator);
 
-        emit V1(
-            _admin,
-            _tokenFactory,
-            _staker,
-            _oracleAgregator,
-            _yieldManager
-        );
+        emit V1(_admin, _tokenFactory, _staker, _oracleAgregator);
     }
 
     ////////////////////////////////////
@@ -263,57 +256,53 @@ contract LongShort is Initializable {
         string calldata syntheticSymbol,
         address _fundToken,
         address _oracleFeed,
+        address _yieldManager,
         uint256 _baseEntryFee,
         uint256 _badLiquidityEntryFee,
         uint256 _baseExitFee,
         uint256 _badLiquidityExitFee
     ) external adminOnly {
-        uint256 marketNumber = latestMarket.add(1);
+        latestMarket++;
+        marketExists[latestMarket] = true;
 
         // Initial minting/redeeming fees.
-        baseEntryFee[marketNumber] = _baseEntryFee;
-        baseExitFee[marketNumber] = _baseExitFee;
-        badLiquidityEntryFee[marketNumber] = _badLiquidityEntryFee;
-        badLiquidityExitFee[marketNumber] = _badLiquidityExitFee;
+        baseEntryFee[latestMarket] = _baseEntryFee;
+        baseExitFee[latestMarket] = _baseExitFee;
+        badLiquidityEntryFee[latestMarket] = _badLiquidityEntryFee;
+        badLiquidityExitFee[latestMarket] = _badLiquidityExitFee;
 
-        // Initial market state.
-        fundTokens[marketNumber] = IERC20Upgradeable(_fundToken);
-
-        oracleAgregator.registerNewMarket(marketNumber, _oracleFeed);
+        // Register price feed with oracle manager.
+        oracleAgregator.registerNewMarket(latestMarket, _oracleFeed);
 
         // Create new synthetic long token.
-        longTokens[marketNumber] = SyntheticToken(
+        longTokens[latestMarket] = SyntheticToken(
             tokenFactory.createTokenLong(syntheticName, syntheticSymbol)
         );
 
         // Create new synthetic short token.
-        shortTokens[marketNumber] = SyntheticToken(
+        shortTokens[latestMarket] = SyntheticToken(
             tokenFactory.createTokenShort(syntheticName, syntheticSymbol)
         );
 
         // Initial market state.
-        longTokenPrice[marketNumber] = TEN_TO_THE_18;
-        shortTokenPrice[marketNumber] = TEN_TO_THE_18;
-        assetPrice[marketNumber] = uint256(getLatestPrice(marketNumber));
-
-        // Update global state.
-        latestMarket = marketNumber;
-        marketExists[marketNumber] = true;
+        longTokenPrice[latestMarket] = TEN_TO_THE_18;
+        shortTokenPrice[latestMarket] = TEN_TO_THE_18;
+        assetPrice[latestMarket] = uint256(getLatestPrice(latestMarket));
+        fundTokens[latestMarket] = IERC20Upgradeable(_fundToken);
+        yieldManagers[latestMarket] = IYieldManager(_yieldManager);
 
         // Add new staker funds with fresh synthetic tokens.
         staker.addNewStakingFund(
-            marketNumber,
-            address(longTokens[marketNumber]),
-            address(shortTokens[marketNumber])
+            latestMarket,
+            address(longTokens[latestMarket]),
+            address(shortTokens[latestMarket])
         );
 
-        // TODO(guy): Update this event to track _fundToken address, need to
-        // change the graph handlers and schema to track that too.
         emit SyntheticTokenCreated(
-            marketNumber,
-            address(longTokens[marketNumber]),
-            address(shortTokens[marketNumber]),
-            assetPrice[marketNumber],
+            latestMarket,
+            address(longTokens[latestMarket]),
+            address(shortTokens[latestMarket]),
+            assetPrice[latestMarket],
             syntheticName,
             syntheticSymbol,
             _oracleFeed,
@@ -581,15 +570,15 @@ contract LongShort is Initializable {
     function _depositFunds(uint256 marketIndex, uint256 amount) internal {
         require(amount > 0, "User needs to add positive amount");
 
-        // TODO: Interest mechanism, probably lend coins to venus.
+        // Transfer the tokens to the LongShort contract.
         fundTokens[marketIndex].transferFrom(msg.sender, address(this), amount);
 
+        // Update global value state.
+        totalValueLocked = totalValueLocked.add(amount);
         totalValueLockedInMarket[marketIndex] = totalValueLockedInMarket[
             marketIndex
         ]
             .add(amount);
-
-        totalValueLocked = totalValueLocked.add(amount);
     }
 
     /*
@@ -605,6 +594,24 @@ contract LongShort is Initializable {
 
         // TODO: May need to liquidate venus coins if we're out of funds.
         fundTokens[marketIndex].transfer(msg.sender, amount);
+    }
+
+    /*
+     * Transfers locked funds from LongShort into the yield manager.
+     */
+    function _transferToYieldManager(uint256 marketIndex, uint256 amount)
+        internal
+    {
+        // TODO(guy): Implement me.
+    }
+
+    /*
+     * Transfers locked funds from the yield manager into LongShort.
+     */
+    function _transferFromYieldManager(uint256 marketIndex, uint256 amount)
+        internal
+    {
+        // TODO(guy): Implement me.
     }
 
     /*

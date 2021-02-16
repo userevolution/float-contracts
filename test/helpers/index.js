@@ -41,10 +41,6 @@ const initialize = async (admin) => {
     from: admin,
   });
 
-  const yieldManager = await YieldManager.new({
-    from: admin,
-  });
-
   await floatToken.setup("Float token", "FLOAT TOKEN", staker.address, {
     from: admin,
   });
@@ -57,16 +53,11 @@ const initialize = async (admin) => {
     from: admin,
   });
 
-  await yieldManager.setup(admin, longShort.address, {
-    from: admin,
-  });
-
   await longShort.setup(
     admin,
     tokenFactory.address,
     staker.address,
     oracleManagerMock.address,
-    yieldManager.address,
     {
       from: admin,
     }
@@ -80,7 +71,6 @@ const initialize = async (admin) => {
     longShort,
     tokenFactory,
     oracleManagerMock,
-    yieldManager,
   };
 };
 
@@ -98,10 +88,18 @@ const createSynthetic = async (
     from: admin,
   });
 
+  const yieldManager = await YieldManager.new({
+    from: admin,
+  });
+
   // For testing, we will use the fundToken's address as the oracle address. This is likely to chance in the future
   const priceOracleAddress = fundToken.address;
 
   await fundToken.initialize("fund token", "FND", {
+    from: admin,
+  });
+
+  await yieldManager.setup(admin, longShort.address, fundToken.address, {
     from: admin,
   });
 
@@ -110,6 +108,7 @@ const createSynthetic = async (
     syntheticSymbol,
     fundToken.address,
     priceOracleAddress,
+    yieldManager.address,
     _baseEntryFee,
     _badLiquidityEntryFee,
     _baseExitFee,
@@ -129,6 +128,7 @@ const createSynthetic = async (
     longToken,
     shortToken,
     fundToken,
+    yieldManager,
   };
 };
 

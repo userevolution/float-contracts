@@ -7,8 +7,10 @@ import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 
 import "../interfaces/IYieldManager.sol";
 
-// YieldManagerMock is an implementation of a yield manager that supports
-// configurable or deterministic token yields for testing.
+/*
+ * YieldManagerMock is an implementation of a yield manager that supports
+ * configurable, deterministic token yields for testing.
+ */
 contract YieldManagerMock is IYieldManager, Initializable {
     using SafeMathUpgradeable for uint256;
 
@@ -19,11 +21,11 @@ contract YieldManagerMock is IYieldManager, Initializable {
     // Fixed-precision scale for interest percentages.
     uint256 public constant yieldScale = 1e18;
 
-    // Global state per ERC20 token.
-    mapping(address => bool) public tokenEnabled;
-    mapping(address => uint256) public totalHeld;
-    mapping(address => uint256) public yieldRate; // pcnt per sec
-    mapping(address => uint256) public lastSettled; // secs after epoch
+    // Global state.
+    ERC20 public token;
+    uint256 public totalHeld;
+    uint256 public yieldRate; // pcnt per sec
+    uint256 public lastSettled; // secs after epoch
 
     ////////////////////////////////////
     /////////// MODIFIERS //////////////
@@ -39,24 +41,22 @@ contract YieldManagerMock is IYieldManager, Initializable {
         _;
     }
 
-    modifier ensureEnabled(address token) {
-        if (!tokenEnabled[token]) {
-            ERC20 ercToken = ERC20(token);
-
-            tokenEnabled[token] = true;
-            lastSettled[token] = block.timestamp;
-        }
-
-        _;
-    }
-
     ////////////////////////////////////
     ///// CONTRACT SET-UP //////////////
     ////////////////////////////////////
 
-    function setup(address _admin, address _longShort) public initializer {
+    function setup(
+        address _admin,
+        address _longShort,
+        address _token
+    ) public initializer {
+        // Admin contracts.
         admin = _admin;
         longShort = _longShort;
+
+        // Global state.
+        token = ERC20(_token);
+        lastSettled = block.timestamp;
     }
 
     ////////////////////////////////////
@@ -66,80 +66,62 @@ contract YieldManagerMock is IYieldManager, Initializable {
     /**
      * Adds the token's accrued yield to the token holdings.
      */
-    function settle(address token) public ensureEnabled(token) {
-        uint256 totalYield =
-            yieldRate[token].mul(block.timestamp.sub(lastSettled[token]));
+    function settle() public {
+        uint256 totalYield = yieldRate.mul(block.timestamp.sub(lastSettled));
 
-        lastSettled[token] = block.timestamp;
-        totalHeld[token] = totalHeld[token].add(
-            totalHeld[token].mul(totalYield).div(yieldScale)
-        );
+        lastSettled = block.timestamp;
+        totalHeld = totalHeld.add(totalHeld.mul(totalYield).div(yieldScale));
     }
 
     /**
      * Adds the given yield to the token holdings.
      */
-    function settleWithYield(address token, uint256 yield)
-        public
-        adminOnly
-        ensureEnabled(token)
-    {
-        lastSettled[token] = block.timestamp;
-        totalHeld[token] = totalHeld[token].add(
-            totalHeld[token].mul(yield).div(yieldScale)
-        );
+    function settleWithYield(uint256 yield) public adminOnly {
+        lastSettled = block.timestamp;
+        totalHeld = totalHeld.add(totalHeld.mul(yield).div(yieldScale));
     }
 
     /**
      * Sets the yield percentage per second for the given token.
      */
-    function setYieldRate(address token, uint256 yield)
-        public
-        adminOnly
-        ensureEnabled(token)
-    {
-        yieldRate[token] = yield;
+    function setYieldRate(uint256 _yieldRate) public adminOnly {
+        yieldRate = _yieldRate;
     }
 
-    function depositToken(address token, uint256 amount)
-        public
-        override
-        longShortOnly
-        ensureEnabled(token)
-    {
+    function depositToken(uint256 amount) public override longShortOnly {
         // Ensure token state is current.
-        settle(token);
+        settle();
 
         // Transfer tokens to manager contract.
-        ERC20 ercToken = ERC20(token);
-        ercToken.transferFrom(longShort, address(this), amount);
-        totalHeld[token] = totalHeld[token].add(amount);
+        token.transferFrom(longShort, address(this), amount);
+        totalHeld = totalHeld.add(amount);
     }
 
-    function withdrawDepositToken(address token, uint256 amount)
+    function withdrawToken(uint256 amount)
         public
         override
         longShortOnly
-        ensureEnabled(token)
-        returns (address tokenWithdrawn, uint256 amountWithdrawn)
     {
         // Ensure token state is current.
-        settle(token);
-        require(amount <= totalHeld[token]);
+        settle();
+        require(amount <= totalHeld);
 
         // Transfer tokens back to LongShort contract.
-        ERC20 ercToken = ERC20(token);
-        ercToken.approve(address(this), amount);
-        ercToken.transferFrom(address(this), longShort, amount);
-        totalHeld[token] = totalHeld[token].sub(amount);
+        token.approve(address(this), amount);
+        token.transferFrom(address(this), longShort, amount);
+        totalHeld = totalHeld.sub(amount);
     }
 
-    function getTotalHeld(address token)
+    function getTotalHeld()
         public
         view
         override
         returns (uint256 amount)
     {
-        return totalHeld[token];
+        return totalHeld;
+    }
+
+    function getHeldToken() public view override returns (address _token) {
+        return address(token);
     }
 }

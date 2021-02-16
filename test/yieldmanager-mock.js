@@ -25,10 +25,6 @@ contract("YieldManagerMock", (accounts) => {
     const result = await initialize(admin);
     longShort = result.longShort;
 
-    // New yield manager with "longShort" proxied to user.
-    yieldManager = await YieldManager.new({ from: admin });
-    await yieldManager.setup(admin, user, { from: admin });
-
     // Create synthetic tokens for yield manager.
     const synthResult = await createSynthetic(
       admin,
@@ -44,19 +40,25 @@ contract("YieldManagerMock", (accounts) => {
     // Mint some of these tokens for the user.
     token = synthResult.fundToken;
     await token.mint(user, oneHundred);
+
+    // New yield manager with "longShort" proxied to user.
+    yieldManager = await YieldManager.new({ from: admin });
+    await yieldManager.setup(admin, user, token.address, { from: admin });
+
+    // Allow yield manager to transfer user's tokens.
     await token.approve(yieldManager.address, oneHundred, {
       from: user,
     });
 
     // Deposit them into the yield manager.
-    await yieldManager.depositToken(token.address, oneHundred, {
+    await yieldManager.depositToken(oneHundred, {
       from: user,
     });
   });
 
   it("depositing into yield manager sets correct holdings", async () => {
     // Should be 100 tokens in the yield manager after beforeEach().
-    var totalHeld = await yieldManager.totalHeld.call(token.address);
+    var totalHeld = await yieldManager.totalHeld.call();
     assert.equal(
       totalHeld.toString(),
       oneHundred.toString(),
@@ -73,12 +75,12 @@ contract("YieldManagerMock", (accounts) => {
   });
 
   it("withdrawing from yield manager sets correct holdings", async () => {
-    await yieldManager.withdrawDepositToken(token.address, fifty, {
+    await yieldManager.withdrawToken(fifty, {
       from: user,
     });
 
     // Should be 50 tokens in the yield manager after withdrawal.
-    var totalHeld = await yieldManager.totalHeld.call(token.address);
+    var totalHeld = await yieldManager.totalHeld.call();
     assert.equal(
       totalHeld.toString(),
       fifty.toString(),
@@ -95,12 +97,12 @@ contract("YieldManagerMock", (accounts) => {
   });
 
   it("settling with yield increases holdings", async () => {
-    await yieldManager.settleWithYield(token.address, oneTenth, {
+    await yieldManager.settleWithYield(oneTenth, {
       from: admin,
     });
 
     // Should be 110 tokens in yield manager after settling.
-    var totalHeld = await yieldManager.totalHeld.call(token.address);
+    var totalHeld = await yieldManager.totalHeld.call();
     assert.equal(
       totalHeld.toString(),
       oneHundredTen.toString(),
@@ -109,12 +111,21 @@ contract("YieldManagerMock", (accounts) => {
   });
 
   it("getTotalHeld should agree with actual holdings", async () => {
-    var getTotalHeld = await yieldManager.getTotalHeld(token.address);
-    var totalHeld = await yieldManager.totalHeld.call(token.address);
+    var getTotalHeld = await yieldManager.getTotalHeld();
+    var totalHeld = await yieldManager.totalHeld.call();
     assert.equal(
       getTotalHeld.toString(),
       totalHeld.toString(),
       "getTotalHeld doesn't agree with actual holdings"
+    );
+  });
+
+  it("getHeldToken should agree with actual underlying token", async () => {
+    var getHeldToken = await yieldManager.getHeldToken.call();
+    assert.equal(
+      getHeldToken,
+      token.address,
+      "getHeldToken doesn't return correct token address"
     );
   });
 });
