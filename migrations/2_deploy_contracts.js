@@ -24,7 +24,7 @@ const deployContracts = async (options, accounts, deployer) => {
   add({
     contractsData: [
       { name: "LongShort", alias: "LongShort" },
-      { name: ORACLE_AGREGATOR, alias: "OracleAgregator" },
+      { name: ORACLE_AGREGATOR, alias: "oracleAggregator" },
       { name: YIELD_MANAGER, alias: "YieldManager" },
     ],
   });
@@ -47,7 +47,7 @@ const deployContracts = async (options, accounts, deployer) => {
 
   const oracleAgregator = await create({
     ...options,
-    contractAlias: "OracleAgregator",
+    contractAlias: "oracleAggregator",
   });
   const oracleAgregatorInstance = await OracleManagerMock.at(
     oracleAgregator.address
