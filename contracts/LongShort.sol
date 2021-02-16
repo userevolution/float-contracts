@@ -11,6 +11,7 @@ import "./TokenFactory.sol";
 import "./Staker.sol";
 import "./interfaces/IYieldManager.sol";
 import "./interfaces/IOracleManager.sol";
+import "./interfaces/ILongShort.sol";
 
 /**
  * @dev {LongShort} contract, including:
@@ -68,7 +69,7 @@ import "./interfaces/IOracleManager.sol";
  * Layer 2 solutions
  * Remove safe Math library
  */
-contract LongShort is Initializable {
+contract LongShort is ILongShort, Initializable {
     using SafeMathUpgradeable for uint256;
 
     ////////////////////////////////////
@@ -789,6 +790,7 @@ contract LongShort is Initializable {
 
     function redeemLong(uint256 marketIndex, uint256 tokensToRedeem)
         external
+        override
         refreshSystemState(marketIndex)
     {
         // Burn tokens - will revert unless user gives permission to contract.
@@ -836,6 +838,7 @@ contract LongShort is Initializable {
 
     function redeemShort(uint256 marketIndex, uint256 tokensToRedeem)
         external
+        override
         refreshSystemState(marketIndex)
     {
         // Burn tokens - will revert unless user gives permission to contract.
