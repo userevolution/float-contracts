@@ -128,6 +128,7 @@ contract LongShort is Initializable {
     event ValueLockedInSystem(
         uint256 marketIndex,
         uint256 contractCallCounter,
+        uint256 totalValueLocked,
         uint256 totalValueLockedInMarket,
         uint256 longValue,
         uint256 shortValue
@@ -561,6 +562,7 @@ contract LongShort is Initializable {
         emit ValueLockedInSystem(
             marketIndex,
             externalContractCounter[marketIndex],
+            totalValueLocked,
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
             shortValue[marketIndex]
@@ -729,6 +731,7 @@ contract LongShort is Initializable {
         emit ValueLockedInSystem(
             marketIndex,
             externalContractCounter[marketIndex],
+            totalValueLocked,
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
             shortValue[marketIndex]
@@ -777,6 +780,7 @@ contract LongShort is Initializable {
         emit ValueLockedInSystem(
             marketIndex,
             externalContractCounter[marketIndex],
+            totalValueLocked,
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
             shortValue[marketIndex]
@@ -828,6 +832,7 @@ contract LongShort is Initializable {
         emit ValueLockedInSystem(
             marketIndex,
             externalContractCounter[marketIndex],
+            totalValueLocked,
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
             shortValue[marketIndex]
@@ -875,6 +880,7 @@ contract LongShort is Initializable {
         emit ValueLockedInSystem(
             marketIndex,
             externalContractCounter[marketIndex],
+            totalValueLocked,
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
             shortValue[marketIndex]
