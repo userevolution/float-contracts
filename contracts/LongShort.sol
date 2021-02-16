@@ -124,7 +124,7 @@ contract LongShort is Initializable {
         address staker,
         address yieldManager,
         address oracleAgregator
-    ); // TODO: add all init variables here!
+    );
     event ValueLockedInSystem(
         uint256 marketIndex,
         uint256 contractCallCounter,
