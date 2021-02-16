@@ -3,7 +3,9 @@
   "name": "float-capital",
   "version": "0.1.0",
   "contracts": {
-    "LongShort": "LongShort"
+    "LongShort": "LongShort",
+    "OracleAgregator": "OracleManagerMock",
+    "YieldManager": "YieldManagerMock"
   },
   "dependencies": {},
   "compiler": {

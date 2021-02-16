@@ -1,6 +1,7 @@
 const SYNTHETIC_TOKEN = "Dai";
 const TOKEN_FACTORY = "TokenFactory";
-const PRICE_ORACLE_NAME = "PriceOracle";
+const YIELD_MANAGER = "YieldManagerMock";
+const ORACLE_AGREGATOR = "OracleManagerMock";
 const STAKER = "Staker";
 const FLOAT_TOKEN = "FloatToken";
 
@@ -8,7 +9,8 @@ const LongShort = artifacts.require("LongShort");
 
 const Dai = artifacts.require(SYNTHETIC_TOKEN);
 const TokenFactory = artifacts.require(TOKEN_FACTORY);
-const PriceOracle = artifacts.require(PRICE_ORACLE_NAME);
+const OracleManagerMock = artifacts.require(ORACLE_AGREGATOR);
+const YieldManager = artifacts.require(YIELD_MANAGER);
 const Staker = artifacts.require(STAKER);
 const FloatToken = artifacts.require(FLOAT_TOKEN);
 
@@ -16,13 +18,15 @@ const FloatToken = artifacts.require(FLOAT_TOKEN);
 const { scripts, ConfigManager } = require("@openzeppelin/cli");
 const { add, push, create } = scripts;
 
-const SIMULATED_INSTANT_APY = 10;
-
 const deployContracts = async (options, accounts, deployer) => {
   const admin = accounts[0];
 
   add({
-    contractsData: [{ name: "LongShort", alias: "LongShort" }],
+    contractsData: [
+      { name: "LongShort", alias: "LongShort" },
+      { name: ORACLE_AGREGATOR, alias: "OracleAgregator" },
+      { name: YIELD_MANAGER, alias: "YieldManager" },
+    ],
   });
   await push({ ...options, force: true });
 
@@ -32,26 +36,51 @@ const deployContracts = async (options, accounts, deployer) => {
 
   await dai.initialize("dai token", "DAI");
 
-  const tokenFactory = await TokenFactory.new({
-    from: admin,
-  });
+  await deployer.deploy(TokenFactory);
+  let tokenFactory = await TokenFactory.deployed();
 
-  const staker = await Staker.new({
-    from: admin,
-  });
+  await deployer.deploy(Staker);
+  let staker = await Staker.deployed();
 
-  const floatToken = await FloatToken.new({
-    from: admin,
+  await deployer.deploy(FloatToken);
+  let floatToken = await FloatToken.deployed();
+
+  const oracleAgregator = await create({
+    ...options,
+    contractAlias: "OracleAgregator",
   });
+  const oracleAgregatorInstance = await OracleManagerMock.at(
+    oracleAgregator.address
+  );
+
+  const yieldManager = await create({
+    ...options,
+    contractAlias: "YieldManager",
+  });
+  const yieldManagerInstance = await YieldManager.at(yieldManager.address);
 
   const longShort = await create({
     ...options,
     contractAlias: "LongShort",
     methodName: "setup",
-    methodArgs: [admin, tokenFactory.address, staker.address],
+    methodArgs: [
+      admin,
+      tokenFactory.address,
+      staker.address,
+      oracleAgregator.address,
+      yieldManager.address,
+    ],
   });
 
   const longShortInstance = await LongShort.at(longShort.address);
+
+  await oracleAgregatorInstance.setup(admin, longShort.address, {
+    from: admin,
+  });
+
+  await yieldManagerInstance.setup(admin, longShort.address, {
+    from: admin,
+  });
 
   await tokenFactory.setup(admin, longShort.address, {
     from: admin,
@@ -66,7 +95,7 @@ const deployContracts = async (options, accounts, deployer) => {
   });
 };
 
-module.exports = async function (deployer, networkName, accounts) {
+module.exports = async function(deployer, networkName, accounts) {
   deployer.then(async () => {
     // Don't try to deploy/migrate the contracts for tests
     if (networkName === "test") {
