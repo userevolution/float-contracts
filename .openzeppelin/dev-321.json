@@ -1,7 +1,7 @@
 {
   "contracts": {
     "LongShort": {
-      "address": "0xc5227927D1303145F2e86a15439Fd2B5C9D4b03D",
+      "address": "0xC3Fb033114620B6511bD0be0bC60Cb3cb74Eb8Cb",
       "constructorCode": "608060405234801561001057600080fd5b5061257d806100206000396000f3fe",
       "bodyBytecodeHash": "ec4b7cea5f2a84a2b1a1fd5ffc1b006fad53e664f4638521c8bfe430e52a6ee0",
       "localBytecodeHash": "24a541b7c1ef576ff62e0b774e829c703a611934d4d0996c158c30a92ffbd357",
@@ -244,7 +244,7 @@
       }
     },
     "OracleAgregator": {
-      "address": "0x10e6Bfdc69b8a03F1D11828b1D6e5dE83455C55f",
+      "address": "0xD87E5eE10A4233319c94611b3198cA584e89fa74",
       "constructorCode": "608060405234801561001057600080fd5b50610590806100206000396000f3fe",
       "bodyBytecodeHash": "bdc3a23c9dab76fa6a6ef2b0356dddec040dc7867697191acdb5cf25375c9d40",
       "localBytecodeHash": "645c669745379f07961876087d49340199901dbb14fdb178299b7184fcaf30b8",
@@ -337,7 +337,7 @@
       }
     },
     "YieldManager": {
-      "address": "0x3D88547BF768A1549B177D81d27d9bbEf07521dC",
+      "address": "0xe745E3dd2a7c6d0FBDAa8401622fb7e854dAb9Ff",
       "constructorCode": "608060405234801561001057600080fd5b50610879806100206000396000f3fe",
       "bodyBytecodeHash": "050bb9a57ef38736d0107f0028fa1d59e9a8effcae3ab5eb4509cb1325c65cdc",
       "localBytecodeHash": "24c03129de52016c89165200daf39db638950e1fad9f3b3d56c62853c94596b7",
@@ -436,28 +436,28 @@
   "proxies": {
     "float-capital/OracleAgregator": [
       {
-        "address": "0x5b4E33e69Ef1304565Ce36B17E0D4108222D3430",
+        "address": "0x690d863d8Ea03BF4bFaa2DD869Da1c81d9894b6e",
         "version": "0.1.0",
-        "implementation": "0x10e6Bfdc69b8a03F1D11828b1D6e5dE83455C55f",
-        "admin": "0x75a4DbFc33Fe826a1dd8B6dE980Ea04d8D22d452",
+        "implementation": "0xD87E5eE10A4233319c94611b3198cA584e89fa74",
+        "admin": "0x0023153EcF2344f72A4599278e9dD3A885D1D3C1",
         "kind": "Upgradeable"
       }
     ],
     "float-capital/YieldManager": [
       {
-        "address": "0xE7f7c472fA38E62069C4D6F614161f39C71F0BaC",
+        "address": "0x8806A54B41c5fD728907a6002Ee9F420965D1FFc",
         "version": "0.1.0",
-        "implementation": "0x3D88547BF768A1549B177D81d27d9bbEf07521dC",
-        "admin": "0x75a4DbFc33Fe826a1dd8B6dE980Ea04d8D22d452",
+        "implementation": "0xe745E3dd2a7c6d0FBDAa8401622fb7e854dAb9Ff",
+        "admin": "0x0023153EcF2344f72A4599278e9dD3A885D1D3C1",
         "kind": "Upgradeable"
       }
     ],
     "float-capital/LongShort": [
       {
-        "address": "0x284B427bb74bD7050A66BF64E16Bb1336Da5E9a0",
+        "address": "0xa9e638f77Eea6036D05F00d0AC55169357De114E",
         "version": "0.1.0",
-        "implementation": "0xc5227927D1303145F2e86a15439Fd2B5C9D4b03D",
-        "admin": "0x75a4DbFc33Fe826a1dd8B6dE980Ea04d8D22d452",
+        "implementation": "0xC3Fb033114620B6511bD0be0bC60Cb3cb74Eb8Cb",
+        "admin": "0x0023153EcF2344f72A4599278e9dD3A885D1D3C1",
         "kind": "Upgradeable"
       }
     ]
@@ -465,6 +465,6 @@
   "manifestVersion": "2.2",
   "version": "0.1.0",
   "proxyAdmin": {
-    "address": "0x75a4DbFc33Fe826a1dd8B6dE980Ea04d8D22d452"
+    "address": "0x0023153EcF2344f72A4599278e9dD3A885D1D3C1"
   }
 }

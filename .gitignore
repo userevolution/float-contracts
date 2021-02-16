@@ -10,6 +10,7 @@ build
 .openzeppelin/.session
 .openzeppelin/dev-*.json
 !.openzeppelin/dev-97.json
+!.openzeppelin/dev-321.json
 
 # Secrets
 secretsManager.js

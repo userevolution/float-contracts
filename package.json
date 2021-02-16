@@ -7,10 +7,10 @@
     "compile": "hardhat compile",
     "test": "hardhat test",
     "coverage": "hardhat coverage",
-    "verify-non-upgrade-contracts-goerli": "truffle run verify SyntheticToken ShortCoins ADai Dai AaveLendingPool LendingPoolAddressesProvider PriceOracle --network goerli",
-    "verify-upgradeable-contracts-goerli": "truffle run verify LongShort@0xc088f3F3C9fe36a72f919b4Fc6EB9c5785B95a28 --network goerli",
-    "verify-non-upgrade-contracts-bsc-test": "truffle run verify SyntheticToken ShortCoins ADai Dai AaveLendingPool LendingPoolAddressesProvider PriceOracle --network binanceTest",
-    "verify-upgradeable-contracts-bsc-test": "truffle run verify LongShort@0x2248dfe5e78597d9E9bE2fC7932a01c3Dc10b684 --network binanceTest"
+    "clean": "rm -rf build/contracts/* artifacts cache",
+    "save-deployment": "/bin/bash -c 'mkdir -p ./buildsDeployed/deployed; \\cp ./build/contracts/{Dai,FloatToken,LongShort,Migrations,OracleManagerMock,Staker,TokenFactory,YieldManagerMock}.json ./buildsDeployed/deployed/'",
+    "prepair-upgrade": "npm run clean; mkdir -p ./build/contracts; cp -r ./buildsDeployed/deployed/ ./build/contracts/",
+    "verify-contracts": "truffle run verify Dai FloatToken LongShort@$LONGSHORT_IMPLEMENTATION Migrations OracleManagerMock@$ORACLE_MANAGER_IMPLEMENTATION Staker TokenFactory YieldManagerMock@$YIELD_MANAGER_IMPLEMENTATION --network $NETWORK"
   },
   "dependencies": {
     "@chainlink/contracts": "^0.0.8",

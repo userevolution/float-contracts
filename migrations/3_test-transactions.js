@@ -40,10 +40,32 @@ const deployTestMarket = async (
   );
 };
 
+const zeroPointTwoEth = new BN("200000000000000000");
+const zeroPointFiveEth = new BN("500000000000000000");
+const topupBalanceIfLow = async (from, to) => {
+  const senderBalance = new BN(await web3.eth.getBalance(from));
+  if (zeroPointFiveEth.gt(senderBalance)) {
+    throw "The admin account doesn't have enough ETH - need at least 0.5 ETH! (top up to over 1 ETH to be safe)";
+  }
+  const recieverBalance = new BN(await web3.eth.getBalance(to));
+  if (zeroPointTwoEth.gt(recieverBalance)) {
+    await web3.eth.sendTransaction({
+      from,
+      to,
+      value: zeroPointTwoEth,
+    });
+  }
+};
+
 module.exports = async function(deployer, network, accounts) {
+  const admin = accounts[0];
   const user1 = accounts[1];
   const user2 = accounts[2];
   const user3 = accounts[3];
+
+  await topupBalanceIfLow(admin, user1);
+  await topupBalanceIfLow(admin, user2);
+  await topupBalanceIfLow(admin, user3);
 
   const dummyOracleAddress1 = "0x1230000000000000000000000000000000000001";
   const dummyOracleAddress2 = "0x1230000000000000000000000000000000000002";

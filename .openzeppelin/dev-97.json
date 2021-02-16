@@ -1,33 +1,26 @@
 {
   "contracts": {
     "LongShort": {
-      "address": "0x0b2872B248DD64E695149009ed471910F8840dA7",
-      "constructorCode": "608060405234801561001057600080fd5b506123b0806100206000396000f3fe",
-      "bodyBytecodeHash": "d26ce129d6c88b3437d0b5ac47f7ae1bd42cd5ab996a2de33934e5ee956be7a8",
-      "localBytecodeHash": "d892ae36175298eb09544ea728d17969acd0bbad70f4e7ab3d5455e29fc46f7a",
-      "deployedBytecodeHash": "d892ae36175298eb09544ea728d17969acd0bbad70f4e7ab3d5455e29fc46f7a",
+      "address": "0xD3f784691FaD9f1Af5a221e36467d03DA1ad99Ed",
+      "constructorCode": "608060405234801561001057600080fd5b5061257d806100206000396000f3fe",
+      "bodyBytecodeHash": "ec4b7cea5f2a84a2b1a1fd5ffc1b006fad53e664f4638521c8bfe430e52a6ee0",
+      "localBytecodeHash": "24a541b7c1ef576ff62e0b774e829c703a611934d4d0996c158c30a92ffbd357",
+      "deployedBytecodeHash": "24a541b7c1ef576ff62e0b774e829c703a611934d4d0996c158c30a92ffbd357",
       "types": {
         "t_bool": {
           "id": "t_bool",
           "kind": "elementary",
           "label": "bool"
         },
-        "t_uint256": {
-          "id": "t_uint256",
-          "kind": "elementary",
-          "label": "uint256"
-        },
-        "t_array:50<t_uint256>": {
-          "id": "t_array:50<t_uint256>",
-          "valueType": "t_uint256",
-          "length": "50",
-          "kind": "array",
-          "label": "uint256[50]"
-        },
         "t_address": {
           "id": "t_address",
           "kind": "elementary",
           "label": "address"
+        },
+        "t_uint256": {
+          "id": "t_uint256",
+          "kind": "elementary",
+          "label": "uint256"
         },
         "t_mapping<t_bool>": {
           "id": "t_mapping<t_bool>",
@@ -35,11 +28,335 @@
           "label": "mapping(key => bool)",
           "kind": "mapping"
         },
+        "t_mapping<t_uint256>": {
+          "id": "t_mapping<t_uint256>",
+          "valueType": "t_uint256",
+          "label": "mapping(key => uint256)",
+          "kind": "mapping"
+        },
         "t_mapping<t_address>": {
           "id": "t_mapping<t_address>",
           "valueType": "t_address",
           "label": "mapping(key => address)",
           "kind": "mapping"
+        }
+      },
+      "storage": [
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
+          "label": "_initialized",
+          "astId": 4775,
+          "type": "t_bool",
+          "src": "1212:25:22"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
+          "label": "_initializing",
+          "astId": 4778,
+          "type": "t_bool",
+          "src": "1340:26:22"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "admin",
+          "astId": 74,
+          "type": "t_address",
+          "src": "3773:20:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "latestMarket",
+          "astId": 76,
+          "type": "t_uint256",
+          "src": "3838:27:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "totalValueLocked",
+          "astId": 78,
+          "type": "t_uint256",
+          "src": "3871:31:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "marketExists",
+          "astId": 82,
+          "type": "t_mapping<t_bool>",
+          "src": "3908:44:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "tokenFactory",
+          "astId": 84,
+          "type": "t_address",
+          "src": "4028:32:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "staker",
+          "astId": 86,
+          "type": "t_address",
+          "src": "4066:20:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "yieldManager",
+          "astId": 88,
+          "type": "t_address",
+          "src": "4134:33:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "oracleAgregator",
+          "astId": 90,
+          "type": "t_address",
+          "src": "4173:37:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "assetPrice",
+          "astId": 102,
+          "type": "t_mapping<t_uint256>",
+          "src": "4382:45:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "totalValueLockedInMarket",
+          "astId": 106,
+          "type": "t_mapping<t_uint256>",
+          "src": "4433:59:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "longValue",
+          "astId": 110,
+          "type": "t_mapping<t_uint256>",
+          "src": "4498:44:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "shortValue",
+          "astId": 114,
+          "type": "t_mapping<t_uint256>",
+          "src": "4548:45:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "longTokenPrice",
+          "astId": 118,
+          "type": "t_mapping<t_uint256>",
+          "src": "4599:49:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "shortTokenPrice",
+          "astId": 122,
+          "type": "t_mapping<t_uint256>",
+          "src": "4654:50:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "externalContractCounter",
+          "astId": 126,
+          "type": "t_mapping<t_uint256>",
+          "src": "4710:58:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "fundTokens",
+          "astId": 130,
+          "type": "t_mapping<t_address>",
+          "src": "4774:55:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "longTokens",
+          "astId": 134,
+          "type": "t_mapping<t_address>",
+          "src": "4898:52:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "shortTokens",
+          "astId": 138,
+          "type": "t_mapping<t_address>",
+          "src": "4956:53:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "baseEntryFee",
+          "astId": 142,
+          "type": "t_mapping<t_uint256>",
+          "src": "5140:47:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "badLiquidityEntryFee",
+          "astId": 146,
+          "type": "t_mapping<t_uint256>",
+          "src": "5193:55:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "baseExitFee",
+          "astId": 150,
+          "type": "t_mapping<t_uint256>",
+          "src": "5254:46:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "badLiquidityExitFee",
+          "astId": 154,
+          "type": "t_mapping<t_uint256>",
+          "src": "5306:54:1"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
+    },
+    "OracleAgregator": {
+      "address": "0x84660FF3153e003cE8E6C1e842119FBA13Eced56",
+      "constructorCode": "608060405234801561001057600080fd5b50610590806100206000396000f3fe",
+      "bodyBytecodeHash": "bdc3a23c9dab76fa6a6ef2b0356dddec040dc7867697191acdb5cf25375c9d40",
+      "localBytecodeHash": "645c669745379f07961876087d49340199901dbb14fdb178299b7184fcaf30b8",
+      "deployedBytecodeHash": "645c669745379f07961876087d49340199901dbb14fdb178299b7184fcaf30b8",
+      "types": {
+        "t_bool": {
+          "id": "t_bool",
+          "kind": "elementary",
+          "label": "bool"
+        },
+        "t_address": {
+          "id": "t_address",
+          "kind": "elementary",
+          "label": "address"
+        },
+        "t_mapping<t_address>": {
+          "id": "t_mapping<t_address>",
+          "valueType": "t_address",
+          "label": "mapping(key => address)",
+          "kind": "mapping"
+        },
+        "t_int256": {
+          "id": "t_int256",
+          "kind": "elementary",
+          "label": "int256"
+        },
+        "t_mapping<t_int256>": {
+          "id": "t_mapping<t_int256>",
+          "valueType": "t_int256",
+          "label": "mapping(key => int256)",
+          "kind": "mapping"
+        }
+      },
+      "storage": [
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
+          "label": "_initialized",
+          "astId": 4775,
+          "type": "t_bool",
+          "src": "1212:25:22"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
+          "label": "_initializing",
+          "astId": 4778,
+          "type": "t_bool",
+          "src": "1340:26:22"
+        },
+        {
+          "contract": "OracleManagerMock",
+          "path": "contracts/mocks/OracleManagerMock.sol",
+          "label": "admin",
+          "astId": 3449,
+          "type": "t_address",
+          "src": "241:20:16"
+        },
+        {
+          "contract": "OracleManagerMock",
+          "path": "contracts/mocks/OracleManagerMock.sol",
+          "label": "longShortContract",
+          "astId": 3451,
+          "type": "t_address",
+          "src": "267:32:16"
+        },
+        {
+          "contract": "OracleManagerMock",
+          "path": "contracts/mocks/OracleManagerMock.sol",
+          "label": "oracleFeeds",
+          "astId": 3455,
+          "type": "t_mapping<t_address>",
+          "src": "306:46:16"
+        },
+        {
+          "contract": "OracleManagerMock",
+          "path": "contracts/mocks/OracleManagerMock.sol",
+          "label": "oraclePrices",
+          "astId": 3459,
+          "type": "t_mapping<t_int256>",
+          "src": "368:46:16"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
+    },
+    "YieldManager": {
+      "address": "0xEe2F1Eb6988e3d456263FC08C0A038a11b7D6C63",
+      "constructorCode": "608060405234801561001057600080fd5b50610879806100206000396000f3fe",
+      "bodyBytecodeHash": "050bb9a57ef38736d0107f0028fa1d59e9a8effcae3ab5eb4509cb1325c65cdc",
+      "localBytecodeHash": "24c03129de52016c89165200daf39db638950e1fad9f3b3d56c62853c94596b7",
+      "deployedBytecodeHash": "24c03129de52016c89165200daf39db638950e1fad9f3b3d56c62853c94596b7",
+      "types": {
+        "t_bool": {
+          "id": "t_bool",
+          "kind": "elementary",
+          "label": "bool"
+        },
+        "t_address": {
+          "id": "t_address",
+          "kind": "elementary",
+          "label": "address"
+        },
+        "t_uint256": {
+          "id": "t_uint256",
+          "kind": "elementary",
+          "label": "uint256"
         },
         "t_mapping<t_uint256>": {
           "id": "t_mapping<t_uint256>",
@@ -52,186 +369,58 @@
         {
           "contract": "Initializable",
           "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
-          "label": "initialized",
-          "astId": 11357,
+          "label": "_initialized",
+          "astId": 4775,
           "type": "t_bool",
-          "src": "757:24:21"
+          "src": "1212:25:22"
         },
         {
           "contract": "Initializable",
           "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
-          "label": "initializing",
-          "astId": 11360,
+          "label": "_initializing",
+          "astId": 4778,
           "type": "t_bool",
-          "src": "876:25:21"
+          "src": "1340:26:22"
         },
         {
-          "contract": "Initializable",
-          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
-          "label": "______gap",
-          "astId": 11425,
-          "type": "t_array:50<t_uint256>",
-          "src": "1982:29:21"
-        },
-        {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
+          "contract": "YieldManagerMock",
+          "path": "contracts/mocks/YieldManagerMock.sol",
           "label": "admin",
-          "astId": 15,
+          "astId": 3688,
           "type": "t_address",
-          "src": "3685:20:0"
+          "src": "956:20:17"
         },
         {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
-          "label": "latestMarket",
-          "astId": 17,
-          "type": "t_uint256",
-          "src": "3750:27:0"
-        },
-        {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
-          "label": "totalValueLocked",
-          "astId": 19,
-          "type": "t_uint256",
-          "src": "3783:31:0"
-        },
-        {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
-          "label": "marketExists",
-          "astId": 23,
-          "type": "t_mapping<t_bool>",
-          "src": "3820:44:0"
-        },
-        {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
-          "label": "daiContract",
-          "astId": 25,
+          "contract": "YieldManagerMock",
+          "path": "contracts/mocks/YieldManagerMock.sol",
+          "label": "longShortContract",
+          "astId": 3690,
           "type": "t_address",
-          "src": "3952:25:0"
+          "src": "982:32:17"
         },
         {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
-          "label": "tokenFactory",
-          "astId": 27,
-          "type": "t_address",
-          "src": "3983:32:0"
-        },
-        {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
-          "label": "priceFeed",
-          "astId": 39,
-          "type": "t_mapping<t_address>",
-          "src": "4221:58:0"
-        },
-        {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
-          "label": "assetPrice",
-          "astId": 43,
+          "contract": "YieldManagerMock",
+          "path": "contracts/mocks/YieldManagerMock.sol",
+          "label": "totalHeld",
+          "astId": 3697,
           "type": "t_mapping<t_uint256>",
-          "src": "4296:45:0"
+          "src": "1095:44:17"
         },
         {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
-          "label": "totalValueLockedInMarket",
-          "astId": 47,
+          "contract": "YieldManagerMock",
+          "path": "contracts/mocks/YieldManagerMock.sol",
+          "label": "interestScalarTime",
+          "astId": 3701,
           "type": "t_mapping<t_uint256>",
-          "src": "4347:59:0"
+          "src": "1145:53:17"
         },
         {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
-          "label": "longValue",
-          "astId": 51,
+          "contract": "YieldManagerMock",
+          "path": "contracts/mocks/YieldManagerMock.sol",
+          "label": "timeYieldWasLastSettled",
+          "astId": 3705,
           "type": "t_mapping<t_uint256>",
-          "src": "4412:44:0"
-        },
-        {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
-          "label": "shortValue",
-          "astId": 55,
-          "type": "t_mapping<t_uint256>",
-          "src": "4462:45:0"
-        },
-        {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
-          "label": "longTokenPrice",
-          "astId": 59,
-          "type": "t_mapping<t_uint256>",
-          "src": "4513:49:0"
-        },
-        {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
-          "label": "shortTokenPrice",
-          "astId": 63,
-          "type": "t_mapping<t_uint256>",
-          "src": "4568:50:0"
-        },
-        {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
-          "label": "externalContractCounter",
-          "astId": 67,
-          "type": "t_mapping<t_uint256>",
-          "src": "4624:58:0"
-        },
-        {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
-          "label": "longTokens",
-          "astId": 71,
-          "type": "t_mapping<t_address>",
-          "src": "4689:52:0"
-        },
-        {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
-          "label": "shortTokens",
-          "astId": 75,
-          "type": "t_mapping<t_address>",
-          "src": "4747:53:0"
-        },
-        {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
-          "label": "baseEntryFee",
-          "astId": 79,
-          "type": "t_mapping<t_uint256>",
-          "src": "4862:47:0"
-        },
-        {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
-          "label": "badLiquidityEntryFee",
-          "astId": 83,
-          "type": "t_mapping<t_uint256>",
-          "src": "4941:55:0"
-        },
-        {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
-          "label": "baseExitFee",
-          "astId": 87,
-          "type": "t_mapping<t_uint256>",
-          "src": "5048:46:0"
-        },
-        {
-          "contract": "LongShort",
-          "path": "contracts/LongShort.sol",
-          "label": "badLiquidityExitFee",
-          "astId": 91,
-          "type": "t_mapping<t_uint256>",
-          "src": "5126:54:0"
+          "src": "1204:58:17"
         }
       ],
       "warnings": {
@@ -245,12 +434,30 @@
   },
   "solidityLibs": {},
   "proxies": {
+    "float-capital/OracleAgregator": [
+      {
+        "address": "0x10e6Bfdc69b8a03F1D11828b1D6e5dE83455C55f",
+        "version": "0.1.0",
+        "implementation": "0x84660FF3153e003cE8E6C1e842119FBA13Eced56",
+        "admin": "0xc5227927D1303145F2e86a15439Fd2B5C9D4b03D",
+        "kind": "Upgradeable"
+      }
+    ],
+    "float-capital/YieldManager": [
+      {
+        "address": "0x3D88547BF768A1549B177D81d27d9bbEf07521dC",
+        "version": "0.1.0",
+        "implementation": "0xEe2F1Eb6988e3d456263FC08C0A038a11b7D6C63",
+        "admin": "0xc5227927D1303145F2e86a15439Fd2B5C9D4b03D",
+        "kind": "Upgradeable"
+      }
+    ],
     "float-capital/LongShort": [
       {
-        "address": "0xA911530C826290607fE65C41beBFFa6c646C35F3",
+        "address": "0xE3da72657bC93D30528519d518f9B58bcDBf8493",
         "version": "0.1.0",
-        "implementation": "0x0b2872B248DD64E695149009ed471910F8840dA7",
-        "admin": "0xE14264d8D97810Ab72E95b48189c870e6316B7b9",
+        "implementation": "0xD3f784691FaD9f1Af5a221e36467d03DA1ad99Ed",
+        "admin": "0xc5227927D1303145F2e86a15439Fd2B5C9D4b03D",
         "kind": "Upgradeable"
       }
     ]
@@ -258,6 +465,6 @@
   "manifestVersion": "2.2",
   "version": "0.1.0",
   "proxyAdmin": {
-    "address": "0xE14264d8D97810Ab72E95b48189c870e6316B7b9"
+    "address": "0xc5227927D1303145F2e86a15439Fd2B5C9D4b03D"
   }
 }
