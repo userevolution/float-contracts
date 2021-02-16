@@ -21,7 +21,6 @@ contract YieldManagerMock is IYieldManager, Initializable {
 
     // Global state per ERC20 token.
     mapping(address => bool) public tokenEnabled;
-    mapping(address => uint256) public tokenDecimals;
     mapping(address => uint256) public totalHeld;
     mapping(address => uint256) public yieldRate; // pcnt per sec
     mapping(address => uint256) public lastSettled; // secs after epoch
@@ -45,7 +44,6 @@ contract YieldManagerMock is IYieldManager, Initializable {
             ERC20 ercToken = ERC20(token);
 
             tokenEnabled[token] = true;
-            tokenDecimals[token] = 1**ercToken.decimals();
             lastSettled[token] = block.timestamp;
         }
 
@@ -65,30 +63,41 @@ contract YieldManagerMock is IYieldManager, Initializable {
     ///// IMPLEMENTATION ///////////////
     ////////////////////////////////////
 
-    // settle adds the token's accrued yield to the token holdings.
+    /**
+     * Adds the token's accrued yield to the token holdings.
+     */
     function settle(address token) public ensureEnabled(token) {
         uint256 totalYield =
             yieldRate[token].mul(block.timestamp.sub(lastSettled[token]));
 
-        settleWithYield(token, totalYield);
+        lastSettled[token] = block.timestamp;
+        totalHeld[token] = totalHeld[token].add(
+            totalHeld[token].mul(totalYield).div(yieldScale)
+        );
     }
 
-    // settleWithYield adds the given yield to the token holdings.
-    function settleWithYield(
-        address token,
-        uint256 yield
-    ) public adminOnly ensureEnabled(token) {
+    /**
+     * Adds the given yield to the token holdings.
+     */
+    function settleWithYield(address token, uint256 yield)
+        public
+        adminOnly
+        ensureEnabled(token)
+    {
         lastSettled[token] = block.timestamp;
         totalHeld[token] = totalHeld[token].add(
             totalHeld[token].mul(yield).div(yieldScale)
         );
     }
 
-    // setYieldRate sets the yield percentage per second for the given token.
-    function setYieldRate(
-        address token,
-        uint256 yield
-    ) public adminOnly ensureEnabled(token) {
+    /**
+     * Sets the yield percentage per second for the given token.
+     */
+    function setYieldRate(address token, uint256 yield)
+        public
+        adminOnly
+        ensureEnabled(token)
+    {
         yieldRate[token] = yield;
     }
 
@@ -120,7 +129,7 @@ contract YieldManagerMock is IYieldManager, Initializable {
 
         // Transfer tokens back to LongShort contract.
         ERC20 ercToken = ERC20(token);
-        ercToken.approve(longShort, amount);
+        ercToken.approve(address(this), amount);
         ercToken.transferFrom(address(this), longShort, amount);
         totalHeld[token] = totalHeld[token].sub(amount);
     }

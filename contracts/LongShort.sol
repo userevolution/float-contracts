@@ -425,7 +425,8 @@ contract LongShort is Initializable {
         uint256 longPercentage,
         uint256 shortPercentage
     ) internal {
-        require(100 == shortPercentage.add(longPercentage)); // Possibly remove this check as internal function. Save gas.
+        // Possibly remove this check to save gas.
+        require(100 == shortPercentage.add(longPercentage));
 
         if (amount != 0) {
             uint256 longSideIncrease = amount.mul(longPercentage).div(100);
@@ -669,11 +670,11 @@ contract LongShort is Initializable {
             }
         }
 
-        // Case 1: fee gap is big enough that user pays no penalty fees
         if (feeGap >= amount) {
+            // Case 1: fee gap is big enough that user pays no penalty fees
             return _getFeesForAmounts(marketIndex, amount, 0, isMint);
-            // Case 2: user pays penalty fees on the remained after fee gap
         } else {
+            // Case 2: user pays penalty fees on the remained after fee gap
             return
                 _getFeesForAmounts(
                     marketIndex,
