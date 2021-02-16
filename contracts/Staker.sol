@@ -226,6 +226,12 @@ contract Staker is Initializable {
     {
         // Safe Math will make this fail in case users try to claim immediately after
         // after deposit before the next state is updated.
+        if (
+            userIndexOfLastClaimedReward[tokenAddress][msg.sender] >
+            latestRewardIndex[tokenAddress]
+        ) {
+            return 0;
+        }
         uint256 accumDelta =
             syntheticRewardParams[tokenAddress][latestRewardIndex[tokenAddress]]
                 .accumulativeFloatPerSecond
@@ -246,12 +252,13 @@ contract Staker is Initializable {
             msg.sender
         ] = latestRewardIndex[tokenAddress];
 
-        // Add float to their balance.
-        accumulatedFloat[msg.sender] =
-            accumulatedFloat[msg.sender] +
-            additionalFloat;
-
-        emit FloatAccumulated(msg.sender, tokenAddress, additionalFloat);
+        if (additionalFloat > 0) {
+            // Add float to their balance.
+            accumulatedFloat[msg.sender] =
+                accumulatedFloat[msg.sender] +
+                additionalFloat;
+            emit FloatAccumulated(msg.sender, tokenAddress, additionalFloat);
+        }
     }
 
     ////////////////////////////////////
@@ -268,36 +275,7 @@ contract Staker is Initializable {
         public
         onlyValidSynthetic(tokenAddress)
     {
-        ERC20PresetMinterPauserUpgradeable(tokenAddress).transferFrom(
-            msg.sender,
-            address(this),
-            amount
-        );
-
-        // If they already have staked, calculate and award them their float.
-        if (userAmountStaked[tokenAddress][msg.sender] > 0) {
-            if (
-                userIndexOfLastClaimedReward[tokenAddress][msg.sender] <
-                latestRewardIndex[tokenAddress]
-            ) {
-                creditAccumulatedFloat(tokenAddress);
-                mintFloat();
-            }
-        }
-
-        userAmountStaked[tokenAddress][msg.sender] = userAmountStaked[
-            tokenAddress
-        ][msg.sender]
-            .add(amount);
-
-        // We are currently smashing them out of earnings till the next state update.
-        // Figure out what happens when they fall inbetween state updates.
-        // Note this also effects top up people.
-        userIndexOfLastClaimedReward[tokenAddress][msg.sender] =
-            latestRewardIndex[tokenAddress] +
-            1;
-
-        emit StakeAdded(msg.sender, tokenAddress, amount);
+        _stake(tokenAddress, amount, msg.sender, false);
     }
 
     /*
@@ -320,6 +298,57 @@ contract Staker is Initializable {
         userIndexOfLastClaimedReward[tokenAddress][
             msg.sender
         ] = latestRewardIndex[tokenAddress];
+    }
+
+    /**
+     * Stake tokens that have already been minted for the staker
+     */
+    function stakeTransferredTokens(
+        address tokenAddress,
+        uint256 amount,
+        address user
+    ) external onlyFloat() {
+        _stake(tokenAddress, amount, user, true);
+    }
+
+    function _stake(
+        address tokenAddress,
+        uint256 amount,
+        address user,
+        bool alreadyTransferred
+    ) internal {
+        if (!alreadyTransferred) {
+            ERC20PresetMinterPauserUpgradeable(tokenAddress).transferFrom(
+                user,
+                address(this),
+                amount
+            );
+        }
+
+        // If they already have staked, calculate and award them their float.
+        if (userAmountStaked[tokenAddress][user] > 0) {
+            if (
+                userIndexOfLastClaimedReward[tokenAddress][user] <
+                latestRewardIndex[tokenAddress]
+            ) {
+                creditAccumulatedFloat(tokenAddress);
+                mintFloat();
+            }
+        }
+
+        userAmountStaked[tokenAddress][user] = userAmountStaked[tokenAddress][
+            user
+        ]
+            .add(amount);
+
+        // We are currently smashing them out of earnings till the next state update.
+        // Figure out what happens when they fall inbetween state updates.
+        // Note this also effects top up people.
+        userIndexOfLastClaimedReward[tokenAddress][user] =
+            latestRewardIndex[tokenAddress] +
+            1;
+
+        emit StakeAdded(user, tokenAddress, amount);
     }
 
     ////////////////////////////////////

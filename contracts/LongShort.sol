@@ -695,6 +695,55 @@ contract LongShort is Initializable {
         external
         refreshSystemState(marketIndex)
     {
+        _mintLong(marketIndex, amount, msg.sender, msg.sender);
+    }
+
+    /**
+     * Creates a short position
+     */
+    function mintShort(uint256 marketIndex, uint256 amount)
+        external
+        refreshSystemState(marketIndex)
+    {
+        _mintShort(marketIndex, amount, msg.sender, msg.sender);
+    }
+
+    /**
+     * Creates a long position and stakes it
+     */
+    function mintLongAndStake(uint256 marketIndex, uint256 amount)
+        external
+        refreshSystemState(marketIndex)
+    {
+        _mintLong(marketIndex, amount, msg.sender, address(staker));
+        staker.stakeTransferredTokens(
+            address(longTokens[marketIndex]),
+            amount,
+            msg.sender
+        );
+    }
+
+    /**
+     * Creates a short position and stakes it
+     */
+    function mintShortAndStake(uint256 marketIndex, uint256 amount)
+        external
+        refreshSystemState(marketIndex)
+    {
+        _mintShort(marketIndex, amount, msg.sender, address(staker));
+        staker.stakeTransferredTokens(
+            address(shortTokens[marketIndex]),
+            amount,
+            msg.sender
+        );
+    }
+
+    function _mintLong(
+        uint256 marketIndex,
+        uint256 amount,
+        address user,
+        address transferTo
+    ) internal {
         // Deposit DAI and compute fees.
         _depositFunds(marketIndex, amount);
         uint256 fees =
@@ -715,7 +764,7 @@ contract LongShort is Initializable {
         // Mint long tokens with remaining value.
         uint256 tokens =
             remaining.mul(TEN_TO_THE_18).div(longTokenPrice[marketIndex]);
-        longTokens[marketIndex].mint(msg.sender, tokens);
+        longTokens[marketIndex].mint(transferTo, tokens);
         longValue[marketIndex] = longValue[marketIndex].add(remaining);
 
         emit LongMinted(
@@ -724,7 +773,7 @@ contract LongShort is Initializable {
             amount,
             remaining,
             tokens,
-            msg.sender
+            user
         );
         emit ValueLockedInSystem(
             marketIndex,
@@ -735,13 +784,12 @@ contract LongShort is Initializable {
         );
     }
 
-    /**
-     * Creates a short position
-     */
-    function mintShort(uint256 marketIndex, uint256 amount)
-        external
-        refreshSystemState(marketIndex)
-    {
+    function _mintShort(
+        uint256 marketIndex,
+        uint256 amount,
+        address user,
+        address transferTo
+    ) internal {
         // Deposit DAI and compute fees.
         _depositFunds(marketIndex, amount);
         uint256 fees =
@@ -762,7 +810,7 @@ contract LongShort is Initializable {
         // Mint short tokens with remaining value.
         uint256 tokens =
             remaining.mul(TEN_TO_THE_18).div(shortTokenPrice[marketIndex]);
-        shortTokens[marketIndex].mint(msg.sender, tokens);
+        shortTokens[marketIndex].mint(transferTo, tokens);
         shortValue[marketIndex] = shortValue[marketIndex].add(remaining);
 
         emit ShortMinted(
@@ -771,7 +819,7 @@ contract LongShort is Initializable {
             amount,
             remaining,
             tokens,
-            msg.sender
+            user
         );
 
         emit ValueLockedInSystem(
