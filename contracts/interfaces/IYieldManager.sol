@@ -5,7 +5,6 @@ import "@openzeppelin/contracts-upgradeable/presets/ERC20PresetMinterPauserUpgra
 abstract contract IYieldManager {
     function depositToken(address erc20Token, uint256 amount) public virtual;
 
-    // Note, it is possible that this won't be able to withdraw the underlying token - so it may have to give the user the interest bearing token
     function withdrawDepositToken(address erc20Token, uint256 amount)
         public
         virtual
