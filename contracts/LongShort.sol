@@ -376,6 +376,38 @@ contract LongShort is ILongShort, Initializable {
     }
 
     /**
+     * Returns the amount of accrued interest that should go to the market,
+     * and the amount that should be locked into dao funds. To incentivise
+     * market balance, more interest goes to the market in proportion to how
+     * imbalanced it is.
+     * TODO: use this for the fee mechanism as well?
+     */
+    function getYieldSplit(uint256 marketIndex, uint256 amount)
+        public
+        view
+        returns (uint256 marketAmount, uint256 daoAmount)
+    {
+        uint256 marketPcnt; // fixed-precision scale of 10000
+        if (longValue[marketIndex] > shortValue[marketIndex]) {
+            marketPcnt = longValue[marketIndex]
+                .sub(shortValue[marketIndex])
+                .mul(10000)
+                .div(totalValueLockedInMarket[marketIndex]);
+        } else {
+            marketPcnt = shortValue[marketIndex]
+                .sub(longValue[marketIndex])
+                .mul(10000)
+                .div(totalValueLockedInMarket[marketIndex]);
+        }
+
+        marketAmount = marketPcnt.mul(amount).div(10000);
+        daoAmount = amount.sub(marketAmount);
+        require(amount == marketAmount + daoAmount);
+
+        return (marketAmount, daoAmount);
+    }
+
+    /**
      * Adjusts the long/short token prices according to supply and value.
      */
     function _refreshTokensPrice(uint256 marketIndex) internal {
@@ -385,12 +417,14 @@ contract LongShort is ILongShort, Initializable {
                 .mul(TEN_TO_THE_18)
                 .div(longTokenSupply);
         }
+
         uint256 shortTokenSupply = shortTokens[marketIndex].totalSupply();
         if (shortTokenSupply > 0) {
             shortTokenPrice[marketIndex] = shortValue[marketIndex]
                 .mul(TEN_TO_THE_18)
                 .div(shortTokenSupply);
         }
+
         emit TokenPriceRefreshed(
             marketIndex,
             externalContractCounter[marketIndex],
@@ -406,12 +440,10 @@ contract LongShort is ILongShort, Initializable {
         // Initial mechanism just splits fees evenly across the long/short
         // market values. We may want to incentivise float token holders by
         // depositing some in the DAO later.
-        uint256 longSideIncrease = totalFees.div(2);
-        uint256 shortSideIncrease = totalFees.sub(longSideIncrease);
-        longValue[marketIndex] = longValue[marketIndex].add(longSideIncrease);
-        shortValue[marketIndex] = shortValue[marketIndex].add(
-            shortSideIncrease
-        );
+        uint256 longAmount = totalFees.div(2);
+        uint256 shortAmount = totalFees.sub(longAmount);
+        longValue[marketIndex] = longValue[marketIndex].add(longAmount);
+        shortValue[marketIndex] = shortValue[marketIndex].add(shortAmount);
 
         emit FeesLevied(
             marketIndex,
@@ -423,7 +455,29 @@ contract LongShort is ILongShort, Initializable {
     /**
      * Controls what happens with accrued yield manager interest.
      */
-    function _interestMechanism(uint256 marketIndex) internal {}
+    function _interestMechanism(uint256 marketIndex) internal {
+        uint256 amount =
+            yieldManagers[marketIndex].getTotalHeld().sub(
+                totalValueLockedInYieldManager[marketIndex]
+            );
+
+        (uint256 marketAmount, uint256 daoAmount) =
+            getYieldSplit(marketIndex, amount);
+
+        // We keep the interest locked in the yield manager, but update our
+        // bookkeeping to logically simulate moving the funds around.
+        totalValueLockedInYieldManager[marketIndex] += amount;
+        totalValueLockedInMarket[marketIndex] += marketAmount;
+        totalValueLockedInDao[marketIndex] += daoAmount;
+
+        // TODO(guy): Implement actual interest split for market. The weaker
+        // side should receive the stronger side's proportion of the interest
+        // to incentivise market balance (leveraged yield!).
+        uint256 longAmount = marketAmount.div(2);
+        uint256 shortAmount = marketAmount.sub(longAmount);
+        longValue[marketIndex] = longValue[marketIndex].add(longAmount);
+        shortValue[marketIndex] = shortValue[marketIndex].add(shortAmount);
+    }
 
     // TODO fix with beta
     function _priceChangeMechanism(uint256 marketIndex, uint256 newPrice)
@@ -531,15 +585,12 @@ contract LongShort is ILongShort, Initializable {
         );
 
         // Adjusts long and short values based on price movements.
-        // $1
-        // $100 on each side.
-        // $1.1 10% increase
-        // $90 on short side. $110 on the long side.
         if (longValue[marketIndex] > 0 && shortValue[marketIndex] > 0) {
             _priceChangeMechanism(marketIndex, newPrice);
         }
 
-        // TODO: Interest mechanism and governance tokens.
+        // Distibute accrued yield manager interest.
+        _interestMechanism(marketIndex);
 
         _refreshTokensPrice(marketIndex);
         assetPrice[marketIndex] = newPrice;
@@ -620,10 +671,11 @@ contract LongShort is ILongShort, Initializable {
         totalValueLockedInYieldManager[marketIndex] += amount;
 
         // Invariant: yield managers should never have more locked funds
-        // than the LongShort contract.
+        // than the combined value of the market and dao funds.
         require(
             totalValueLockedInYieldManager[marketIndex] <=
-                totalValueLockedInMarket[marketIndex]
+                totalValueLockedInMarket[marketIndex] +
+                    totalValueLockedInDao[marketIndex]
         );
     }
 
@@ -640,10 +692,11 @@ contract LongShort is ILongShort, Initializable {
         totalValueLockedInYieldManager[marketIndex] -= amount;
 
         // Invariant: yield managers should never have more locked funds
-        // than the LongShort contract.
+        // than the combined value of the market and dao funds.
         require(
             totalValueLockedInYieldManager[marketIndex] <=
-                totalValueLockedInMarket[marketIndex]
+                totalValueLockedInMarket[marketIndex] +
+                    totalValueLockedInDao[marketIndex]
         );
     }
 
