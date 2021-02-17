@@ -106,7 +106,7 @@ contract("LongShort (yield mechanism)", (accounts) => {
       );
 
       // Ensure yield manager actually holds/bookkeeps the locked tokens.
-      const initialYieldHeld = await yieldManager.getTotalHeld();
+      const initialYieldHeld = await yieldManager.getTotalHeld.call();
       const initialTokenHeld = await yieldToken.balanceOf(yieldManager.address);
       assert.equal(
         initialYieldValue.toString(),

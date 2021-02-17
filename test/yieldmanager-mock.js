@@ -111,7 +111,7 @@ contract("YieldManagerMock (interface)", (accounts) => {
   });
 
   it("getTotalHeld should agree with actual holdings", async () => {
-    var getTotalHeld = await yieldManager.getTotalHeld();
+    var getTotalHeld = await yieldManager.getTotalHeld.call();
     var totalHeld = await yieldManager.totalHeld.call();
     assert.equal(
       getTotalHeld.toString(),

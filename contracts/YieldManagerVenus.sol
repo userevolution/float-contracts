@@ -5,27 +5,26 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 
-import "../interfaces/IYieldManager.sol";
+import "./interfaces/IYieldManager.sol";
+import "./interfaces/IVToken.sol";
 
 /*
- * YieldManagerMock is an implementation of a yield manager that supports
- * configurable, deterministic token yields for testing.
+ * YieldManagerVenus is an implementation of a yield manager that earns
+ * APY through the venus.io protocol. Each underlying asset (such as BUSD)
+ * has a corresponding vToken (such as vBUSD) that continuously accrues
+ * interest based on a lend/borrow liquidity ratio.
+ *     see: https://docs.venus.io/docs/vtokens
  */
-contract YieldManagerMock is IYieldManager, Initializable {
+contract YieldManagerVenus is IYieldManager, Initializable {
     using SafeMathUpgradeable for uint256;
 
     // Admin contracts.
     address public admin;
     address public longShort;
 
-    // Fixed-precision scale for interest percentages.
-    uint256 public constant yieldScale = 1e18;
-
     // Global state.
-    ERC20 public token;
-    uint256 public totalHeld;
-    uint256 public yieldRate; // pcnt per sec
-    uint256 public lastSettled; // secs after epoch
+    ERC20 token; // underlying asset token
+    IvToken vToken; // corresponding vToken
 
     ////////////////////////////////////
     /////////// MODIFIERS //////////////
@@ -45,72 +44,55 @@ contract YieldManagerMock is IYieldManager, Initializable {
     ///// CONTRACT SET-UP //////////////
     ////////////////////////////////////
 
+    /*
+     * Initialises the yield manager with the given underlying asset token
+     * and corresponding venus vToken. We have to check whether it's BNB,
+     * since BNB has a different interface to other ERC20 tokens in venus.io.
+     */
     function setup(
         address _admin,
         address _longShort,
-        address _token
+        address _token,
+        address _vToken
     ) public initializer {
-        // Admin contracts.
         admin = _admin;
         longShort = _longShort;
 
-        // Global state.
         token = ERC20(_token);
-        lastSettled = block.timestamp;
+        vToken = IvToken(_vToken);
     }
 
     ////////////////////////////////////
     ///// IMPLEMENTATION ///////////////
     ////////////////////////////////////
 
-    /**
-     * Adds the token's accrued yield to the token holdings.
-     */
-    function settle() public {
-        uint256 totalYield = yieldRate.mul(block.timestamp.sub(lastSettled));
-
-        lastSettled = block.timestamp;
-        totalHeld = totalHeld.add(totalHeld.mul(totalYield).div(yieldScale));
-    }
-
-    /**
-     * Adds the given yield to the token holdings.
-     */
-    function settleWithYield(uint256 yield) public adminOnly {
-        lastSettled = block.timestamp;
-        totalHeld = totalHeld.add(totalHeld.mul(yield).div(yieldScale));
-    }
-
-    /**
-     * Sets the yield percentage per second for the given token.
-     */
-    function setYieldRate(uint256 _yieldRate) public adminOnly {
-        yieldRate = _yieldRate;
-    }
-
     function depositToken(uint256 amount) public override longShortOnly {
-        // Ensure token state is current.
-        settle();
-
         // Transfer tokens to manager contract.
         token.transferFrom(longShort, address(this), amount);
-        totalHeld = totalHeld.add(amount);
+
+        // Transfer tokens to vToken contract to mint vTokens.
+        token.approve(address(vToken), amount);
+        uint256 result = vToken.mint(amount);
+
+        // See https://docs.venus.io/docs/vtokens#error-codes.
+        require(result == 0);
     }
 
     function withdrawToken(uint256 amount) public override longShortOnly {
-        // Ensure token state is current.
-        settle();
-        require(amount <= totalHeld);
+        // Redeem vToken for underlying asset tokens.
+        // TODO(guy): Handle edge-case where there isn't enough liquidity
+        //   on venus.io to redeem enough underlying assets.
+        uint256 result = vToken.redeemUnderlying(amount);
+
+        // See https://docs.venus.io/docs/vtokens#error-codes.
+        require(result == 0);
 
         // Transfer tokens back to LongShort contract.
         token.transfer(longShort, amount);
-        totalHeld = totalHeld.sub(amount);
     }
 
     function getTotalHeld() public override returns (uint256 amount) {
-        settle();
-
-        return totalHeld;
+        return vToken.balanceOfUnderlying(address(this));
     }
 
     function getHeldToken() public view override returns (address _token) {
