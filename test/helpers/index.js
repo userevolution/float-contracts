@@ -119,7 +119,6 @@ const createSynthetic = async (
   const currentMarketIndex = await longShort.latestMarket.call();
   const longAddress = await longShort.longTokens.call(currentMarketIndex);
   const shortAddress = await longShort.shortTokens.call(currentMarketIndex);
-
   let longToken = await erc20.at(longAddress);
   let shortToken = await erc20.at(shortAddress);
 

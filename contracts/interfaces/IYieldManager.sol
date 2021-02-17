@@ -15,15 +15,17 @@ abstract contract IYieldManager {
 
     /*
      * Withdraws the given amount of tokens from this yield manager.
+     *
+     * TODO(guy): at some point we should support withdrawing the
+     *   underlying yield tokens if the protocol we use doesn't have
+     *   enough liquidity.
      */
-    function withdrawToken(uint256 amount)
-        public
-        virtual;
+    function withdrawToken(uint256 amount) public virtual;
 
     /*
      * Returns the total token value held by this yield manager.
      */
-    function getTotalHeld() public view virtual returns (uint256 amount);
+    function getTotalHeld() public virtual returns (uint256 amount);
 
     /*
      * Returns the token held by this yield manager.

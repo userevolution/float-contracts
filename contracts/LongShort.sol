@@ -79,7 +79,6 @@ contract LongShort is ILongShort, Initializable {
     // Global state.
     address public admin; // This will likely be the Gnosis safe
     uint256 public latestMarket;
-    uint256 public totalValueLocked; // TODO(guy): per fund token!
     mapping(uint256 => bool) public marketExists;
 
     // Factory for dynamically creating synthetic long/short tokens.
@@ -96,10 +95,12 @@ contract LongShort is ILongShort, Initializable {
     uint256 public constant feeUnitsOfPrecision = 10000;
 
     // Market state.
-    mapping(uint256 => uint256) public assetPrice;
-    mapping(uint256 => uint256) public totalValueLockedInMarket;
     mapping(uint256 => uint256) public longValue;
     mapping(uint256 => uint256) public shortValue;
+    mapping(uint256 => uint256) public totalValueLockedInMarket;
+    mapping(uint256 => uint256) public totalValueLockedInYieldManager;
+    mapping(uint256 => uint256) public totalValueLockedInDao;
+    mapping(uint256 => uint256) public assetPrice;
     mapping(uint256 => uint256) public longTokenPrice;
     mapping(uint256 => uint256) public shortTokenPrice;
     mapping(uint256 => uint256) public externalContractCounter;
@@ -127,27 +128,28 @@ contract LongShort is ILongShort, Initializable {
         address staker,
         address oracleAgregator
     );
+
     event ValueLockedInSystem(
         uint256 marketIndex,
         uint256 contractCallCounter,
-        uint256 totalValueLocked,
         uint256 totalValueLockedInMarket,
         uint256 longValue,
         uint256 shortValue
     );
+
     event TokenPriceRefreshed(
         uint256 marketIndex,
         uint256 contractCallCounter,
         uint256 longTokenPrice,
         uint256 shortTokenPrice
     );
+
     event FeesLevied(
         uint256 marketIndex,
         uint256 contractCallCounter,
-        uint256 totalFees,
-        uint256 longPercentage,
-        uint256 shortPercentage
+        uint256 totalFees
     );
+
     event SyntheticTokenCreated(
         uint256 marketIndex,
         address longTokenAddress,
@@ -161,6 +163,7 @@ contract LongShort is ILongShort, Initializable {
         uint256 baseExitFee,
         uint256 badLiquidityExitFee
     );
+
     event PriceUpdate(
         uint256 marketIndex,
         uint256 contractCallCounter,
@@ -168,6 +171,7 @@ contract LongShort is ILongShort, Initializable {
         uint256 newPrice,
         address user
     );
+
     event LongMinted(
         uint256 marketIndex,
         uint256 contractCallCounter,
@@ -176,6 +180,7 @@ contract LongShort is ILongShort, Initializable {
         uint256 tokensMinted,
         address user
     );
+
     event ShortMinted(
         uint256 marketIndex,
         uint256 contractCallCounter,
@@ -184,6 +189,7 @@ contract LongShort is ILongShort, Initializable {
         uint256 tokensMinted,
         address user
     );
+
     event LongRedeem(
         uint256 marketIndex,
         uint256 contractCallCounter,
@@ -192,6 +198,7 @@ contract LongShort is ILongShort, Initializable {
         uint256 finalRedeemValue,
         address user
     );
+
     event ShortRedeem(
         uint256 marketIndex,
         uint256 contractCallCounter,
@@ -327,6 +334,17 @@ contract LongShort is ILongShort, Initializable {
     }
 
     /**
+     * Returns the amount of funds that LongShort can directly transfer.
+     * Funds locked in the yield managers have to be withdrawn first.
+     */
+    function getLiquidFunds(uint256 marketIndex) public view returns (uint256) {
+        return
+            totalValueLockedInMarket[marketIndex]
+                .add(totalValueLockedInDao[marketIndex])
+                .sub(totalValueLockedInYieldManager[marketIndex]);
+    }
+
+    /**
      * Returns % of long position that is filled
      */
     function getLongBeta(uint256 marketIndex) public view returns (uint256) {
@@ -358,6 +376,38 @@ contract LongShort is ILongShort, Initializable {
     }
 
     /**
+     * Returns the amount of accrued interest that should go to the market,
+     * and the amount that should be locked into dao funds. To incentivise
+     * market balance, more interest goes to the market in proportion to how
+     * imbalanced it is.
+     * TODO: use this for the fee mechanism as well?
+     */
+    function getYieldSplit(uint256 marketIndex, uint256 amount)
+        public
+        view
+        returns (uint256 marketAmount, uint256 daoAmount)
+    {
+        uint256 marketPcnt; // fixed-precision scale of 10000
+        if (longValue[marketIndex] > shortValue[marketIndex]) {
+            marketPcnt = longValue[marketIndex]
+                .sub(shortValue[marketIndex])
+                .mul(10000)
+                .div(totalValueLockedInMarket[marketIndex]);
+        } else {
+            marketPcnt = shortValue[marketIndex]
+                .sub(longValue[marketIndex])
+                .mul(10000)
+                .div(totalValueLockedInMarket[marketIndex]);
+        }
+
+        marketAmount = marketPcnt.mul(amount).div(10000);
+        daoAmount = amount.sub(marketAmount);
+        require(amount == marketAmount + daoAmount);
+
+        return (marketAmount, daoAmount);
+    }
+
+    /**
      * Adjusts the long/short token prices according to supply and value.
      */
     function _refreshTokensPrice(uint256 marketIndex) internal {
@@ -367,12 +417,14 @@ contract LongShort is ILongShort, Initializable {
                 .mul(TEN_TO_THE_18)
                 .div(longTokenSupply);
         }
+
         uint256 shortTokenSupply = shortTokens[marketIndex].totalSupply();
         if (shortTokenSupply > 0) {
             shortTokenPrice[marketIndex] = shortValue[marketIndex]
                 .mul(TEN_TO_THE_18)
                 .div(shortTokenSupply);
         }
+
         emit TokenPriceRefreshed(
             marketIndex,
             externalContractCounter[marketIndex],
@@ -383,52 +435,48 @@ contract LongShort is ILongShort, Initializable {
 
     /**
      * Controls what happens with mint/redeem fees.
-     * This is a v1 mechanism.
      */
-    function _feesMechanism(
-        uint256 marketIndex,
-        uint256 totalFees,
-        uint256 longPercentage,
-        uint256 shortPercentage
-    ) internal {
-        _increaseLongShortSides(
-            marketIndex,
-            totalFees,
-            longPercentage,
-            shortPercentage
-        );
+    function _feesMechanism(uint256 marketIndex, uint256 totalFees) internal {
+        // Initial mechanism just splits fees evenly across the long/short
+        // market values. We may want to incentivise float token holders by
+        // depositing some in the DAO later.
+        uint256 longAmount = totalFees.div(2);
+        uint256 shortAmount = totalFees.sub(longAmount);
+        longValue[marketIndex] = longValue[marketIndex].add(longAmount);
+        shortValue[marketIndex] = shortValue[marketIndex].add(shortAmount);
 
         emit FeesLevied(
             marketIndex,
             externalContractCounter[marketIndex],
-            totalFees,
-            longPercentage,
-            shortPercentage
+            totalFees
         );
     }
 
     /**
-     * Splits the given amount between the long/short sides.
+     * Controls what happens with accrued yield manager interest.
      */
-    function _increaseLongShortSides(
-        uint256 marketIndex,
-        uint256 amount,
-        uint256 longPercentage,
-        uint256 shortPercentage
-    ) internal {
-        // Possibly remove this check to save gas.
-        require(100 == shortPercentage.add(longPercentage));
+    function _yieldMechanism(uint256 marketIndex) internal {
+        uint256 amount =
+            yieldManagers[marketIndex].getTotalHeld().sub(
+                totalValueLockedInYieldManager[marketIndex]
+            );
 
-        if (amount != 0) {
-            uint256 longSideIncrease = amount.mul(longPercentage).div(100);
-            uint256 shortSideIncrease = amount.sub(longSideIncrease);
-            longValue[marketIndex] = longValue[marketIndex].add(
-                longSideIncrease
-            );
-            shortValue[marketIndex] = shortValue[marketIndex].add(
-                shortSideIncrease
-            );
-        }
+        (uint256 marketAmount, uint256 daoAmount) =
+            getYieldSplit(marketIndex, amount);
+
+        // We keep the interest locked in the yield manager, but update our
+        // bookkeeping to logically simulate moving the funds around.
+        totalValueLockedInYieldManager[marketIndex] += amount;
+        totalValueLockedInMarket[marketIndex] += marketAmount;
+        totalValueLockedInDao[marketIndex] += daoAmount;
+
+        // TODO(guy): Implement actual interest split for market. The weaker
+        // side should receive the stronger side's proportion of the interest
+        // to incentivise market balance (leveraged yield!).
+        uint256 longAmount = marketAmount.div(2);
+        uint256 shortAmount = marketAmount.sub(longAmount);
+        longValue[marketIndex] = longValue[marketIndex].add(longAmount);
+        shortValue[marketIndex] = shortValue[marketIndex].add(shortAmount);
     }
 
     // TODO fix with beta
@@ -537,15 +585,12 @@ contract LongShort is ILongShort, Initializable {
         );
 
         // Adjusts long and short values based on price movements.
-        // $1
-        // $100 on each side.
-        // $1.1 10% increase
-        // $90 on short side. $110 on the long side.
         if (longValue[marketIndex] > 0 && shortValue[marketIndex] > 0) {
             _priceChangeMechanism(marketIndex, newPrice);
         }
 
-        // TODO: Interest mechanism and governance tokens.
+        // Distibute accrued yield manager interest.
+        _yieldMechanism(marketIndex);
 
         _refreshTokensPrice(marketIndex);
         assetPrice[marketIndex] = newPrice;
@@ -553,13 +598,12 @@ contract LongShort is ILongShort, Initializable {
         emit ValueLockedInSystem(
             marketIndex,
             externalContractCounter[marketIndex],
-            totalValueLocked,
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
             shortValue[marketIndex]
         );
-        // For extra robustness while testing.
-        // TODO: Consider gas cost trade-off of removing
+
+        // Invariant: long/short values should never differ from total value.
         require(
             longValue[marketIndex].add(shortValue[marketIndex]) ==
                 totalValueLockedInMarket[marketIndex],
@@ -571,32 +615,44 @@ contract LongShort is ILongShort, Initializable {
      * Locks funds from the sender into the given market.
      */
     function _depositFunds(uint256 marketIndex, uint256 amount) internal {
-        require(amount > 0, "User needs to add positive amount");
-
-        // Transfer the tokens to the LongShort contract.
         fundTokens[marketIndex].transferFrom(msg.sender, address(this), amount);
 
         // Update global value state.
-        totalValueLocked = totalValueLocked.add(amount);
         totalValueLockedInMarket[marketIndex] = totalValueLockedInMarket[
             marketIndex
         ]
             .add(amount);
+
+        // Transfer funds to the yield managers.
+        // TODO: we could consider pooling funds in the LongShort contract and
+        // only transferring over some threshold to save on gas. Does kinda
+        // screw users periodically if they transfer right on the threshold.
+        _transferToYieldManager(marketIndex, amount);
     }
 
     /*
      * Returns locked funds from the market to the sender.
      */
     function _withdrawFunds(uint256 marketIndex, uint256 amount) internal {
+        require(totalValueLockedInMarket[marketIndex] >= amount);
+
+        // Withdraw requisite funds from the yield managers if necessary.
+        // TODO: we could consider withdrawing more funds than necessary into
+        // a pool, so users don't have to transfer on every call to safe gas.
+        // Again, kinda screws users now and again if they time calls badly.
+        uint256 liquid = getLiquidFunds(marketIndex);
+        if (liquid < amount) {
+            _transferFromYieldManager(marketIndex, amount - liquid);
+        }
+
+        // Transfer funds to the sender.
+        fundTokens[marketIndex].transfer(msg.sender, amount);
+
+        // Update market state.
         totalValueLockedInMarket[marketIndex] = totalValueLockedInMarket[
             marketIndex
         ]
             .sub(amount);
-
-        totalValueLocked = totalValueLocked.sub(amount);
-
-        // TODO: May need to liquidate venus coins if we're out of funds.
-        fundTokens[marketIndex].transfer(msg.sender, amount);
     }
 
     /*
@@ -605,7 +661,22 @@ contract LongShort is ILongShort, Initializable {
     function _transferToYieldManager(uint256 marketIndex, uint256 amount)
         internal
     {
-        // TODO(guy): Implement me.
+        fundTokens[marketIndex].approve(
+            address(yieldManagers[marketIndex]),
+            amount
+        );
+        yieldManagers[marketIndex].depositToken(amount);
+
+        // Update market state.
+        totalValueLockedInYieldManager[marketIndex] += amount;
+
+        // Invariant: yield managers should never have more locked funds
+        // than the combined value of the market and dao funds.
+        require(
+            totalValueLockedInYieldManager[marketIndex] <=
+                totalValueLockedInMarket[marketIndex] +
+                    totalValueLockedInDao[marketIndex]
+        );
     }
 
     /*
@@ -614,7 +685,19 @@ contract LongShort is ILongShort, Initializable {
     function _transferFromYieldManager(uint256 marketIndex, uint256 amount)
         internal
     {
-        // TODO(guy): Implement me.
+        require(totalValueLockedInYieldManager[marketIndex] >= amount);
+        yieldManagers[marketIndex].withdrawToken(amount);
+
+        // Update market state.
+        totalValueLockedInYieldManager[marketIndex] -= amount;
+
+        // Invariant: yield managers should never have more locked funds
+        // than the combined value of the market and dao funds.
+        require(
+            totalValueLockedInYieldManager[marketIndex] <=
+                totalValueLockedInMarket[marketIndex] +
+                    totalValueLockedInDao[marketIndex]
+        );
     }
 
     /*
@@ -627,7 +710,7 @@ contract LongShort is ILongShort, Initializable {
         uint256 baseAmount, // e18
         uint256 penaltyAmount, // e18
         bool isMint // true for mint, false for redeem
-    ) internal returns (uint256) {
+    ) internal view returns (uint256) {
         uint256 baseRate = 0; // base fee pcnt paid for all actions
         uint256 penaltyRate = 0; // penalty fee pcnt paid for imbalancing
 
@@ -654,29 +737,28 @@ contract LongShort is ILongShort, Initializable {
     function _getFeesForAction(
         uint256 marketIndex,
         uint256 amount, // 1e18
-        uint256 longValue, // 1e18
-        uint256 shortValue, // 1e18
         bool isMint, // true for mint, false for redeem
         bool isLong // true for long side, false for short side
-    ) internal returns (uint256) {
+    ) internal view returns (uint256) {
+        uint256 _longValue = longValue[marketIndex];
+        uint256 _shortValue = shortValue[marketIndex];
+
         // Edge-case: no penalties for minting in a 1-sided market.
         // TODO: Is this what we want for new markets?
-        if (isMint && (longValue == 0 || shortValue == 0)) {
+        if (isMint && (_longValue == 0 || _shortValue == 0)) {
             return _getFeesForAmounts(marketIndex, amount, 0, isMint);
         }
 
-        uint256 fees = 0; // amount paid in fees
-        uint256 feeGap = 0; // amount that can be spent before higher fees
-
+        // Compute amount that can be spent before higher fees.
+        uint256 feeGap = 0;
         bool isLongMintOrShortRedeem = isMint == isLong;
         if (isLongMintOrShortRedeem) {
-            if (shortValue > longValue) {
-                feeGap = shortValue - longValue;
+            if (_shortValue > _longValue) {
+                feeGap = _shortValue - _longValue;
             }
         } else {
-            // long redeem or short mint
-            if (longValue > shortValue) {
-                feeGap = longValue - shortValue;
+            if (_longValue > _shortValue) {
+                feeGap = _longValue - _shortValue;
             }
         }
 
@@ -727,6 +809,7 @@ contract LongShort is ILongShort, Initializable {
         refreshSystemState(marketIndex)
     {
         _mintLong(marketIndex, amount, msg.sender, address(staker));
+
         staker.stakeTransferredTokens(
             address(longTokens[marketIndex]),
             amount,
@@ -742,6 +825,7 @@ contract LongShort is ILongShort, Initializable {
         refreshSystemState(marketIndex)
     {
         _mintShort(marketIndex, amount, msg.sender, address(staker));
+
         staker.stakeTransferredTokens(
             address(shortTokens[marketIndex]),
             amount,
@@ -755,21 +839,13 @@ contract LongShort is ILongShort, Initializable {
         address user,
         address transferTo
     ) internal {
-        // Deposit DAI and compute fees.
+        // Deposit funds and compute fees.
         _depositFunds(marketIndex, amount);
-        uint256 fees =
-            _getFeesForAction(
-                marketIndex,
-                amount,
-                longValue[marketIndex],
-                shortValue[marketIndex],
-                true,
-                true
-            );
+        uint256 fees = _getFeesForAction(marketIndex, amount, true, true);
         uint256 remaining = amount.sub(fees);
 
-        // TODO: decide on minting fees mechanism,
-        _feesMechanism(marketIndex, fees, 50, 50);
+        // Distribute fees across the market.
+        _feesMechanism(marketIndex, fees);
         _refreshTokensPrice(marketIndex);
 
         // Mint long tokens with remaining value.
@@ -786,10 +862,10 @@ contract LongShort is ILongShort, Initializable {
             tokens,
             user
         );
+
         emit ValueLockedInSystem(
             marketIndex,
             externalContractCounter[marketIndex],
-            totalValueLocked,
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
             shortValue[marketIndex]
@@ -802,21 +878,13 @@ contract LongShort is ILongShort, Initializable {
         address user,
         address transferTo
     ) internal {
-        // Deposit DAI and compute fees.
+        // Deposit funds and compute fees.
         _depositFunds(marketIndex, amount);
-        uint256 fees =
-            _getFeesForAction(
-                marketIndex,
-                amount,
-                longValue[marketIndex],
-                shortValue[marketIndex],
-                true,
-                false
-            );
+        uint256 fees = _getFeesForAction(marketIndex, amount, true, false);
         uint256 remaining = amount.sub(fees);
 
-        // TODO: decide on minting fees mechanism.
-        _feesMechanism(marketIndex, fees, 50, 50);
+        // Distribute fees across the market.
+        _feesMechanism(marketIndex, fees);
         _refreshTokensPrice(marketIndex);
 
         // Mint short tokens with remaining value.
@@ -837,7 +905,6 @@ contract LongShort is ILongShort, Initializable {
         emit ValueLockedInSystem(
             marketIndex,
             externalContractCounter[marketIndex],
-            totalValueLocked,
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
             shortValue[marketIndex]
@@ -853,30 +920,22 @@ contract LongShort is ILongShort, Initializable {
         override
         refreshSystemState(marketIndex)
     {
-        // Burn tokens - will revert unless user gives permission to contract.
+        // Burn tokens - will revert unless user gives permission.
         longTokens[marketIndex].burnFrom(msg.sender, tokensToRedeem);
 
         // Compute fees.
         uint256 amount =
             tokensToRedeem.mul(longTokenPrice[marketIndex]).div(TEN_TO_THE_18);
-        uint256 fees =
-            _getFeesForAction(
-                marketIndex,
-                amount,
-                longValue[marketIndex],
-                shortValue[marketIndex],
-                false,
-                true
-            );
+        uint256 fees = _getFeesForAction(marketIndex, amount, false, true);
         uint256 remaining = amount.sub(fees);
 
-        // TODO: decide on redeeming fees mechanism.
-        _feesMechanism(marketIndex, fees, 50, 50);
+        // Distribute fees across the market.
+        _feesMechanism(marketIndex, fees);
 
-        // Withdraw DAI with remaining amount.
+        // Withdraw funds with remaining amount.
         longValue[marketIndex] = longValue[marketIndex].sub(amount);
-        _refreshTokensPrice(marketIndex);
         _withdrawFunds(marketIndex, remaining);
+        _refreshTokensPrice(marketIndex);
 
         emit LongRedeem(
             marketIndex,
@@ -890,7 +949,6 @@ contract LongShort is ILongShort, Initializable {
         emit ValueLockedInSystem(
             marketIndex,
             externalContractCounter[marketIndex],
-            totalValueLocked,
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
             shortValue[marketIndex]
@@ -908,24 +966,16 @@ contract LongShort is ILongShort, Initializable {
         // Compute fees.
         uint256 amount =
             tokensToRedeem.mul(shortTokenPrice[marketIndex]).div(TEN_TO_THE_18);
-        uint256 fees =
-            _getFeesForAction(
-                marketIndex,
-                amount,
-                longValue[marketIndex],
-                shortValue[marketIndex],
-                false,
-                false
-            );
+        uint256 fees = _getFeesForAction(marketIndex, amount, false, false);
         uint256 remaining = amount.sub(fees);
 
-        // TODO: decide on redeeming fees mechanism.
-        _feesMechanism(marketIndex, fees, 50, 50);
+        // Distribute fees across the market.
+        _feesMechanism(marketIndex, fees);
 
-        // Withdraw DAI with remaining amount.
+        // Withdraw funds with remaining amount.
         shortValue[marketIndex] = shortValue[marketIndex].sub(amount);
-        _refreshTokensPrice(marketIndex);
         _withdrawFunds(marketIndex, remaining);
+        _refreshTokensPrice(marketIndex);
 
         emit ShortRedeem(
             marketIndex,
@@ -939,7 +989,6 @@ contract LongShort is ILongShort, Initializable {
         emit ValueLockedInSystem(
             marketIndex,
             externalContractCounter[marketIndex],
-            totalValueLocked,
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
             shortValue[marketIndex]

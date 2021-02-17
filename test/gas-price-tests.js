@@ -14,7 +14,7 @@ const {
   logGasPrices,
 } = require("./helpers");
 
-contract("LongShort", (accounts) => {
+contract("LongShort (gas prices)", (accounts) => {
   ////////////////////////////////////
   //////// GAS ASSUMPTIONS ///////////
   ////////////////////////////////////
@@ -75,7 +75,7 @@ contract("LongShort", (accounts) => {
     marketIndex = synthResult.currentMarketIndex;
   });
 
-  it("longshort: cost of Minting without oracle movement", async () => {
+  it("check cost of minting without oracle movement", async () => {
     await mintAndApprove(fund, defaultMintAmount, user1, longShort.address);
     const receipt = await longShort.mintLong(
       marketIndex,
@@ -94,7 +94,7 @@ contract("LongShort", (accounts) => {
     );
   });
 
-  it("longshort: cost of Minting WITH oracle movement", async () => {
+  it("check cost of minting with oracle movement", async () => {
     await mintAndApprove(fund, defaultMintAmount, user1, longShort.address);
     await longShort.mintLong(marketIndex, new BN(defaultMintAmount), {
       from: user1,

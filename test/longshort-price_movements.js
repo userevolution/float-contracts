@@ -9,7 +9,7 @@ const {
 
 const { initialize, mintAndApprove, createSynthetic } = require("./helpers");
 
-contract("LongShort", (accounts) => {
+contract("LongShort (price movements)", (accounts) => {
   let longShort;
   let priceOracle;
   let marketIndex;
@@ -63,7 +63,7 @@ contract("LongShort", (accounts) => {
   });
 
   // also tests full exposure value change on price increase
-  it("longshort: Initialize base case", async () => {
+  it("changes value correctly in equal markets", async () => {
     await mintAndApprove(fund, defaultMintAmount, user1, longShort.address);
     await longShort.mintLong(marketIndex, new BN(defaultMintAmount), {
       from: user1,
@@ -103,7 +103,7 @@ contract("LongShort", (accounts) => {
     );
   });
 
-  it("longshort: Values change correctly on full exposure when price is adjusted downwards", async () => {
+  it("changes value correctly in equal markets (flipped)", async () => {
     // 100 fund tokens in each of long and short
     await mintLongShort2(
       marketIndex,
@@ -135,7 +135,7 @@ contract("LongShort", (accounts) => {
     );
   });
 
-  it("longshort: Values change according to beta when price adjusted upwards", async () => {
+  it("changes value correctly in imbalanced markets", async () => {
     // 110 fund in short, 90 fund in long. mint short first to avoid fees / tipping
     await mintLongShort2(
       marketIndex,
@@ -167,7 +167,7 @@ contract("LongShort", (accounts) => {
     );
   });
 
-  it("longshort: Values change according to beta when price adjusted downwards", async () => {
+  it("changes value correctly in imbalanced markets (flipped)", async () => {
     // 110 fund in short, 90 fund in long. mint short first to avoid fees / tipping
     await mintLongShort2(
       marketIndex,
@@ -199,7 +199,7 @@ contract("LongShort", (accounts) => {
     );
   });
 
-  it("longshort: Price movements of 100% or greater upwards induce short liquidation", async () => {
+  it("induces short liquidation on >100% price movements", async () => {
     // 100 fund in short, 100 fund in long
     await mintLongShort2(
       marketIndex,
@@ -238,7 +238,7 @@ contract("LongShort", (accounts) => {
     assert.equal(newShortVal.toString(), "0", "Short value change correct");
   });
 
-  it("longshort: Price movements of 100% downwards induce long liquidation", async () => {
+  it("induces long liquidation on >100% price movements", async () => {
     // 100 fund in short, 100 fund in long
     await mintLongShort2(
       marketIndex,
@@ -265,7 +265,7 @@ contract("LongShort", (accounts) => {
     );
   });
 
-  it("longshort: Price changes induce no value change when only long has liquidity", async () => {
+  it("induces no value change on long-only market", async () => {
     // 100 fund to long
     await mintAndApprove(fund, defaultMintAmount, user1, longShort.address);
     await longShort.mintLong(marketIndex, new BN(defaultMintAmount), {
@@ -301,7 +301,7 @@ contract("LongShort", (accounts) => {
     assert.equal(newShortVal.toString(), "0", "Short value change correct");
   });
 
-  it("longshort: Price changes induce no value change when only short has liquidity", async () => {
+  it("induces no value change on short-only market", async () => {
     // 100 fund to short
     await mintAndApprove(fund, defaultMintAmount, user1, longShort.address);
     await longShort.mintShort(marketIndex, new BN(defaultMintAmount), {
