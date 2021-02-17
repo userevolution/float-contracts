@@ -147,9 +147,7 @@ contract LongShort is ILongShort, Initializable {
     event FeesLevied(
         uint256 marketIndex,
         uint256 contractCallCounter,
-        uint256 totalFees,
-        uint256 longPercentage,
-        uint256 shortPercentage
+        uint256 totalFees
     );
 
     event SyntheticTokenCreated(
@@ -403,53 +401,29 @@ contract LongShort is ILongShort, Initializable {
 
     /**
      * Controls what happens with mint/redeem fees.
-     * This is a v1 mechanism.
      */
-    function _feesMechanism(
-        uint256 marketIndex,
-        uint256 totalFees,
-        uint256 longPercentage,
-        uint256 shortPercentage
-    ) internal {
-        _increaseLongShortSides(
-            marketIndex,
-            totalFees,
-            longPercentage,
-            shortPercentage
+    function _feesMechanism(uint256 marketIndex, uint256 totalFees) internal {
+        // Initial mechanism just splits fees evenly across the long/short
+        // market values. We may want to incentivise float token holders by
+        // depositing some in the DAO later.
+        uint256 longSideIncrease = totalFees.div(2);
+        uint256 shortSideIncrease = totalFees.sub(longSideIncrease);
+        longValue[marketIndex] = longValue[marketIndex].add(longSideIncrease);
+        shortValue[marketIndex] = shortValue[marketIndex].add(
+            shortSideIncrease
         );
 
         emit FeesLevied(
             marketIndex,
             externalContractCounter[marketIndex],
-            totalFees,
-            longPercentage,
-            shortPercentage
+            totalFees
         );
     }
 
     /**
-     * Splits the given amount between the long/short sides.
+     * Controls what happens with accrued yield manager interest.
      */
-    function _increaseLongShortSides(
-        uint256 marketIndex,
-        uint256 amount,
-        uint256 longPercentage,
-        uint256 shortPercentage
-    ) internal {
-        // Possibly remove this check to save gas.
-        require(100 == shortPercentage.add(longPercentage));
-
-        if (amount != 0) {
-            uint256 longSideIncrease = amount.mul(longPercentage).div(100);
-            uint256 shortSideIncrease = amount.sub(longSideIncrease);
-            longValue[marketIndex] = longValue[marketIndex].add(
-                longSideIncrease
-            );
-            shortValue[marketIndex] = shortValue[marketIndex].add(
-                shortSideIncrease
-            );
-        }
-    }
+    function _interestMechanism(uint256 marketIndex) internal {}
 
     // TODO fix with beta
     function _priceChangeMechanism(uint256 marketIndex, uint256 newPrice)
@@ -818,7 +792,7 @@ contract LongShort is ILongShort, Initializable {
         uint256 remaining = amount.sub(fees);
 
         // Distribute fees across the market.
-        _feesMechanism(marketIndex, fees, 50, 50);
+        _feesMechanism(marketIndex, fees);
         _refreshTokensPrice(marketIndex);
 
         // Mint long tokens with remaining value.
@@ -857,7 +831,7 @@ contract LongShort is ILongShort, Initializable {
         uint256 remaining = amount.sub(fees);
 
         // Distribute fees across the market.
-        _feesMechanism(marketIndex, fees, 50, 50);
+        _feesMechanism(marketIndex, fees);
         _refreshTokensPrice(marketIndex);
 
         // Mint short tokens with remaining value.
@@ -903,7 +877,7 @@ contract LongShort is ILongShort, Initializable {
         uint256 remaining = amount.sub(fees);
 
         // Distribute fees across the market.
-        _feesMechanism(marketIndex, fees, 50, 50);
+        _feesMechanism(marketIndex, fees);
 
         // Withdraw funds with remaining amount.
         longValue[marketIndex] = longValue[marketIndex].sub(amount);
@@ -943,7 +917,7 @@ contract LongShort is ILongShort, Initializable {
         uint256 remaining = amount.sub(fees);
 
         // Distribute fees across the market.
-        _feesMechanism(marketIndex, fees, 50, 50);
+        _feesMechanism(marketIndex, fees);
 
         // Withdraw funds with remaining amount.
         shortValue[marketIndex] = shortValue[marketIndex].sub(amount);
