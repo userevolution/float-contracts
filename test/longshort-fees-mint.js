@@ -9,7 +9,7 @@ const {
 
 const { initialize, mintAndApprove, createSynthetic } = require("./helpers");
 
-contract("LongShort", (accounts) => {
+contract("LongShort (minting fees)", (accounts) => {
   let longShort;
 
   const syntheticName = "FTSE100";

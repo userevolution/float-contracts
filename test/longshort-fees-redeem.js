@@ -9,7 +9,7 @@ const {
 
 const { initialize, mintAndApprove, createSynthetic } = require("./helpers");
 
-contract("LongShort", (accounts) => {
+contract("LongShort (redeeming fees)", (accounts) => {
   let longShort;
   let priceOracle;
   let marketIndex;

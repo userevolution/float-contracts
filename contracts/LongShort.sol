@@ -455,7 +455,7 @@ contract LongShort is ILongShort, Initializable {
     /**
      * Controls what happens with accrued yield manager interest.
      */
-    function _interestMechanism(uint256 marketIndex) internal {
+    function _yieldMechanism(uint256 marketIndex) internal {
         uint256 amount =
             yieldManagers[marketIndex].getTotalHeld().sub(
                 totalValueLockedInYieldManager[marketIndex]
@@ -590,7 +590,7 @@ contract LongShort is ILongShort, Initializable {
         }
 
         // Distibute accrued yield manager interest.
-        _interestMechanism(marketIndex);
+        _yieldMechanism(marketIndex);
 
         _refreshTokensPrice(marketIndex);
         assetPrice[marketIndex] = newPrice;

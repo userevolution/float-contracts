@@ -3,7 +3,7 @@ const { initialize, mintAndApprove, createSynthetic } = require("./helpers");
 
 const YieldManager = artifacts.require("YieldManagerMock");
 
-contract("YieldManagerMock", (accounts) => {
+contract("YieldManagerMock (interface)", (accounts) => {
   let yieldManager;
   let token;
 

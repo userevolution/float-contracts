@@ -9,7 +9,7 @@ const {
 
 const { initialize, mintAndApprove, createSynthetic } = require("./helpers");
 
-contract("LongShort", (accounts) => {
+contract("LongShort (initialisation)", (accounts) => {
   let longShort;
   let priceOracle;
   let marketIndex;
@@ -56,7 +56,7 @@ contract("LongShort", (accounts) => {
     marketIndex = synthResult.currentMarketIndex;
   });
 
-  it("longshort: contract initialises, Long position can be made", async () => {
+  it("successfully initialises, long position can be made", async () => {
     await mintAndApprove(fund, defaultMintAmount, user1, longShort.address);
 
     // Create a long position
@@ -75,7 +75,7 @@ contract("LongShort", (accounts) => {
     assert.equal(user1FundTokens, 0, "Tokens not taken when minting position");
   });
 
-  it("longshort: contract initialises, short position can be created.", async () => {
+  it("successfully initialises, short position can be created.", async () => {
     await mintAndApprove(fund, defaultMintAmount, user1, longShort.address);
 
     // Create a short position
@@ -94,7 +94,7 @@ contract("LongShort", (accounts) => {
     assert.equal(user1FundTokens, 0, "Tokens not taken when minting position");
   });
 
-  it("longshort: contract initialises,long short sides both created. Token price and value correct.", async () => {
+  it("succesfully initialises, long/short sides created with correct price/value", async () => {
     await mintAndApprove(fund, defaultMintAmount, user1, longShort.address);
 
     // Create a short position
