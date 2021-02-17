@@ -40,9 +40,6 @@ const deployContracts = async (options, accounts, deployer) => {
   await deployer.deploy(TokenFactory);
   let tokenFactory = await TokenFactory.deployed();
 
-  // await deployer.deploy(Staker);
-  // let staker = await Staker.deployed();
-
   await deployer.deploy(FloatToken);
   let floatToken = await FloatToken.deployed();
 
@@ -75,7 +72,6 @@ const deployContracts = async (options, accounts, deployer) => {
       tokenFactory.address,
       staker.address,
       oracleAggregator.address,
-      // yieldManager.address,
     ],
   });
 
