@@ -1,103 +1,127 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.7.6;
 
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
-
-import "@openzeppelin/contracts-upgradeable/presets/ERC20PresetMinterPauserUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 
 import "../interfaces/IYieldManager.sol";
 
 /*
-Thoughts for the mock:
-* Should accept multiple erc20 tokens
-
-Thought, for contract testing we likely want a small yield increase per transaction.
-But for UI testing, we want yield to be earned smoothly over time.
-Maybe solution is to have a combination of both.
-
-I do think it is a good thing to test that the yield could increase between two transactions in the same block
-  (which should be possible with current lending markets since interactions with the yield platform can happen inbetween)
+ * YieldManagerMock is an implementation of a yield manager that supports
+ * configurable, deterministic token yields for testing.
  */
 contract YieldManagerMock is IYieldManager, Initializable {
     using SafeMathUpgradeable for uint256;
 
+    // Admin contracts.
     address public admin;
-    address public longShortContract;
+    address public longShort;
 
-    uint256 public constant interestScalarDenominator = 10e18; // = 10^9
+    // Fixed-precision scale for interest percentages.
+    uint256 public constant yieldScale = 1e18;
 
-    mapping(address => uint256) public totalHeld;
-    mapping(address => uint256) public interestScalarTime;
-    mapping(address => uint256) public timeYieldWasLastSettled;
+    // Global state.
+    ERC20 public token;
+    uint256 public totalHeld;
+    uint256 public yieldRate; // pcnt per sec
+    uint256 public lastSettled; // secs after epoch
+
+    ////////////////////////////////////
+    /////////// MODIFIERS //////////////
+    ////////////////////////////////////
 
     modifier adminOnly() {
         require(msg.sender == admin, "Not admin");
         _;
     }
+
     modifier longShortOnly() {
-        require(msg.sender == longShortContract, "Not longShort");
+        require(msg.sender == longShort, "Not longShort");
         _;
     }
 
-    function setup(address _admin, address _longShort) public initializer {
+    ////////////////////////////////////
+    ///// CONTRACT SET-UP //////////////
+    ////////////////////////////////////
+
+    function setup(
+        address _admin,
+        address _longShort,
+        address _token
+    ) public initializer {
+        // Admin contracts.
         admin = _admin;
-        longShortContract = _longShort;
+        longShort = _longShort;
+
+        // Global state.
+        token = ERC20(_token);
+        lastSettled = block.timestamp;
     }
 
-    function setYieldRateIncreaseForNextQuery(
-        address tokenAddress,
-        uint256 percentage
-    ) public adminOnly {
-        uint256 currentTotalHeld = getTotalHeld(tokenAddress);
-        totalHeld[tokenAddress] = currentTotalHeld.add(
-            currentTotalHeld.mul(percentage).div(interestScalarDenominator)
-        );
-        timeYieldWasLastSettled[tokenAddress] = block.timestamp;
+    ////////////////////////////////////
+    ///// IMPLEMENTATION ///////////////
+    ////////////////////////////////////
+
+    /**
+     * Adds the token's accrued yield to the token holdings.
+     */
+    function settle() public {
+        uint256 totalYield = yieldRate.mul(block.timestamp.sub(lastSettled));
+
+        lastSettled = block.timestamp;
+        totalHeld = totalHeld.add(totalHeld.mul(totalYield).div(yieldScale));
     }
 
-    function setYieldRateIncreasePerSecond(
-        address tokenAddress,
-        uint256 newPercentage
-    ) public adminOnly {
-        setYieldRateIncreaseForNextQuery(tokenAddress, 0);
-
-        interestScalarTime[tokenAddress] = newPercentage;
+    /**
+     * Adds the given yield to the token holdings.
+     */
+    function settleWithYield(uint256 yield) public adminOnly {
+        lastSettled = block.timestamp;
+        totalHeld = totalHeld.add(totalHeld.mul(yield).div(yieldScale));
     }
 
-    function depositToken(address erc20Token, uint256 amount)
+    /**
+     * Sets the yield percentage per second for the given token.
+     */
+    function setYieldRate(uint256 _yieldRate) public adminOnly {
+        yieldRate = _yieldRate;
+    }
+
+    function depositToken(uint256 amount) public override longShortOnly {
+        // Ensure token state is current.
+        settle();
+
+        // Transfer tokens to manager contract.
+        token.transferFrom(longShort, address(this), amount);
+        totalHeld = totalHeld.add(amount);
+    }
+
+    function withdrawToken(uint256 amount)
         public
         override
         longShortOnly
     {
-        // erc20Token.burn()
+        // Ensure token state is current.
+        settle();
+        require(amount <= totalHeld);
+
+        // Transfer tokens back to LongShort contract.
+        token.approve(address(this), amount);
+        token.transferFrom(address(this), longShort, amount);
+        totalHeld = totalHeld.sub(amount);
     }
 
-    // Note, it is possible that this won't be able to withdraw the underlying token - so it may have to give the user the interest bearing token
-    function withdrawDepositToken(address erc20Token, uint256 amount)
-        public
-        override
-        longShortOnly
-        returns (address tokenWithdrawn, uint256 amountWithdrawn)
-    {
-        // token.mint(receiverOfTokens, amountToMintForUser);
-    }
-
-    function getTotalHeld(address erc20Token)
+    function getTotalHeld()
         public
         view
         override
         returns (uint256 amount)
     {
-        return
-            totalHeld[erc20Token].add(
-                totalHeld[erc20Token]
-                    .mul(
-                    interestScalarTime[erc20Token].mul(
-                        block.timestamp.sub(timeYieldWasLastSettled[erc20Token])
-                    )
-                )
-                    .div(interestScalarDenominator)
-            );
+        return totalHeld;
+    }
+
+    function getHeldToken() public view override returns (address _token) {
+        return address(token);
     }
 }

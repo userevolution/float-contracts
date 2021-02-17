@@ -36,10 +36,8 @@ const initialize = async (admin) => {
   const longShort = await LongShort.new({
     from: admin,
   });
+
   const oracleManagerMock = await OracleManagerMock.new({
-    from: admin,
-  });
-  const yieldManager = await YieldManager.new({
     from: admin,
   });
 
@@ -55,16 +53,11 @@ const initialize = async (admin) => {
     from: admin,
   });
 
-  await yieldManager.setup(admin, longShort.address, {
-    from: admin,
-  });
-
   await longShort.setup(
     admin,
     tokenFactory.address,
     staker.address,
     oracleManagerMock.address,
-    yieldManager.address,
     {
       from: admin,
     }
@@ -78,7 +71,6 @@ const initialize = async (admin) => {
     longShort,
     tokenFactory,
     oracleManagerMock,
-    yieldManager,
   };
 };
 
@@ -96,10 +88,18 @@ const createSynthetic = async (
     from: admin,
   });
 
+  const yieldManager = await YieldManager.new({
+    from: admin,
+  });
+
   // For testing, we will use the fundToken's address as the oracle address. This is likely to chance in the future
   const priceOracleAddress = fundToken.address;
 
   await fundToken.initialize("fund token", "FND", {
+    from: admin,
+  });
+
+  await yieldManager.setup(admin, longShort.address, fundToken.address, {
     from: admin,
   });
 
@@ -108,6 +108,7 @@ const createSynthetic = async (
     syntheticSymbol,
     fundToken.address,
     priceOracleAddress,
+    yieldManager.address,
     _baseEntryFee,
     _badLiquidityEntryFee,
     _baseExitFee,
@@ -127,6 +128,7 @@ const createSynthetic = async (
     longToken,
     shortToken,
     fundToken,
+    yieldManager,
   };
 };
 
@@ -201,12 +203,7 @@ const feeCalculation = (
     }
   }
   // If greater than minFeeThreshold
-  if (
-    amount
-      .add(longValue)
-      .add(shortValue)
-      .gte(minThreshold)
-  ) {
+  if (amount.add(longValue).add(shortValue).gte(minThreshold)) {
     const TEN_TO_THE_18 = "1" + "000000000000000000";
     let betaDiff = new BN(TEN_TO_THE_18).sub(thinBeta); // TODO: when previous beta != 1
 
@@ -254,10 +251,7 @@ const logGasPrices = async (
   console.log(`USD Price: $${ethPriceUsd}`);
   const ethCost =
     Number(
-      totalCostEth
-        .mul(new BN(ethPriceUsd))
-        .mul(new BN(100))
-        .div(ONE_ETH)
+      totalCostEth.mul(new BN(ethPriceUsd)).mul(new BN(100)).div(ONE_ETH)
     ) / 100;
   console.log(`Cost on ETH Mainnet: $${ethCost}`);
 
@@ -269,10 +263,7 @@ const logGasPrices = async (
   console.log(`BNB Price: $${bnbPriceUsd}`);
   const bscCost =
     Number(
-      totalCostBsc
-        .mul(new BN(bnbPriceUsd))
-        .mul(new BN(100))
-        .div(ONE_ETH)
+      totalCostBsc.mul(new BN(bnbPriceUsd)).mul(new BN(100)).div(ONE_ETH)
     ) / 100;
   console.log(`Cost on BSC: $${bscCost}`);
 };

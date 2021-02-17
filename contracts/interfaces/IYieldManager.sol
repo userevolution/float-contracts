@@ -2,18 +2,31 @@ pragma solidity 0.7.6;
 
 import "@openzeppelin/contracts-upgradeable/presets/ERC20PresetMinterPauserUpgradeable.sol";
 
+/*
+ * Manages yield accumulation for the LongShort contract. Each market is
+ * deployed with its own yield manager to simplify the bookkeeping, as
+ * different markets may share an underlying fund token.
+ */
 abstract contract IYieldManager {
-    function depositToken(address erc20Token, uint256 amount) public virtual;
+    /*
+     * Deposits the given amount of tokens into this yield manager.
+     */
+    function depositToken(uint256 amount) public virtual;
 
-    // Note, it is possible that this won't be able to withdraw the underlying token - so it may have to give the user the interest bearing token
-    function withdrawDepositToken(address erc20Token, uint256 amount)
+    /*
+     * Withdraws the given amount of tokens from this yield manager.
+     */
+    function withdrawToken(uint256 amount)
         public
-        virtual
-        returns (address tokenWithdrawn, uint256 amountWithdrawn);
+        virtual;
 
-    function getTotalHeld(address erc20Token)
-        public
-        view
-        virtual
-        returns (uint256 amount);
+    /*
+     * Returns the total token value held by this yield manager.
+     */
+    function getTotalHeld() public view virtual returns (uint256 amount);
+
+    /*
+     * Returns the token held by this yield manager.
+     */
+    function getHeldToken() public view virtual returns (address token);
 }
