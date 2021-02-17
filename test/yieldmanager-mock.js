@@ -45,6 +45,10 @@ contract("YieldManagerMock (interface)", (accounts) => {
     yieldManager = await YieldManager.new({ from: admin });
     await yieldManager.setup(admin, user, token.address, { from: admin });
 
+    // Mock yield manager needs to be able to mint tokens to simulate yield.
+    var mintRole = await token.MINTER_ROLE.call();
+    await token.grantRole(mintRole, yieldManager.address);
+
     // Allow yield manager to transfer user's tokens.
     await token.approve(yieldManager.address, oneHundred, {
       from: user,

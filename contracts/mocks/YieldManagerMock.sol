@@ -1,15 +1,16 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.7.6;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/presets/ERC20PresetMinterPauserUpgradeable.sol";
 
 import "../interfaces/IYieldManager.sol";
 
 /*
  * YieldManagerMock is an implementation of a yield manager that supports
- * configurable, deterministic token yields for testing.
+ * configurable, deterministic token yields for testing. Note that the mock
+ * needs to be able to mint the underlying token to simulate yield.
  */
 contract YieldManagerMock is IYieldManager, Initializable {
     using SafeMathUpgradeable for uint256;
@@ -22,7 +23,7 @@ contract YieldManagerMock is IYieldManager, Initializable {
     uint256 public constant yieldScale = 1e18;
 
     // Global state.
-    ERC20 public token;
+    ERC20PresetMinterPauserUpgradeable public token;
     uint256 public totalHeld;
     uint256 public yieldRate; // pcnt per sec
     uint256 public lastSettled; // secs after epoch
@@ -55,7 +56,7 @@ contract YieldManagerMock is IYieldManager, Initializable {
         longShort = _longShort;
 
         // Global state.
-        token = ERC20(_token);
+        token = ERC20PresetMinterPauserUpgradeable(_token);
         lastSettled = block.timestamp;
     }
 
@@ -67,18 +68,23 @@ contract YieldManagerMock is IYieldManager, Initializable {
      * Adds the token's accrued yield to the token holdings.
      */
     function settle() public {
-        uint256 totalYield = yieldRate.mul(block.timestamp.sub(lastSettled));
+        uint256 totalYieldRate = yieldRate.mul(block.timestamp.sub(lastSettled));
+        uint256 totalYield = totalHeld.mul(totalYieldRate).div(yieldScale);
 
         lastSettled = block.timestamp;
-        totalHeld = totalHeld.add(totalHeld.mul(totalYield).div(yieldScale));
+        totalHeld = totalHeld.add(totalYield);
+        token.mint(address(this), totalYield);
     }
 
     /**
      * Adds the given yield to the token holdings.
      */
     function settleWithYield(uint256 yield) public adminOnly {
+        uint256 totalYield = totalHeld.mul(yield).div(yieldScale);
+
         lastSettled = block.timestamp;
-        totalHeld = totalHeld.add(totalHeld.mul(yield).div(yieldScale));
+        totalHeld = totalHeld.add(totalYield);
+        token.mint(address(this), totalYield);
     }
 
     /**
