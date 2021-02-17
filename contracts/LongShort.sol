@@ -339,9 +339,9 @@ contract LongShort is ILongShort, Initializable {
      */
     function getLiquidFunds(uint256 marketIndex) public view returns (uint256) {
         return
-            totalValueLockedInMarket[marketIndex].sub(
-                totalValueLockedInYieldManager[marketIndex]
-            );
+            totalValueLockedInMarket[marketIndex]
+                .add(totalValueLockedInDao[marketIndex])
+                .sub(totalValueLockedInYieldManager[marketIndex]);
     }
 
     /**
