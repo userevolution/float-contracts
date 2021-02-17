@@ -1,7 +1,7 @@
 const Dai = artifacts.require("Dai");
 const SyntheticToken = artifacts.require("SyntheticToken");
 
-const OracleAgregator = artifacts.require("OracleManagerMock");
+const oracleAggregator = artifacts.require("OracleManagerMock");
 const LongShort = artifacts.require("LongShort");
 
 const { BN } = require("@openzeppelin/test-helpers");
@@ -75,7 +75,7 @@ module.exports = async function(deployer, network, accounts) {
 
   const dai = await Dai.deployed();
 
-  const oracleAgregator = await OracleAgregator.deployed();
+  const oracleAgregator = await oracleAggregator.deployed();
 
   const longShort = await LongShort.deployed();
   await deployTestMarket(
