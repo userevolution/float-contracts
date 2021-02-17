@@ -1,22 +1,413 @@
 {
   "contracts": {
-    "YieldManager": {
-      "address": "0xC3Fb033114620B6511bD0be0bC60Cb3cb74Eb8Cb",
-      "constructorCode": "608060405234801561001057600080fd5b5061093a806100206000396000f3fe",
-      "bodyBytecodeHash": "b7962c99f2310af2269711c1bd60486dccca2e18030127eeae992eb39cc865a8",
-      "localBytecodeHash": "d0ca881c4fd7b5f6ec5e4ece06b421b7b7a306827d0a6dd84a15b0530ebe50e3",
-      "deployedBytecodeHash": "d0ca881c4fd7b5f6ec5e4ece06b421b7b7a306827d0a6dd84a15b0530ebe50e3",
-      "types": null,
-      "storage": null
-    },
     "LongShort": {
-      "address": "0xD87E5eE10A4233319c94611b3198cA584e89fa74",
+      "address": "0xC3Fb033114620B6511bD0be0bC60Cb3cb74Eb8Cb",
       "constructorCode": "608060405234801561001057600080fd5b506127ba806100206000396000f3fe",
       "bodyBytecodeHash": "e713b17bafc1fe519efa12ca4c2a2e093873e4c8629b00f0f1ecbe9ac7dc5179",
       "localBytecodeHash": "599b2e88e6c6eaccb10478f12048baed39d2d62df1b8173b357f73e091fe7f2d",
       "deployedBytecodeHash": "599b2e88e6c6eaccb10478f12048baed39d2d62df1b8173b357f73e091fe7f2d",
-      "types": null,
-      "storage": null
+      "types": {
+        "t_bool": {
+          "id": "t_bool",
+          "kind": "elementary",
+          "label": "bool"
+        },
+        "t_address": {
+          "id": "t_address",
+          "kind": "elementary",
+          "label": "address"
+        },
+        "t_uint256": {
+          "id": "t_uint256",
+          "kind": "elementary",
+          "label": "uint256"
+        },
+        "t_mapping<t_bool>": {
+          "id": "t_mapping<t_bool>",
+          "valueType": "t_bool",
+          "label": "mapping(key => bool)",
+          "kind": "mapping"
+        },
+        "t_mapping<t_uint256>": {
+          "id": "t_mapping<t_uint256>",
+          "valueType": "t_uint256",
+          "label": "mapping(key => uint256)",
+          "kind": "mapping"
+        },
+        "t_mapping<t_address>": {
+          "id": "t_mapping<t_address>",
+          "valueType": "t_address",
+          "label": "mapping(key => address)",
+          "kind": "mapping"
+        }
+      },
+      "storage": [
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
+          "label": "_initialized",
+          "astId": 5125,
+          "type": "t_bool",
+          "src": "1212:25:23"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
+          "label": "_initializing",
+          "astId": 5128,
+          "type": "t_bool",
+          "src": "1340:26:23"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "admin",
+          "astId": 77,
+          "type": "t_address",
+          "src": "3823:20:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "latestMarket",
+          "astId": 79,
+          "type": "t_uint256",
+          "src": "3888:27:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "totalValueLocked",
+          "astId": 81,
+          "type": "t_uint256",
+          "src": "3921:31:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "marketExists",
+          "astId": 85,
+          "type": "t_mapping<t_bool>",
+          "src": "3988:44:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "tokenFactory",
+          "astId": 87,
+          "type": "t_address",
+          "src": "4108:32:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "staker",
+          "astId": 89,
+          "type": "t_address",
+          "src": "4204:20:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "oracleAgregator",
+          "astId": 91,
+          "type": "t_address",
+          "src": "4280:37:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "assetPrice",
+          "astId": 103,
+          "type": "t_mapping<t_uint256>",
+          "src": "4489:45:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "totalValueLockedInMarket",
+          "astId": 107,
+          "type": "t_mapping<t_uint256>",
+          "src": "4540:59:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "longValue",
+          "astId": 111,
+          "type": "t_mapping<t_uint256>",
+          "src": "4605:44:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "shortValue",
+          "astId": 115,
+          "type": "t_mapping<t_uint256>",
+          "src": "4655:45:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "longTokenPrice",
+          "astId": 119,
+          "type": "t_mapping<t_uint256>",
+          "src": "4706:49:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "shortTokenPrice",
+          "astId": 123,
+          "type": "t_mapping<t_uint256>",
+          "src": "4761:50:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "externalContractCounter",
+          "astId": 127,
+          "type": "t_mapping<t_uint256>",
+          "src": "4817:58:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "fundTokens",
+          "astId": 131,
+          "type": "t_mapping<t_address>",
+          "src": "4881:55:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "yieldManagers",
+          "astId": 135,
+          "type": "t_mapping<t_address>",
+          "src": "4942:54:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "longTokens",
+          "astId": 139,
+          "type": "t_mapping<t_address>",
+          "src": "5065:52:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "shortTokens",
+          "astId": 143,
+          "type": "t_mapping<t_address>",
+          "src": "5123:53:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "baseEntryFee",
+          "astId": 147,
+          "type": "t_mapping<t_uint256>",
+          "src": "5307:47:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "badLiquidityEntryFee",
+          "astId": 151,
+          "type": "t_mapping<t_uint256>",
+          "src": "5360:55:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "baseExitFee",
+          "astId": 155,
+          "type": "t_mapping<t_uint256>",
+          "src": "5421:46:1"
+        },
+        {
+          "contract": "LongShort",
+          "path": "contracts/LongShort.sol",
+          "label": "badLiquidityExitFee",
+          "astId": 159,
+          "type": "t_mapping<t_uint256>",
+          "src": "5473:54:1"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
+    },
+    "Staker": {
+      "address": "0xD87E5eE10A4233319c94611b3198cA584e89fa74",
+      "constructorCode": "608060405234801561001057600080fd5b50611199806100206000396000f3fe",
+      "bodyBytecodeHash": "d03b3c6b015365a00304aff364f883ca3d00d4d9c8dda804fb18938bf0aa287a",
+      "localBytecodeHash": "60bf91ea7a3b4d30e1669663948a51054f5a1fb122f30126327c319078af1b2d",
+      "deployedBytecodeHash": "60bf91ea7a3b4d30e1669663948a51054f5a1fb122f30126327c319078af1b2d",
+      "types": {
+        "t_bool": {
+          "id": "t_bool",
+          "kind": "elementary",
+          "label": "bool"
+        },
+        "t_address": {
+          "id": "t_address",
+          "kind": "elementary",
+          "label": "address"
+        },
+        "t_mapping<t_bool>": {
+          "id": "t_mapping<t_bool>",
+          "valueType": "t_bool",
+          "label": "mapping(key => bool)",
+          "kind": "mapping"
+        },
+        "t_uint256": {
+          "id": "t_uint256",
+          "kind": "elementary",
+          "label": "uint256"
+        },
+        "t_mapping<t_uint256>": {
+          "id": "t_mapping<t_uint256>",
+          "valueType": "t_uint256",
+          "label": "mapping(key => uint256)",
+          "kind": "mapping"
+        },
+        "t_struct<Staker.RewardState>": {
+          "id": "t_struct<Staker.RewardState>",
+          "kind": "struct",
+          "label": "Staker.RewardState",
+          "members": [
+            {
+              "label": "timestamp",
+              "astId": 2102,
+              "type": "t_uint256",
+              "src": "1208:17:3"
+            },
+            {
+              "label": "accumulativeFloatPerSecond",
+              "astId": 2104,
+              "type": "t_uint256",
+              "src": "1235:34:3"
+            }
+          ]
+        },
+        "t_mapping<t_struct<Staker.RewardState>>": {
+          "id": "t_mapping<t_struct<Staker.RewardState>>",
+          "valueType": "t_struct<Staker.RewardState>",
+          "label": "mapping(key => Staker.RewardState)",
+          "kind": "mapping"
+        }
+      },
+      "storage": [
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
+          "label": "_initialized",
+          "astId": 5125,
+          "type": "t_bool",
+          "src": "1212:25:23"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
+          "label": "_initializing",
+          "astId": 5128,
+          "type": "t_bool",
+          "src": "1340:26:23"
+        },
+        {
+          "contract": "Staker",
+          "path": "contracts/Staker.sol",
+          "label": "admin",
+          "astId": 2080,
+          "type": "t_address",
+          "src": "786:20:3"
+        },
+        {
+          "contract": "Staker",
+          "path": "contracts/Staker.sol",
+          "label": "syntheticValid",
+          "astId": 2084,
+          "type": "t_mapping<t_bool>",
+          "src": "812:39:3"
+        },
+        {
+          "contract": "Staker",
+          "path": "contracts/Staker.sol",
+          "label": "accumulatedFloat",
+          "astId": 2088,
+          "type": "t_mapping<t_uint256>",
+          "src": "898:51:3"
+        },
+        {
+          "contract": "Staker",
+          "path": "contracts/Staker.sol",
+          "label": "userAmountStaked",
+          "astId": 2094,
+          "type": "t_mapping<t_uint256>",
+          "src": "955:71:3"
+        },
+        {
+          "contract": "Staker",
+          "path": "contracts/Staker.sol",
+          "label": "userIndexOfLastClaimedReward",
+          "astId": 2100,
+          "type": "t_mapping<t_uint256>",
+          "src": "1081:91:3"
+        },
+        {
+          "contract": "Staker",
+          "path": "contracts/Staker.sol",
+          "label": "marketIndexOfToken",
+          "astId": 2109,
+          "type": "t_mapping<t_uint256>",
+          "src": "1282:53:3"
+        },
+        {
+          "contract": "Staker",
+          "path": "contracts/Staker.sol",
+          "label": "syntheticRewardParams",
+          "astId": 2115,
+          "type": "t_mapping<t_struct<Staker.RewardState>>",
+          "src": "1399:88:3"
+        },
+        {
+          "contract": "Staker",
+          "path": "contracts/Staker.sol",
+          "label": "latestRewardIndex",
+          "astId": 2119,
+          "type": "t_mapping<t_uint256>",
+          "src": "1545:52:3"
+        },
+        {
+          "contract": "Staker",
+          "path": "contracts/Staker.sol",
+          "label": "floatContract",
+          "astId": 2121,
+          "type": "t_address",
+          "src": "1649:30:3"
+        },
+        {
+          "contract": "Staker",
+          "path": "contracts/Staker.sol",
+          "label": "floatToken",
+          "astId": 2123,
+          "type": "t_address",
+          "src": "1685:28:3"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
     },
     "oracleAggregator": {
       "address": "0xe745E3dd2a7c6d0FBDAa8401622fb7e854dAb9Ff",
@@ -58,49 +449,49 @@
           "contract": "Initializable",
           "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
           "label": "_initialized",
-          "astId": 4775,
+          "astId": 5125,
           "type": "t_bool",
-          "src": "1212:25:22"
+          "src": "1212:25:23"
         },
         {
           "contract": "Initializable",
           "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
           "label": "_initializing",
-          "astId": 4778,
+          "astId": 5128,
           "type": "t_bool",
-          "src": "1340:26:22"
+          "src": "1340:26:23"
         },
         {
           "contract": "OracleManagerMock",
           "path": "contracts/mocks/OracleManagerMock.sol",
           "label": "admin",
-          "astId": 3449,
+          "astId": 3739,
           "type": "t_address",
-          "src": "241:20:16"
+          "src": "241:20:17"
         },
         {
           "contract": "OracleManagerMock",
           "path": "contracts/mocks/OracleManagerMock.sol",
           "label": "longShortContract",
-          "astId": 3451,
+          "astId": 3741,
           "type": "t_address",
-          "src": "267:32:16"
+          "src": "267:32:17"
         },
         {
           "contract": "OracleManagerMock",
           "path": "contracts/mocks/OracleManagerMock.sol",
           "label": "oracleFeeds",
-          "astId": 3455,
+          "astId": 3745,
           "type": "t_mapping<t_address>",
-          "src": "306:46:16"
+          "src": "306:46:17"
         },
         {
           "contract": "OracleManagerMock",
           "path": "contracts/mocks/OracleManagerMock.sol",
           "label": "oraclePrices",
-          "astId": 3459,
+          "astId": 3749,
           "type": "t_mapping<t_int256>",
-          "src": "368:46:16"
+          "src": "368:46:17"
         }
       ],
       "warnings": {
@@ -110,15 +501,145 @@
         "hasInitialValuesInDeclarations": false,
         "uninitializedBaseContracts": []
       }
+    },
+    "YieldManager": {
+      "address": "0xDb54B47B735eeF765Bf64dDda0c04d8D284CDD5d",
+      "constructorCode": "608060405234801561001057600080fd5b5061093a806100206000396000f3fe",
+      "bodyBytecodeHash": "b7962c99f2310af2269711c1bd60486dccca2e18030127eeae992eb39cc865a8",
+      "localBytecodeHash": "d0ca881c4fd7b5f6ec5e4ece06b421b7b7a306827d0a6dd84a15b0530ebe50e3",
+      "deployedBytecodeHash": "d0ca881c4fd7b5f6ec5e4ece06b421b7b7a306827d0a6dd84a15b0530ebe50e3",
+      "types": {
+        "t_bool": {
+          "id": "t_bool",
+          "kind": "elementary",
+          "label": "bool"
+        },
+        "t_address": {
+          "id": "t_address",
+          "kind": "elementary",
+          "label": "address"
+        },
+        "t_uint256": {
+          "id": "t_uint256",
+          "kind": "elementary",
+          "label": "uint256"
+        }
+      },
+      "storage": [
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
+          "label": "_initialized",
+          "astId": 5125,
+          "type": "t_bool",
+          "src": "1212:25:23"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
+          "label": "_initializing",
+          "astId": 5128,
+          "type": "t_bool",
+          "src": "1340:26:23"
+        },
+        {
+          "contract": "YieldManagerMock",
+          "path": "contracts/mocks/YieldManagerMock.sol",
+          "label": "admin",
+          "astId": 3978,
+          "type": "t_address",
+          "src": "576:20:18"
+        },
+        {
+          "contract": "YieldManagerMock",
+          "path": "contracts/mocks/YieldManagerMock.sol",
+          "label": "longShort",
+          "astId": 3980,
+          "type": "t_address",
+          "src": "602:24:18"
+        },
+        {
+          "contract": "YieldManagerMock",
+          "path": "contracts/mocks/YieldManagerMock.sol",
+          "label": "token",
+          "astId": 3985,
+          "type": "t_address",
+          "src": "757:18:18"
+        },
+        {
+          "contract": "YieldManagerMock",
+          "path": "contracts/mocks/YieldManagerMock.sol",
+          "label": "totalHeld",
+          "astId": 3987,
+          "type": "t_uint256",
+          "src": "781:24:18"
+        },
+        {
+          "contract": "YieldManagerMock",
+          "path": "contracts/mocks/YieldManagerMock.sol",
+          "label": "yieldRate",
+          "astId": 3989,
+          "type": "t_uint256",
+          "src": "811:24:18"
+        },
+        {
+          "contract": "YieldManagerMock",
+          "path": "contracts/mocks/YieldManagerMock.sol",
+          "label": "lastSettled",
+          "astId": 3991,
+          "type": "t_uint256",
+          "src": "857:26:18"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "importsVanillaContracts": [
+          "token/ERC20/ERC20.sol",
+          "utils/Context.sol",
+          "token/ERC20/IERC20.sol",
+          "math/SafeMath.sol"
+        ],
+        "uninitializedBaseContracts": []
+      }
     }
   },
   "solidityLibs": {},
   "proxies": {
-    "float-capital/oracleAggregator": [
+    "float-capital/Staker": [
       {
         "address": "0x690d863d8Ea03BF4bFaa2DD869Da1c81d9894b6e",
         "version": "0.1.0",
+        "implementation": "0xD87E5eE10A4233319c94611b3198cA584e89fa74",
+        "admin": "0x0023153EcF2344f72A4599278e9dD3A885D1D3C1",
+        "kind": "Upgradeable"
+      }
+    ],
+    "float-capital/oracleAggregator": [
+      {
+        "address": "0x8806A54B41c5fD728907a6002Ee9F420965D1FFc",
+        "version": "0.1.0",
         "implementation": "0xe745E3dd2a7c6d0FBDAa8401622fb7e854dAb9Ff",
+        "admin": "0x0023153EcF2344f72A4599278e9dD3A885D1D3C1",
+        "kind": "Upgradeable"
+      }
+    ],
+    "float-capital/YieldManager": [
+      {
+        "address": "0xa9e638f77Eea6036D05F00d0AC55169357De114E",
+        "version": "0.1.0",
+        "implementation": "0xDb54B47B735eeF765Bf64dDda0c04d8D284CDD5d",
+        "admin": "0x0023153EcF2344f72A4599278e9dD3A885D1D3C1",
+        "kind": "Upgradeable"
+      }
+    ],
+    "float-capital/LongShort": [
+      {
+        "address": "0x9e86BA54E5498AdF90C8D0B43f55C4876679e1C2",
+        "version": "0.1.0",
+        "implementation": "0xC3Fb033114620B6511bD0be0bC60Cb3cb74Eb8Cb",
         "admin": "0x0023153EcF2344f72A4599278e9dD3A885D1D3C1",
         "kind": "Upgradeable"
       }

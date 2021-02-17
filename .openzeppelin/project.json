@@ -5,7 +5,8 @@
   "contracts": {
     "LongShort": "LongShort",
     "oracleAggregator": "OracleManagerMock",
-    "YieldManager": "YieldManagerMock"
+    "YieldManager": "YieldManagerMock",
+    "Staker": "Staker"
   },
   "dependencies": {},
   "compiler": {

@@ -26,6 +26,7 @@ const deployContracts = async (options, accounts, deployer) => {
       { name: "LongShort", alias: "LongShort" },
       { name: ORACLE_AGGREGATOR, alias: "oracleAggregator" },
       { name: YIELD_MANAGER, alias: "YieldManager" },
+      { name: STAKER, alias: "Staker" },
     ],
   });
   await push({ ...options, force: true });
@@ -39,11 +40,17 @@ const deployContracts = async (options, accounts, deployer) => {
   await deployer.deploy(TokenFactory);
   let tokenFactory = await TokenFactory.deployed();
 
-  await deployer.deploy(Staker);
-  let staker = await Staker.deployed();
+  // await deployer.deploy(Staker);
+  // let staker = await Staker.deployed();
 
   await deployer.deploy(FloatToken);
   let floatToken = await FloatToken.deployed();
+
+  const staker = await create({
+    ...options,
+    contractAlias: "Staker",
+  });
+  const stakerInstance = await Staker.at(staker.address);
 
   const oracleAggregator = await create({
     ...options,
@@ -90,9 +97,14 @@ const deployContracts = async (options, accounts, deployer) => {
     from: admin,
   });
 
-  await staker.initialize(admin, longShort.address, floatToken.address, {
-    from: admin,
-  });
+  await stakerInstance.initialize(
+    admin,
+    longShort.address,
+    floatToken.address,
+    {
+      from: admin,
+    }
+  );
 };
 
 module.exports = async function(deployer, networkName, accounts) {
