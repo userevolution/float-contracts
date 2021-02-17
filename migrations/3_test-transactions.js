@@ -1,7 +1,7 @@
 const Dai = artifacts.require("Dai");
 const SyntheticToken = artifacts.require("SyntheticToken");
 
-const oracleAggregator = artifacts.require("OracleManagerMock");
+const OracleAggregator = artifacts.require("OracleManagerMock");
 const LongShort = artifacts.require("LongShort");
 
 const { BN } = require("@openzeppelin/test-helpers");
@@ -19,7 +19,8 @@ const deployTestMarket = async (
   syntheticName,
   longShortInstance,
   fundTokenInstance,
-  oracleAddress
+  oracleAddress,
+  yieldManagerAddress
 ) => {
   // Deploy a synthetic market:
   // Use these as defaults
@@ -33,6 +34,7 @@ const deployTestMarket = async (
     syntheticSymbol,
     fundTokenInstance.address,
     oracleAddress,
+    yieldManagerAddress,
     _baseEntryFee,
     _badLiquidityEntryFee,
     _baseExitFee,
@@ -71,11 +73,15 @@ module.exports = async function(deployer, network, accounts) {
   const dummyOracleAddress2 = "0x1230000000000000000000000000000000000002";
   const dummyOracleAddress3 = "0x1230000000000000000000000000000000000003";
 
+  const dummyYieldAddress1 = "0x1230000000000000000000000000000000000004";
+  const dummyYieldAddress2 = "0x1230000000000000000000000000000000000005";
+  const dummyYieldAddress3 = "0x1230000000000000000000000000000000000006";
+
   const oneHundredMintAmount = "100000000000000000000";
 
   const dai = await Dai.deployed();
 
-  const oracleAgregator = await oracleAggregator.deployed();
+  const oracleAggregator = await OracleAggregator.deployed();
 
   const longShort = await LongShort.deployed();
   await deployTestMarket(
@@ -83,10 +89,26 @@ module.exports = async function(deployer, network, accounts) {
     "FTSE",
     longShort,
     dai,
-    dummyOracleAddress1
+    dummyOracleAddress1,
+    dummyYieldAddress1
   );
-  await deployTestMarket("GOLD", "GOLD", longShort, dai, dummyOracleAddress2);
-  await deployTestMarket("SP", "S&P500", longShort, dai, dummyOracleAddress3);
+  await deployTestMarket(
+    "GOLD",
+    "GOLD",
+    longShort,
+    dai,
+    dummyOracleAddress2,
+    dummyYieldAddress2
+  );
+  await deployTestMarket(
+    "SP",
+    "S&P500",
+    longShort,
+    dai,
+    dummyOracleAddress3,
+    dummyYieldAddress3
+  );
+
   const currentMarketIndex = (await longShort.latestMarket()).toNumber();
 
   for (let marketIndex = 1; marketIndex <= currentMarketIndex; ++marketIndex) {
@@ -115,7 +137,7 @@ module.exports = async function(deployer, network, accounts) {
 
     // increase oracle price
     const tenPercentMovement = "100000000000000000";
-    await oracleAgregator.increasePrice("1", tenPercentMovement);
+    await oracleAggregator.increasePrice("1", tenPercentMovement);
 
     await longShort._updateSystemState(marketIndex);
 

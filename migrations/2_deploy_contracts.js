@@ -1,7 +1,7 @@
 const SYNTHETIC_TOKEN = "Dai";
 const TOKEN_FACTORY = "TokenFactory";
 const YIELD_MANAGER = "YieldManagerMock";
-const ORACLE_AGREGATOR = "OracleManagerMock";
+const ORACLE_AGGREGATOR = "OracleManagerMock";
 const STAKER = "Staker";
 const FLOAT_TOKEN = "FloatToken";
 
@@ -9,7 +9,7 @@ const LongShort = artifacts.require("LongShort");
 
 const Dai = artifacts.require(SYNTHETIC_TOKEN);
 const TokenFactory = artifacts.require(TOKEN_FACTORY);
-const OracleManagerMock = artifacts.require(ORACLE_AGREGATOR);
+const OracleManagerMock = artifacts.require(ORACLE_AGGREGATOR);
 const YieldManager = artifacts.require(YIELD_MANAGER);
 const Staker = artifacts.require(STAKER);
 const FloatToken = artifacts.require(FLOAT_TOKEN);
@@ -24,7 +24,7 @@ const deployContracts = async (options, accounts, deployer) => {
   add({
     contractsData: [
       { name: "LongShort", alias: "LongShort" },
-      { name: ORACLE_AGREGATOR, alias: "oracleAggregator" },
+      { name: ORACLE_AGGREGATOR, alias: "oracleAggregator" },
       { name: YIELD_MANAGER, alias: "YieldManager" },
     ],
   });
@@ -45,12 +45,12 @@ const deployContracts = async (options, accounts, deployer) => {
   await deployer.deploy(FloatToken);
   let floatToken = await FloatToken.deployed();
 
-  const oracleAgregator = await create({
+  const oracleAggregator = await create({
     ...options,
     contractAlias: "oracleAggregator",
   });
-  const oracleAgregatorInstance = await OracleManagerMock.at(
-    oracleAgregator.address
+  const oracleAggregatorInstance = await OracleManagerMock.at(
+    oracleAggregator.address
   );
 
   const yieldManager = await create({
@@ -67,18 +67,18 @@ const deployContracts = async (options, accounts, deployer) => {
       admin,
       tokenFactory.address,
       staker.address,
-      oracleAgregator.address,
-      yieldManager.address,
+      oracleAggregator.address,
+      // yieldManager.address,
     ],
   });
 
   const longShortInstance = await LongShort.at(longShort.address);
 
-  await oracleAgregatorInstance.setup(admin, longShort.address, {
+  await oracleAggregatorInstance.setup(admin, longShort.address, {
     from: admin,
   });
 
-  await yieldManagerInstance.setup(admin, longShort.address, {
+  await yieldManagerInstance.setup(admin, longShort.address, dai.address, {
     from: admin,
   });
 
