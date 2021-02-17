@@ -128,20 +128,22 @@ contract LongShort is ILongShort, Initializable {
         address staker,
         address oracleAgregator
     );
+
     event ValueLockedInSystem(
         uint256 marketIndex,
         uint256 contractCallCounter,
-        uint256 totalValueLocked,
         uint256 totalValueLockedInMarket,
         uint256 longValue,
         uint256 shortValue
     );
+
     event TokenPriceRefreshed(
         uint256 marketIndex,
         uint256 contractCallCounter,
         uint256 longTokenPrice,
         uint256 shortTokenPrice
     );
+
     event FeesLevied(
         uint256 marketIndex,
         uint256 contractCallCounter,
@@ -149,6 +151,7 @@ contract LongShort is ILongShort, Initializable {
         uint256 longPercentage,
         uint256 shortPercentage
     );
+
     event SyntheticTokenCreated(
         uint256 marketIndex,
         address longTokenAddress,
@@ -162,6 +165,7 @@ contract LongShort is ILongShort, Initializable {
         uint256 baseExitFee,
         uint256 badLiquidityExitFee
     );
+
     event PriceUpdate(
         uint256 marketIndex,
         uint256 contractCallCounter,
@@ -169,6 +173,7 @@ contract LongShort is ILongShort, Initializable {
         uint256 newPrice,
         address user
     );
+
     event LongMinted(
         uint256 marketIndex,
         uint256 contractCallCounter,
@@ -177,6 +182,7 @@ contract LongShort is ILongShort, Initializable {
         uint256 tokensMinted,
         address user
     );
+
     event ShortMinted(
         uint256 marketIndex,
         uint256 contractCallCounter,
@@ -185,6 +191,7 @@ contract LongShort is ILongShort, Initializable {
         uint256 tokensMinted,
         address user
     );
+
     event LongRedeem(
         uint256 marketIndex,
         uint256 contractCallCounter,
@@ -193,6 +200,7 @@ contract LongShort is ILongShort, Initializable {
         uint256 finalRedeemValue,
         address user
     );
+
     event ShortRedeem(
         uint256 marketIndex,
         uint256 contractCallCounter,
@@ -565,7 +573,6 @@ contract LongShort is ILongShort, Initializable {
         emit ValueLockedInSystem(
             marketIndex,
             externalContractCounter[marketIndex],
-            totalValueLocked,
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
             shortValue[marketIndex]
@@ -676,7 +683,7 @@ contract LongShort is ILongShort, Initializable {
         uint256 baseAmount, // e18
         uint256 penaltyAmount, // e18
         bool isMint // true for mint, false for redeem
-    ) internal returns (uint256) {
+    ) internal view returns (uint256) {
         uint256 baseRate = 0; // base fee pcnt paid for all actions
         uint256 penaltyRate = 0; // penalty fee pcnt paid for imbalancing
 
@@ -703,29 +710,28 @@ contract LongShort is ILongShort, Initializable {
     function _getFeesForAction(
         uint256 marketIndex,
         uint256 amount, // 1e18
-        uint256 longValue, // 1e18
-        uint256 shortValue, // 1e18
         bool isMint, // true for mint, false for redeem
         bool isLong // true for long side, false for short side
-    ) internal returns (uint256) {
+    ) internal view returns (uint256) {
+        uint256 _longValue = longValue[marketIndex];
+        uint256 _shortValue = shortValue[marketIndex];
+
         // Edge-case: no penalties for minting in a 1-sided market.
         // TODO: Is this what we want for new markets?
-        if (isMint && (longValue == 0 || shortValue == 0)) {
+        if (isMint && (_longValue == 0 || _shortValue == 0)) {
             return _getFeesForAmounts(marketIndex, amount, 0, isMint);
         }
 
-        uint256 fees = 0; // amount paid in fees
-        uint256 feeGap = 0; // amount that can be spent before higher fees
-
+        // Compute amount that can be spent before higher fees.
+        uint256 feeGap = 0;
         bool isLongMintOrShortRedeem = isMint == isLong;
         if (isLongMintOrShortRedeem) {
-            if (shortValue > longValue) {
-                feeGap = shortValue - longValue;
+            if (_shortValue > _longValue) {
+                feeGap = _shortValue - _longValue;
             }
         } else {
-            // long redeem or short mint
-            if (longValue > shortValue) {
-                feeGap = longValue - shortValue;
+            if (_longValue > _shortValue) {
+                feeGap = _longValue - _shortValue;
             }
         }
 
@@ -808,15 +814,7 @@ contract LongShort is ILongShort, Initializable {
     ) internal {
         // Deposit funds and compute fees.
         _depositFunds(marketIndex, amount);
-        uint256 fees =
-            _getFeesForAction(
-                marketIndex,
-                amount,
-                longValue[marketIndex],
-                shortValue[marketIndex],
-                true,
-                true
-            );
+        uint256 fees = _getFeesForAction(marketIndex, amount, true, true);
         uint256 remaining = amount.sub(fees);
 
         // Distribute fees across the market.
@@ -841,7 +839,6 @@ contract LongShort is ILongShort, Initializable {
         emit ValueLockedInSystem(
             marketIndex,
             externalContractCounter[marketIndex],
-            totalValueLocked,
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
             shortValue[marketIndex]
@@ -856,15 +853,7 @@ contract LongShort is ILongShort, Initializable {
     ) internal {
         // Deposit funds and compute fees.
         _depositFunds(marketIndex, amount);
-        uint256 fees =
-            _getFeesForAction(
-                marketIndex,
-                amount,
-                longValue[marketIndex],
-                shortValue[marketIndex],
-                true,
-                false
-            );
+        uint256 fees = _getFeesForAction(marketIndex, amount, true, false);
         uint256 remaining = amount.sub(fees);
 
         // Distribute fees across the market.
@@ -889,7 +878,6 @@ contract LongShort is ILongShort, Initializable {
         emit ValueLockedInSystem(
             marketIndex,
             externalContractCounter[marketIndex],
-            totalValueLocked,
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
             shortValue[marketIndex]
@@ -911,15 +899,7 @@ contract LongShort is ILongShort, Initializable {
         // Compute fees.
         uint256 amount =
             tokensToRedeem.mul(longTokenPrice[marketIndex]).div(TEN_TO_THE_18);
-        uint256 fees =
-            _getFeesForAction(
-                marketIndex,
-                amount,
-                longValue[marketIndex],
-                shortValue[marketIndex],
-                false,
-                true
-            );
+        uint256 fees = _getFeesForAction(marketIndex, amount, false, true);
         uint256 remaining = amount.sub(fees);
 
         // Distribute fees across the market.
@@ -942,7 +922,6 @@ contract LongShort is ILongShort, Initializable {
         emit ValueLockedInSystem(
             marketIndex,
             externalContractCounter[marketIndex],
-            totalValueLocked,
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
             shortValue[marketIndex]
@@ -960,15 +939,7 @@ contract LongShort is ILongShort, Initializable {
         // Compute fees.
         uint256 amount =
             tokensToRedeem.mul(shortTokenPrice[marketIndex]).div(TEN_TO_THE_18);
-        uint256 fees =
-            _getFeesForAction(
-                marketIndex,
-                amount,
-                longValue[marketIndex],
-                shortValue[marketIndex],
-                false,
-                false
-            );
+        uint256 fees = _getFeesForAction(marketIndex, amount, false, false);
         uint256 remaining = amount.sub(fees);
 
         // Distribute fees across the market.
@@ -991,7 +962,6 @@ contract LongShort is ILongShort, Initializable {
         emit ValueLockedInSystem(
             marketIndex,
             externalContractCounter[marketIndex],
-            totalValueLocked,
             totalValueLockedInMarket[marketIndex],
             longValue[marketIndex],
             shortValue[marketIndex]
