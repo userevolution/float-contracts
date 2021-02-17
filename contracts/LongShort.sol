@@ -79,7 +79,6 @@ contract LongShort is ILongShort, Initializable {
     // Global state.
     address public admin; // This will likely be the Gnosis safe
     uint256 public latestMarket;
-    uint256 public totalValueLocked; // TODO(guy): per fund token!
     mapping(uint256 => bool) public marketExists;
 
     // Factory for dynamically creating synthetic long/short tokens.
@@ -96,10 +95,12 @@ contract LongShort is ILongShort, Initializable {
     uint256 public constant feeUnitsOfPrecision = 10000;
 
     // Market state.
-    mapping(uint256 => uint256) public assetPrice;
-    mapping(uint256 => uint256) public totalValueLockedInMarket;
     mapping(uint256 => uint256) public longValue;
     mapping(uint256 => uint256) public shortValue;
+    mapping(uint256 => uint256) public totalValueLockedInMarket;
+    mapping(uint256 => uint256) public totalValueLockedInYieldManager;
+    mapping(uint256 => uint256) public totalValueLockedInDao;
+    mapping(uint256 => uint256) public assetPrice;
     mapping(uint256 => uint256) public longTokenPrice;
     mapping(uint256 => uint256) public shortTokenPrice;
     mapping(uint256 => uint256) public externalContractCounter;
@@ -324,6 +325,17 @@ contract LongShort is ILongShort, Initializable {
      */
     function getLatestPrice(uint256 marketIndex) public view returns (int256) {
         return oracleAgregator.getLatestPrice(marketIndex);
+    }
+
+    /**
+     * Returns the amount of funds that LongShort can directly transfer.
+     * Funds locked in the yield managers have to be withdrawn first.
+     */
+    function getLiquidFunds(uint256 marketIndex) public view returns (uint256) {
+        return
+            totalValueLockedInMarket[marketIndex].sub(
+                totalValueLockedInYieldManager[marketIndex]
+            );
     }
 
     /**
@@ -558,8 +570,8 @@ contract LongShort is ILongShort, Initializable {
             longValue[marketIndex],
             shortValue[marketIndex]
         );
-        // For extra robustness while testing.
-        // TODO: Consider gas cost trade-off of removing
+
+        // Invariant: long/short values should never differ from total value.
         require(
             longValue[marketIndex].add(shortValue[marketIndex]) ==
                 totalValueLockedInMarket[marketIndex],
@@ -571,32 +583,44 @@ contract LongShort is ILongShort, Initializable {
      * Locks funds from the sender into the given market.
      */
     function _depositFunds(uint256 marketIndex, uint256 amount) internal {
-        require(amount > 0, "User needs to add positive amount");
-
-        // Transfer the tokens to the LongShort contract.
         fundTokens[marketIndex].transferFrom(msg.sender, address(this), amount);
 
         // Update global value state.
-        totalValueLocked = totalValueLocked.add(amount);
         totalValueLockedInMarket[marketIndex] = totalValueLockedInMarket[
             marketIndex
         ]
             .add(amount);
+
+        // Transfer funds to the yield managers.
+        // TODO: we could consider pooling funds in the LongShort contract and
+        // only transferring over some threshold to save on gas. Does kinda
+        // screw users periodically if they transfer right on the threshold.
+        _transferToYieldManager(marketIndex, amount);
     }
 
     /*
      * Returns locked funds from the market to the sender.
      */
     function _withdrawFunds(uint256 marketIndex, uint256 amount) internal {
+        require(totalValueLockedInMarket[marketIndex] >= amount);
+
+        // Withdraw requisite funds from the yield managers if necessary.
+        // TODO: we could consider withdrawing more funds than necessary into
+        // a pool, so users don't have to transfer on every call to safe gas.
+        // Again, kinda screws users now and again if they time calls badly.
+        uint256 liquid = getLiquidFunds(marketIndex);
+        if (liquid < amount) {
+            _transferFromYieldManager(marketIndex, amount - liquid);
+        }
+
+        // Transfer funds to the sender.
+        fundTokens[marketIndex].transfer(msg.sender, amount);
+
+        // Update market state.
         totalValueLockedInMarket[marketIndex] = totalValueLockedInMarket[
             marketIndex
         ]
             .sub(amount);
-
-        totalValueLocked = totalValueLocked.sub(amount);
-
-        // TODO: May need to liquidate venus coins if we're out of funds.
-        fundTokens[marketIndex].transfer(msg.sender, amount);
     }
 
     /*
@@ -605,7 +629,21 @@ contract LongShort is ILongShort, Initializable {
     function _transferToYieldManager(uint256 marketIndex, uint256 amount)
         internal
     {
-        // TODO(guy): Implement me.
+        fundTokens[marketIndex].approve(
+            address(yieldManagers[marketIndex]),
+            amount
+        );
+        yieldManagers[marketIndex].depositToken(amount);
+
+        // Update market state.
+        totalValueLockedInYieldManager[marketIndex] += amount;
+
+        // Invariant: yield managers should never have more locked funds
+        // than the LongShort contract.
+        require(
+            totalValueLockedInYieldManager[marketIndex] <=
+                totalValueLockedInMarket[marketIndex]
+        );
     }
 
     /*
@@ -614,7 +652,18 @@ contract LongShort is ILongShort, Initializable {
     function _transferFromYieldManager(uint256 marketIndex, uint256 amount)
         internal
     {
-        // TODO(guy): Implement me.
+        require(totalValueLockedInYieldManager[marketIndex] >= amount);
+        yieldManagers[marketIndex].withdrawToken(amount);
+
+        // Update market state.
+        totalValueLockedInYieldManager[marketIndex] -= amount;
+
+        // Invariant: yield managers should never have more locked funds
+        // than the LongShort contract.
+        require(
+            totalValueLockedInYieldManager[marketIndex] <=
+                totalValueLockedInMarket[marketIndex]
+        );
     }
 
     /*
@@ -727,6 +776,7 @@ contract LongShort is ILongShort, Initializable {
         refreshSystemState(marketIndex)
     {
         _mintLong(marketIndex, amount, msg.sender, address(staker));
+
         staker.stakeTransferredTokens(
             address(longTokens[marketIndex]),
             amount,
@@ -742,6 +792,7 @@ contract LongShort is ILongShort, Initializable {
         refreshSystemState(marketIndex)
     {
         _mintShort(marketIndex, amount, msg.sender, address(staker));
+
         staker.stakeTransferredTokens(
             address(shortTokens[marketIndex]),
             amount,
@@ -755,7 +806,7 @@ contract LongShort is ILongShort, Initializable {
         address user,
         address transferTo
     ) internal {
-        // Deposit DAI and compute fees.
+        // Deposit funds and compute fees.
         _depositFunds(marketIndex, amount);
         uint256 fees =
             _getFeesForAction(
@@ -768,7 +819,7 @@ contract LongShort is ILongShort, Initializable {
             );
         uint256 remaining = amount.sub(fees);
 
-        // TODO: decide on minting fees mechanism,
+        // Distribute fees across the market.
         _feesMechanism(marketIndex, fees, 50, 50);
         _refreshTokensPrice(marketIndex);
 
@@ -786,6 +837,7 @@ contract LongShort is ILongShort, Initializable {
             tokens,
             user
         );
+
         emit ValueLockedInSystem(
             marketIndex,
             externalContractCounter[marketIndex],
@@ -802,7 +854,7 @@ contract LongShort is ILongShort, Initializable {
         address user,
         address transferTo
     ) internal {
-        // Deposit DAI and compute fees.
+        // Deposit funds and compute fees.
         _depositFunds(marketIndex, amount);
         uint256 fees =
             _getFeesForAction(
@@ -815,7 +867,7 @@ contract LongShort is ILongShort, Initializable {
             );
         uint256 remaining = amount.sub(fees);
 
-        // TODO: decide on minting fees mechanism.
+        // Distribute fees across the market.
         _feesMechanism(marketIndex, fees, 50, 50);
         _refreshTokensPrice(marketIndex);
 
@@ -853,7 +905,7 @@ contract LongShort is ILongShort, Initializable {
         override
         refreshSystemState(marketIndex)
     {
-        // Burn tokens - will revert unless user gives permission to contract.
+        // Burn tokens - will revert unless user gives permission.
         longTokens[marketIndex].burnFrom(msg.sender, tokensToRedeem);
 
         // Compute fees.
@@ -870,13 +922,13 @@ contract LongShort is ILongShort, Initializable {
             );
         uint256 remaining = amount.sub(fees);
 
-        // TODO: decide on redeeming fees mechanism.
+        // Distribute fees across the market.
         _feesMechanism(marketIndex, fees, 50, 50);
 
-        // Withdraw DAI with remaining amount.
+        // Withdraw funds with remaining amount.
         longValue[marketIndex] = longValue[marketIndex].sub(amount);
-        _refreshTokensPrice(marketIndex);
         _withdrawFunds(marketIndex, remaining);
+        _refreshTokensPrice(marketIndex);
 
         emit LongRedeem(
             marketIndex,
@@ -919,13 +971,13 @@ contract LongShort is ILongShort, Initializable {
             );
         uint256 remaining = amount.sub(fees);
 
-        // TODO: decide on redeeming fees mechanism.
+        // Distribute fees across the market.
         _feesMechanism(marketIndex, fees, 50, 50);
 
-        // Withdraw DAI with remaining amount.
+        // Withdraw funds with remaining amount.
         shortValue[marketIndex] = shortValue[marketIndex].sub(amount);
-        _refreshTokensPrice(marketIndex);
         _withdrawFunds(marketIndex, remaining);
+        _refreshTokensPrice(marketIndex);
 
         emit ShortRedeem(
             marketIndex,

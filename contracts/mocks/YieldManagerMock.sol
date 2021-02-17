@@ -107,8 +107,7 @@ contract YieldManagerMock is IYieldManager, Initializable {
         require(amount <= totalHeld);
 
         // Transfer tokens back to LongShort contract.
-        token.approve(address(this), amount);
-        token.transferFrom(address(this), longShort, amount);
+        token.transfer(longShort, amount);
         totalHeld = totalHeld.sub(amount);
     }
 
