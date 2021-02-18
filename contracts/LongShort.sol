@@ -308,13 +308,6 @@ contract LongShort is ILongShort, Initializable {
         fundTokens[latestMarket] = IERC20Upgradeable(_fundToken);
         yieldManagers[latestMarket] = IYieldManager(_yieldManager);
 
-        // Add new staker funds with fresh synthetic tokens.
-        staker.addNewStakingFund(
-            latestMarket,
-            address(longTokens[latestMarket]),
-            address(shortTokens[latestMarket])
-        );
-
         emit SyntheticTokenCreated(
             latestMarket,
             address(longTokens[latestMarket]),
@@ -327,6 +320,13 @@ contract LongShort is ILongShort, Initializable {
             _badLiquidityEntryFee,
             _baseExitFee,
             _badLiquidityExitFee
+        );
+
+        // Add new staker funds with fresh synthetic tokens.
+        staker.addNewStakingFund(
+            latestMarket,
+            address(longTokens[latestMarket]),
+            address(shortTokens[latestMarket])
         );
     }
 
