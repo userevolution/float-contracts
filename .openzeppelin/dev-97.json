@@ -1,7 +1,100 @@
 {
   "contracts": {
+    "oracleAggregator": {
+      "address": "0x24043F07f376eE1ED2B9e399fb3597292C5D42B1",
+      "constructorCode": "608060405234801561001057600080fd5b50610590806100206000396000f3fe",
+      "bodyBytecodeHash": "bdc3a23c9dab76fa6a6ef2b0356dddec040dc7867697191acdb5cf25375c9d40",
+      "localBytecodeHash": "645c669745379f07961876087d49340199901dbb14fdb178299b7184fcaf30b8",
+      "deployedBytecodeHash": "645c669745379f07961876087d49340199901dbb14fdb178299b7184fcaf30b8",
+      "types": {
+        "t_bool": {
+          "id": "t_bool",
+          "kind": "elementary",
+          "label": "bool"
+        },
+        "t_address": {
+          "id": "t_address",
+          "kind": "elementary",
+          "label": "address"
+        },
+        "t_mapping<t_address>": {
+          "id": "t_mapping<t_address>",
+          "valueType": "t_address",
+          "label": "mapping(key => address)",
+          "kind": "mapping"
+        },
+        "t_int256": {
+          "id": "t_int256",
+          "kind": "elementary",
+          "label": "int256"
+        },
+        "t_mapping<t_int256>": {
+          "id": "t_mapping<t_int256>",
+          "valueType": "t_int256",
+          "label": "mapping(key => int256)",
+          "kind": "mapping"
+        }
+      },
+      "storage": [
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
+          "label": "_initialized",
+          "astId": 5574,
+          "type": "t_bool",
+          "src": "1212:25:25"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
+          "label": "_initializing",
+          "astId": 5577,
+          "type": "t_bool",
+          "src": "1340:26:25"
+        },
+        {
+          "contract": "OracleManagerMock",
+          "path": "contracts/mocks/OracleManagerMock.sol",
+          "label": "admin",
+          "astId": 4171,
+          "type": "t_address",
+          "src": "241:20:19"
+        },
+        {
+          "contract": "OracleManagerMock",
+          "path": "contracts/mocks/OracleManagerMock.sol",
+          "label": "longShortContract",
+          "astId": 4173,
+          "type": "t_address",
+          "src": "267:32:19"
+        },
+        {
+          "contract": "OracleManagerMock",
+          "path": "contracts/mocks/OracleManagerMock.sol",
+          "label": "oracleFeeds",
+          "astId": 4177,
+          "type": "t_mapping<t_address>",
+          "src": "306:46:19"
+        },
+        {
+          "contract": "OracleManagerMock",
+          "path": "contracts/mocks/OracleManagerMock.sol",
+          "label": "oraclePrices",
+          "astId": 4181,
+          "type": "t_mapping<t_int256>",
+          "src": "368:46:19"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
+    },
     "LongShort": {
-      "address": "0x959BC281bfa15445bbd3022d731E0749ed648D47",
+      "address": "0xA5c45f4F57586459BEE6F500d56c632136ADD378",
       "constructorCode": "608060405234801561001057600080fd5b50612cb1806100206000396000f3fe",
       "bodyBytecodeHash": "c32592e1ac5fa811b1e9812d5de6daa2dcc74dfe4416d3b7bf89fdfa87debd61",
       "localBytecodeHash": "e7f9c28b984bd8f72fa48fa8760a6cb48f0f6782d483e06be2b621fbb78246eb",
@@ -46,7 +139,7 @@
           "contract": "Initializable",
           "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
           "label": "_initialized",
-          "astId": 5546,
+          "astId": 5574,
           "type": "t_bool",
           "src": "1212:25:25"
         },
@@ -54,7 +147,7 @@
           "contract": "Initializable",
           "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
           "label": "_initializing",
-          "astId": 5549,
+          "astId": 5577,
           "type": "t_bool",
           "src": "1340:26:25"
         },
@@ -251,105 +344,12 @@
         "uninitializedBaseContracts": []
       }
     },
-    "oracleAggregator": {
-      "address": "0x048A264BbBc4F407E36382ba890216720BB0e2b2",
-      "constructorCode": "608060405234801561001057600080fd5b50610590806100206000396000f3fe",
-      "bodyBytecodeHash": "bdc3a23c9dab76fa6a6ef2b0356dddec040dc7867697191acdb5cf25375c9d40",
-      "localBytecodeHash": "645c669745379f07961876087d49340199901dbb14fdb178299b7184fcaf30b8",
-      "deployedBytecodeHash": "645c669745379f07961876087d49340199901dbb14fdb178299b7184fcaf30b8",
-      "types": {
-        "t_bool": {
-          "id": "t_bool",
-          "kind": "elementary",
-          "label": "bool"
-        },
-        "t_address": {
-          "id": "t_address",
-          "kind": "elementary",
-          "label": "address"
-        },
-        "t_mapping<t_address>": {
-          "id": "t_mapping<t_address>",
-          "valueType": "t_address",
-          "label": "mapping(key => address)",
-          "kind": "mapping"
-        },
-        "t_int256": {
-          "id": "t_int256",
-          "kind": "elementary",
-          "label": "int256"
-        },
-        "t_mapping<t_int256>": {
-          "id": "t_mapping<t_int256>",
-          "valueType": "t_int256",
-          "label": "mapping(key => int256)",
-          "kind": "mapping"
-        }
-      },
-      "storage": [
-        {
-          "contract": "Initializable",
-          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
-          "label": "_initialized",
-          "astId": 5546,
-          "type": "t_bool",
-          "src": "1212:25:25"
-        },
-        {
-          "contract": "Initializable",
-          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
-          "label": "_initializing",
-          "astId": 5549,
-          "type": "t_bool",
-          "src": "1340:26:25"
-        },
-        {
-          "contract": "OracleManagerMock",
-          "path": "contracts/mocks/OracleManagerMock.sol",
-          "label": "admin",
-          "astId": 4171,
-          "type": "t_address",
-          "src": "241:20:19"
-        },
-        {
-          "contract": "OracleManagerMock",
-          "path": "contracts/mocks/OracleManagerMock.sol",
-          "label": "longShortContract",
-          "astId": 4173,
-          "type": "t_address",
-          "src": "267:32:19"
-        },
-        {
-          "contract": "OracleManagerMock",
-          "path": "contracts/mocks/OracleManagerMock.sol",
-          "label": "oracleFeeds",
-          "astId": 4177,
-          "type": "t_mapping<t_address>",
-          "src": "306:46:19"
-        },
-        {
-          "contract": "OracleManagerMock",
-          "path": "contracts/mocks/OracleManagerMock.sol",
-          "label": "oraclePrices",
-          "astId": 4181,
-          "type": "t_mapping<t_int256>",
-          "src": "368:46:19"
-        }
-      ],
-      "warnings": {
-        "hasConstructor": false,
-        "hasSelfDestruct": false,
-        "hasDelegateCall": false,
-        "hasInitialValuesInDeclarations": false,
-        "uninitializedBaseContracts": []
-      }
-    },
     "YieldManager": {
-      "address": "0x42436735A1C59006D30ec91A87311377E01478C4",
-      "constructorCode": "608060405234801561001057600080fd5b506108bf806100206000396000f3fe",
-      "bodyBytecodeHash": "6c9aa3cbff8850455fa67bb22094ea33f2ccb826ace30de342bbfae8706e0cab",
-      "localBytecodeHash": "00e30163efbc7876ee7c59799a5f3da64b61d3f09f17d8ee2b3a76575773374b",
-      "deployedBytecodeHash": "00e30163efbc7876ee7c59799a5f3da64b61d3f09f17d8ee2b3a76575773374b",
+      "address": "0x502a5891FCb055ED6a3Dfe551725eE0e391F232A",
+      "constructorCode": "608060405234801561001057600080fd5b5061093b806100206000396000f3fe",
+      "bodyBytecodeHash": "5638ec90c3a0acabad36b6642c94b5a786568dbd369f27e16569517bc0babf85",
+      "localBytecodeHash": "3166920e606e53992b336f1736c66f48b437f8e47800aeb4918cfc48da448c19",
+      "deployedBytecodeHash": "3166920e606e53992b336f1736c66f48b437f8e47800aeb4918cfc48da448c19",
       "types": {
         "t_bool": {
           "id": "t_bool",
@@ -372,7 +372,7 @@
           "contract": "Initializable",
           "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
           "label": "_initialized",
-          "astId": 5546,
+          "astId": 5574,
           "type": "t_bool",
           "src": "1212:25:25"
         },
@@ -380,7 +380,7 @@
           "contract": "Initializable",
           "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
           "label": "_initializing",
-          "astId": 5549,
+          "astId": 5577,
           "type": "t_bool",
           "src": "1340:26:25"
         },
@@ -390,7 +390,7 @@
           "label": "admin",
           "astId": 4410,
           "type": "t_address",
-          "src": "576:20:20"
+          "src": "700:20:20"
         },
         {
           "contract": "YieldManagerMock",
@@ -398,7 +398,7 @@
           "label": "longShort",
           "astId": 4412,
           "type": "t_address",
-          "src": "602:24:20"
+          "src": "726:24:20"
         },
         {
           "contract": "YieldManagerMock",
@@ -406,7 +406,7 @@
           "label": "token",
           "astId": 4417,
           "type": "t_address",
-          "src": "757:18:20"
+          "src": "881:47:20"
         },
         {
           "contract": "YieldManagerMock",
@@ -414,7 +414,7 @@
           "label": "totalHeld",
           "astId": 4419,
           "type": "t_uint256",
-          "src": "781:24:20"
+          "src": "934:24:20"
         },
         {
           "contract": "YieldManagerMock",
@@ -422,7 +422,7 @@
           "label": "yieldRate",
           "astId": 4421,
           "type": "t_uint256",
-          "src": "811:24:20"
+          "src": "964:24:20"
         },
         {
           "contract": "YieldManagerMock",
@@ -430,7 +430,7 @@
           "label": "lastSettled",
           "astId": 4423,
           "type": "t_uint256",
-          "src": "857:26:20"
+          "src": "1010:26:20"
         }
       ],
       "warnings": {
@@ -438,17 +438,11 @@
         "hasSelfDestruct": false,
         "hasDelegateCall": false,
         "hasInitialValuesInDeclarations": false,
-        "importsVanillaContracts": [
-          "token/ERC20/ERC20.sol",
-          "utils/Context.sol",
-          "token/ERC20/IERC20.sol",
-          "math/SafeMath.sol"
-        ],
         "uninitializedBaseContracts": []
       }
     },
     "Staker": {
-      "address": "0x3390B9F833Ce740e4B09AB2EBfFd208EbFAa48aB",
+      "address": "0x36CfB39D8A521b021440A879e5f119777dEfDd34",
       "constructorCode": "608060405234801561001057600080fd5b50611199806100206000396000f3fe",
       "bodyBytecodeHash": "d03b3c6b015365a00304aff364f883ca3d00d4d9c8dda804fb18938bf0aa287a",
       "localBytecodeHash": "60bf91ea7a3b4d30e1669663948a51054f5a1fb122f30126327c319078af1b2d",
@@ -512,7 +506,7 @@
           "contract": "Initializable",
           "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
           "label": "_initialized",
-          "astId": 5546,
+          "astId": 5574,
           "type": "t_bool",
           "src": "1212:25:25"
         },
@@ -520,7 +514,7 @@
           "contract": "Initializable",
           "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
           "label": "_initializing",
-          "astId": 5549,
+          "astId": 5577,
           "type": "t_bool",
           "src": "1340:26:25"
         },
@@ -612,43 +606,127 @@
         "hasInitialValuesInDeclarations": false,
         "uninitializedBaseContracts": []
       }
+    },
+    "OracleAggregator": {
+      "address": "0x5147230f4F9E9ce64Fe1B72d8422CaA232004316",
+      "constructorCode": "608060405234801561001057600080fd5b50610590806100206000396000f3fe",
+      "bodyBytecodeHash": "bdc3a23c9dab76fa6a6ef2b0356dddec040dc7867697191acdb5cf25375c9d40",
+      "localBytecodeHash": "645c669745379f07961876087d49340199901dbb14fdb178299b7184fcaf30b8",
+      "deployedBytecodeHash": "645c669745379f07961876087d49340199901dbb14fdb178299b7184fcaf30b8",
+      "types": {
+        "t_bool": {
+          "id": "t_bool",
+          "kind": "elementary",
+          "label": "bool"
+        },
+        "t_address": {
+          "id": "t_address",
+          "kind": "elementary",
+          "label": "address"
+        },
+        "t_mapping<t_address>": {
+          "id": "t_mapping<t_address>",
+          "valueType": "t_address",
+          "label": "mapping(key => address)",
+          "kind": "mapping"
+        },
+        "t_int256": {
+          "id": "t_int256",
+          "kind": "elementary",
+          "label": "int256"
+        },
+        "t_mapping<t_int256>": {
+          "id": "t_mapping<t_int256>",
+          "valueType": "t_int256",
+          "label": "mapping(key => int256)",
+          "kind": "mapping"
+        }
+      },
+      "storage": [
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
+          "label": "_initialized",
+          "astId": 5574,
+          "type": "t_bool",
+          "src": "1212:25:25"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
+          "label": "_initializing",
+          "astId": 5577,
+          "type": "t_bool",
+          "src": "1340:26:25"
+        },
+        {
+          "contract": "OracleManagerMock",
+          "path": "contracts/mocks/OracleManagerMock.sol",
+          "label": "admin",
+          "astId": 4171,
+          "type": "t_address",
+          "src": "241:20:19"
+        },
+        {
+          "contract": "OracleManagerMock",
+          "path": "contracts/mocks/OracleManagerMock.sol",
+          "label": "longShortContract",
+          "astId": 4173,
+          "type": "t_address",
+          "src": "267:32:19"
+        },
+        {
+          "contract": "OracleManagerMock",
+          "path": "contracts/mocks/OracleManagerMock.sol",
+          "label": "oracleFeeds",
+          "astId": 4177,
+          "type": "t_mapping<t_address>",
+          "src": "306:46:19"
+        },
+        {
+          "contract": "OracleManagerMock",
+          "path": "contracts/mocks/OracleManagerMock.sol",
+          "label": "oraclePrices",
+          "astId": 4181,
+          "type": "t_mapping<t_int256>",
+          "src": "368:46:19"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
     }
   },
   "solidityLibs": {},
   "proxies": {
     "float-capital/Staker": [
       {
-        "address": "0x4B1975b9c309b99Ca97702aF0fDa73fd3BE29e25",
+        "address": "0xa67880B8b4c51a8c681e2A0B77311ECE34F80595",
         "version": "0.1.0",
-        "implementation": "0x3390B9F833Ce740e4B09AB2EBfFd208EbFAa48aB",
-        "admin": "0x5AA86808a9B5E0Ba76342247D07ACaD691FBbe47",
+        "implementation": "0x36CfB39D8A521b021440A879e5f119777dEfDd34",
+        "admin": "0xFE647555c41646bBB319734A3F6ca853D340dA65",
         "kind": "Upgradeable"
       }
     ],
     "float-capital/oracleAggregator": [
       {
-        "address": "0x3d52BB74dee3C77Dbc9818de0C2C07d21137905A",
+        "address": "0x12dEbcb47BCdb0c05229d638C5Fcd4dd94118F4F",
         "version": "0.1.0",
-        "implementation": "0x048A264BbBc4F407E36382ba890216720BB0e2b2",
-        "admin": "0x5AA86808a9B5E0Ba76342247D07ACaD691FBbe47",
-        "kind": "Upgradeable"
-      }
-    ],
-    "float-capital/YieldManager": [
-      {
-        "address": "0xf1D90adD9EACfB05De5CA54d2A363C712785a64A",
-        "version": "0.1.0",
-        "implementation": "0x42436735A1C59006D30ec91A87311377E01478C4",
-        "admin": "0x5AA86808a9B5E0Ba76342247D07ACaD691FBbe47",
+        "implementation": "0x24043F07f376eE1ED2B9e399fb3597292C5D42B1",
+        "admin": "0xFE647555c41646bBB319734A3F6ca853D340dA65",
         "kind": "Upgradeable"
       }
     ],
     "float-capital/LongShort": [
       {
-        "address": "0x3fc551818E8D7899648c94BB48dc9FD368772481",
+        "address": "0xC119c62a2528228635Cebb797B59bd60051c7e89",
         "version": "0.1.0",
-        "implementation": "0x959BC281bfa15445bbd3022d731E0749ed648D47",
-        "admin": "0x5AA86808a9B5E0Ba76342247D07ACaD691FBbe47",
+        "implementation": "0xA5c45f4F57586459BEE6F500d56c632136ADD378",
+        "admin": "0xFE647555c41646bBB319734A3F6ca853D340dA65",
         "kind": "Upgradeable"
       }
     ]
@@ -656,6 +734,6 @@
   "manifestVersion": "2.2",
   "version": "0.1.0",
   "proxyAdmin": {
-    "address": "0x5AA86808a9B5E0Ba76342247D07ACaD691FBbe47"
+    "address": "0xFE647555c41646bBB319734A3F6ca853D340dA65"
   }
 }
