@@ -111,6 +111,10 @@ contract EthKillerOracleAggregator is Initializable {
         } else {
             indexPrice = indexPrice.sub(priceMovement);
         }
+
+        trxPrice = newTrxPrice;
+        eosPrice = newEosPrice;
+        xrpPrice = newXrpPrice;
     }
 
     function getPrice() public returns (uint256) {
