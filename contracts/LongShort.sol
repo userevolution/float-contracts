@@ -839,6 +839,7 @@ contract LongShort is ILongShort, Initializable {
         address user,
         address transferTo
     ) internal {
+        console.log("HELLO");
         // Deposit funds and compute fees.
         _depositFunds(marketIndex, amount);
         uint256 fees = _getFeesForAction(marketIndex, amount, true, true);

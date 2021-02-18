@@ -10,7 +10,6 @@ const LongShort = artifacts.require("LongShort");
 const Dai = artifacts.require(SYNTHETIC_TOKEN);
 const TokenFactory = artifacts.require(TOKEN_FACTORY);
 const OracleManagerMock = artifacts.require(ORACLE_AGGREGATOR);
-const YieldManager = artifacts.require(YIELD_MANAGER);
 const Staker = artifacts.require(STAKER);
 const FloatToken = artifacts.require(FLOAT_TOKEN);
 
@@ -25,7 +24,6 @@ const deployContracts = async (options, accounts, deployer) => {
     contractsData: [
       { name: "LongShort", alias: "LongShort" },
       { name: ORACLE_AGGREGATOR, alias: "oracleAggregator" },
-      { name: YIELD_MANAGER, alias: "YieldManager" },
       { name: STAKER, alias: "Staker" },
     ],
   });

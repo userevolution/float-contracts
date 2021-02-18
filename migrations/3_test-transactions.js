@@ -1,5 +1,7 @@
 const Dai = artifacts.require("Dai");
 const SyntheticToken = artifacts.require("SyntheticToken");
+const YieldManagerMock = artifacts.require("YieldManagerMock");
+// const YieldManagerVenus = artifacts.require("YieldManagerVenus");
 
 const OracleAggregator = artifacts.require("OracleManagerMock");
 const LongShort = artifacts.require("LongShort");
@@ -20,7 +22,7 @@ const deployTestMarket = async (
   longShortInstance,
   fundTokenInstance,
   oracleAddress,
-  yieldManagerAddress
+  admin
 ) => {
   // Deploy a synthetic market:
   // Use these as defaults
@@ -29,12 +31,20 @@ const deployTestMarket = async (
   const _baseExitFee = 30;
   const _badLiquidityExitFee = 50;
 
+  let yieldManager = await YieldManagerMock.new();
+
+  await yieldManager.setup(
+    admin,
+    longShortInstance.address,
+    fundTokenInstance.address
+  );
+
   await longShortInstance.newSyntheticMarket(
     syntheticName,
     syntheticSymbol,
     fundTokenInstance.address,
     oracleAddress,
-    yieldManagerAddress,
+    yieldManager.address,
     _baseEntryFee,
     _badLiquidityEntryFee,
     _baseExitFee,
@@ -73,10 +83,6 @@ module.exports = async function(deployer, network, accounts) {
   const dummyOracleAddress2 = "0x1230000000000000000000000000000000000002";
   const dummyOracleAddress3 = "0x1230000000000000000000000000000000000003";
 
-  const dummyYieldAddress1 = "0x1230000000000000000000000000000000000004";
-  const dummyYieldAddress2 = "0x1230000000000000000000000000000000000005";
-  const dummyYieldAddress3 = "0x1230000000000000000000000000000000000006";
-
   const oneHundredMintAmount = "100000000000000000000";
 
   const dai = await Dai.deployed();
@@ -90,7 +96,7 @@ module.exports = async function(deployer, network, accounts) {
     longShort,
     dai,
     dummyOracleAddress1,
-    dummyYieldAddress1
+    admin
   );
   await deployTestMarket(
     "GOLD",
@@ -98,7 +104,7 @@ module.exports = async function(deployer, network, accounts) {
     longShort,
     dai,
     dummyOracleAddress2,
-    dummyYieldAddress2
+    admin
   );
   await deployTestMarket(
     "SP",
@@ -106,10 +112,12 @@ module.exports = async function(deployer, network, accounts) {
     longShort,
     dai,
     dummyOracleAddress3,
-    dummyYieldAddress3
+    admin
   );
 
   const currentMarketIndex = (await longShort.latestMarket()).toNumber();
+
+  console.log("The latest market index is", currentMarketIndex);
 
   for (let marketIndex = 1; marketIndex <= currentMarketIndex; ++marketIndex) {
     const longAddress = await longShort.longTokens.call(marketIndex);
