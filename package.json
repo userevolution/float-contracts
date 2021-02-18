@@ -11,7 +11,7 @@
     "clean": "rm -rf build/contracts/* artifacts cache",
     "save-deployment": "/bin/bash -c 'mkdir -p ./buildsDeployed/deployed; \\cp ./build/contracts/{Dai,FloatToken,LongShort,Migrations,OracleManagerMock,Staker,TokenFactory,YieldManagerMock}.json ./buildsDeployed/deployed/'",
     "prepair-upgrade": "npm run clean; mkdir -p ./build/contracts; cp -r ./buildsDeployed/deployed/* ./build/contracts/; npm run truffle-compile",
-    "verify-contracts": "truffle run verify Dai FloatToken LongShort@$LONGSHORT_IMPLEMENTATION OracleManagerMock@$ORACLE_MANAGER_IMPLEMENTATION Staker TokenFactory --network $NETWORK"
+    "verify-contracts": "truffle run verify Dai FloatToken LongShort@$LONGSHORT_IMPLEMENTATION OracleManagerMock@$ORACLE_MANAGER_IMPLEMENTATION Staker@$STAKER_IMPLEMENTATION TokenFactory --network $NETWORK"
   },
   "dependencies": {
     "@chainlink/contracts": "^0.0.8",
