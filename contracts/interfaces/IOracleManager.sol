@@ -1,14 +1,12 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.7.6;
 
+/*
+ * Manages price feeds from different oracle implementations.
+ */
 abstract contract IOracleManager {
-    function registerNewMarket(uint256 marketIndex, address marketFeed)
-        public
-        virtual;
-
-    function getLatestPrice(uint256 marketIndex)
-        public
-        view
-        virtual
-        returns (int256);
+    /*
+     *Returns the latest price from the oracle feed.
+     */
+    function getLatestPrice() public view virtual returns (int256);
 }

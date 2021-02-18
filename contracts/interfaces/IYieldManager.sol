@@ -1,7 +1,5 @@
 pragma solidity 0.7.6;
 
-import "@openzeppelin/contracts-upgradeable/presets/ERC20PresetMinterPauserUpgradeable.sol";
-
 /*
  * Manages yield accumulation for the LongShort contract. Each market is
  * deployed with its own yield manager to simplify the bookkeeping, as
