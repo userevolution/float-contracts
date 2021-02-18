@@ -74,7 +74,7 @@ const topupBalanceIfLow = async (from, to) => {
   }
 };
 
-module.exports = async function (deployer, network, accounts) {
+module.exports = async function(deployer, network, accounts) {
   const admin = accounts[0];
   const user1 = accounts[1];
   const user2 = accounts[2];
@@ -173,5 +173,23 @@ module.exports = async function (deployer, network, accounts) {
     await longShort.redeemLong(marketIndex, thirdTokensMinted, {
       from: user1,
     });
+
+    await mintAndApprove(dai, oneHundredMintAmount, user3, longShort.address);
+    await longShort.mintLongAndStake(
+      marketIndex,
+      new BN(oneHundredMintAmount),
+      {
+        from: user3,
+      }
+    );
+
+    await mintAndApprove(dai, oneHundredMintAmount, user3, longShort.address);
+    await longShort.mintShortAndStake(
+      marketIndex,
+      new BN(oneHundredMintAmount),
+      {
+        from: user3,
+      }
+    );
   }
 };
