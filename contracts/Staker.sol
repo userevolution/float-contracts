@@ -312,9 +312,9 @@ contract Staker is Initializable {
         _stake(tokenAddress, amount, user, true);
 
         // system state is already updated on the float side
-        userIndexOfLastClaimedReward[tokenAddress][
-            msg.sender
-        ] = latestRewardIndex[tokenAddress];
+        userIndexOfLastClaimedReward[tokenAddress][user] = latestRewardIndex[
+            tokenAddress
+        ];
     }
 
     function _stake(

@@ -71,6 +71,8 @@ const initialize = async (admin) => {
     longShort,
     tokenFactory,
     oracleManagerMock,
+    staker,
+    floatToken,
   };
 };
 
