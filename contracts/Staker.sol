@@ -128,6 +128,7 @@ contract Staker is Initializable {
             .accumulativeFloatPerSecond = 0;
 
         emit StateAdded(longTokenAddress, 0, block.timestamp, 0);
+        emit StateAdded(shortTokenAddress, 0, block.timestamp, 0);
     }
 
     ////////////////////////////////////
