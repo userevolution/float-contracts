@@ -285,12 +285,20 @@ contract LongShort is ILongShort, Initializable {
 
         // Create new synthetic long token.
         longTokens[latestMarket] = SyntheticToken(
-            tokenFactory.createTokenLong(syntheticName, syntheticSymbol)
+            tokenFactory.createTokenLong(
+                syntheticName,
+                syntheticSymbol,
+                latestMarket
+            )
         );
 
         // Create new synthetic short token.
         shortTokens[latestMarket] = SyntheticToken(
-            tokenFactory.createTokenShort(syntheticName, syntheticSymbol)
+            tokenFactory.createTokenShort(
+                syntheticName,
+                syntheticSymbol,
+                latestMarket
+            )
         );
 
         // Initial market state.

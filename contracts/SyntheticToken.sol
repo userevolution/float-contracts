@@ -8,19 +8,22 @@ import "./interfaces/ILongShort.sol";
 contract SyntheticToken is ERC20PresetMinterPauserUpgradeable {
     bool public isLong;
     ILongShort public longShort;
+    uint256 public marketIndex;
 
     function initialize(
         string memory name,
         string memory symbol,
         address longShortAddress,
-        bool _isLong
+        bool _isLong,
+        uint256 _marketIndex
     ) public initializer {
         ERC20PresetMinterPauserUpgradeable.initialize(name, symbol);
         isLong = _isLong;
         longShort = ILongShort(longShortAddress);
+        marketIndex = _marketIndex;
     }
 
-    function redeem(uint256 marketIndex, uint256 tokensToRedeem) public {
+    function redeem(uint256 tokensToRedeem) public {
         _approve(_msgSender(), address(longShort), tokensToRedeem);
         if (isLong) {
             longShort.redeemLong(marketIndex, tokensToRedeem);
