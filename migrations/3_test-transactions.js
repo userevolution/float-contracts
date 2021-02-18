@@ -39,6 +39,11 @@ const deployTestMarket = async (
     fundTokenInstance.address
   );
 
+  // Mock yield manager needs to be able to mint tokens to simulate yield.
+  // NOTE: remove this when we go full venus.
+  var mintRole = await fundTokenInstance.MINTER_ROLE.call();
+  await fundTokenInstance.grantRole(mintRole, yieldManager.address);
+
   await longShortInstance.newSyntheticMarket(
     syntheticName,
     syntheticSymbol,
@@ -69,7 +74,7 @@ const topupBalanceIfLow = async (from, to) => {
   }
 };
 
-module.exports = async function(deployer, network, accounts) {
+module.exports = async function (deployer, network, accounts) {
   const admin = accounts[0];
   const user1 = accounts[1];
   const user2 = accounts[2];

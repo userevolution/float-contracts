@@ -1,6 +1,5 @@
 const SYNTHETIC_TOKEN = "Dai";
 const TOKEN_FACTORY = "TokenFactory";
-const YIELD_MANAGER = "YieldManagerMock";
 const ORACLE_AGGREGATOR = "OracleManagerMock";
 const STAKER = "Staker";
 const FLOAT_TOKEN = "FloatToken";
@@ -55,12 +54,6 @@ const deployContracts = async (options, accounts, deployer) => {
     oracleAggregator.address
   );
 
-  const yieldManager = await create({
-    ...options,
-    contractAlias: "YieldManager",
-  });
-  const yieldManagerInstance = await YieldManager.at(yieldManager.address);
-
   const longShort = await create({
     ...options,
     contractAlias: "LongShort",
@@ -76,10 +69,6 @@ const deployContracts = async (options, accounts, deployer) => {
   const longShortInstance = await LongShort.at(longShort.address);
 
   await oracleAggregatorInstance.setup(admin, longShort.address, {
-    from: admin,
-  });
-
-  await yieldManagerInstance.setup(admin, longShort.address, dai.address, {
     from: admin,
   });
 
@@ -101,7 +90,7 @@ const deployContracts = async (options, accounts, deployer) => {
   );
 };
 
-module.exports = async function(deployer, networkName, accounts) {
+module.exports = async function (deployer, networkName, accounts) {
   deployer.then(async () => {
     // Don't try to deploy/migrate the contracts for tests
     if (networkName === "test") {
