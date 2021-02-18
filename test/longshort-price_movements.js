@@ -11,7 +11,7 @@ const { initialize, mintAndApprove, createSynthetic } = require("./helpers");
 
 contract("LongShort (price movements)", (accounts) => {
   let longShort;
-  let priceOracle;
+  let oracleManager;
   let marketIndex;
   let long;
   let short;
@@ -27,12 +27,12 @@ contract("LongShort (price movements)", (accounts) => {
   const _badLiquidityExitFee = 50;
 
   const defaultMintAmount = "100000000000000000000"; // 100 fund etc.
-
   const ninetyPercentDefaultMintAmount = "90000000000000000000";
   const hundredTenPercentDefaultMintAmount = "110000000000000000000";
 
-  const tenPercentMovement = "100000000000000000";
-  const hundredPercentMovement = "1000000000000000000";
+  const e18 = new BN("1000000000000000000");
+  const tenPercentMovement = new BN("100000000000000000");
+  const hundredPercentMovement = new BN("1000000000000000000");
 
   // Default test values
   const admin = accounts[0];
@@ -43,7 +43,6 @@ contract("LongShort (price movements)", (accounts) => {
   beforeEach(async () => {
     const result = await initialize(admin);
     longShort = result.longShort;
-    priceOracle = result.oracleManagerMock;
 
     const synthResult = await createSynthetic(
       admin,
@@ -60,6 +59,7 @@ contract("LongShort (price movements)", (accounts) => {
     long = synthResult.longToken;
     short = synthResult.shortToken;
     marketIndex = synthResult.currentMarketIndex;
+    oracleManager = synthResult.oracleManager;
   });
 
   // also tests full exposure value change on price increase
@@ -77,14 +77,14 @@ contract("LongShort (price movements)", (accounts) => {
     // 100 fund tokens
     const longVal = await longShort.longValue.call(marketIndex); // $100
     const shortVal = await longShort.shortValue.call(marketIndex); // $100
-
     assert.equal(longVal.toString(), shortVal.toString(), "Price movement");
 
-    const orcalePrice = await priceOracle.getMarketPriceByIndex.call("1");
+    let oraclePrice = await oracleManager.getLatestPrice.call();
+    await oracleManager.setPrice(
+      oraclePrice.add(oraclePrice.mul(tenPercentMovement).div(e18))
+    );
 
-    await priceOracle.increasePrice("1", tenPercentMovement);
     await longShort._updateSystemState(marketIndex);
-
     const newLongVal = await longShort.longValue.call(marketIndex); // $110
     const newShortVal = await longShort.shortValue.call(marketIndex); // $90
 
@@ -114,9 +114,12 @@ contract("LongShort (price movements)", (accounts) => {
       true
     );
 
-    await priceOracle.decreasePrice("1", tenPercentMovement);
-    await longShort._updateSystemState(marketIndex);
+    let oraclePrice = await oracleManager.getLatestPrice.call();
+    await oracleManager.setPrice(
+      oraclePrice.sub(oraclePrice.mul(tenPercentMovement).div(e18))
+    );
 
+    await longShort._updateSystemState(marketIndex);
     const newLongVal = await longShort.longValue.call(marketIndex);
     const newShortVal = await longShort.shortValue.call(marketIndex);
 
@@ -146,9 +149,12 @@ contract("LongShort (price movements)", (accounts) => {
       false
     );
 
-    await priceOracle.increasePrice("1", tenPercentMovement);
-    await longShort._updateSystemState(marketIndex);
+    let oraclePrice = await oracleManager.getLatestPrice.call();
+    await oracleManager.setPrice(
+      oraclePrice.add(oraclePrice.mul(tenPercentMovement).div(e18))
+    );
 
+    await longShort._updateSystemState(marketIndex);
     const newLongVal = await longShort.longValue.call(marketIndex);
     const newShortVal = await longShort.shortValue.call(marketIndex);
 
@@ -178,9 +184,12 @@ contract("LongShort (price movements)", (accounts) => {
       false
     );
 
-    await priceOracle.decreasePrice("1", tenPercentMovement);
-    await longShort._updateSystemState(marketIndex);
+    let oraclePrice = await oracleManager.getLatestPrice.call();
+    await oracleManager.setPrice(
+      oraclePrice.sub(oraclePrice.mul(tenPercentMovement).div(e18))
+    );
 
+    await longShort._updateSystemState(marketIndex);
     const newLongVal = await longShort.longValue.call(marketIndex);
     const newShortVal = await longShort.shortValue.call(marketIndex);
 
@@ -210,9 +219,12 @@ contract("LongShort (price movements)", (accounts) => {
       false
     );
 
-    await priceOracle.increasePrice("1", hundredPercentMovement);
-    await longShort._updateSystemState(marketIndex);
+    let oraclePrice = await oracleManager.getLatestPrice.call();
+    await oracleManager.setPrice(
+      oraclePrice.add(oraclePrice.mul(hundredPercentMovement).div(e18))
+    );
 
+    await longShort._updateSystemState(marketIndex);
     const newLongVal = await longShort.longValue.call(marketIndex);
     const newShortVal = await longShort.shortValue.call(marketIndex);
 
@@ -225,7 +237,10 @@ contract("LongShort (price movements)", (accounts) => {
     // 0 fund
     assert.equal(newShortVal.toString(), "0", "Short value change correct");
 
-    await priceOracle.increasePrice("1", hundredPercentMovement);
+    oraclePrice = await oracleManager.getLatestPrice.call();
+    await oracleManager.setPrice(
+      oraclePrice.add(oraclePrice.mul(hundredPercentMovement).div(e18))
+    );
     await longShort._updateSystemState(marketIndex);
 
     // 200 fund
@@ -249,9 +264,12 @@ contract("LongShort (price movements)", (accounts) => {
       false
     );
 
-    await priceOracle.decreasePrice("1", hundredPercentMovement);
-    await longShort._updateSystemState(marketIndex);
+    let oraclePrice = await oracleManager.getLatestPrice.call();
+    await oracleManager.setPrice(
+      oraclePrice.sub(oraclePrice.mul(hundredPercentMovement).div(e18))
+    );
 
+    await longShort._updateSystemState(marketIndex);
     const newLongVal = await longShort.longValue.call(marketIndex);
     const newShortVal = await longShort.shortValue.call(marketIndex);
 
@@ -272,9 +290,12 @@ contract("LongShort (price movements)", (accounts) => {
       from: user1,
     });
 
-    await priceOracle.increasePrice("1", tenPercentMovement);
-    await longShort._updateSystemState(marketIndex);
+    let oraclePrice = await oracleManager.getLatestPrice.call();
+    await oracleManager.setPrice(
+      oraclePrice.add(oraclePrice.mul(tenPercentMovement).div(e18))
+    );
 
+    await longShort._updateSystemState(marketIndex);
     const newLongVal = await longShort.longValue.call(marketIndex);
     const newShortVal = await longShort.shortValue.call(marketIndex);
 
@@ -288,7 +309,11 @@ contract("LongShort (price movements)", (accounts) => {
     // 0 fund
     assert.equal(newShortVal.toString(), "0", "Short value change correct");
 
-    await priceOracle.decreasePrice("1", hundredPercentMovement);
+    oraclePrice = await oracleManager.getLatestPrice.call();
+    await oracleManager.setPrice(
+      oraclePrice.sub(oraclePrice.mul(tenPercentMovement).div(e18))
+    );
+    await longShort._updateSystemState(marketIndex);
 
     // 100 fund
     assert.equal(
@@ -308,9 +333,12 @@ contract("LongShort (price movements)", (accounts) => {
       from: user1,
     });
 
-    await priceOracle.increasePrice("1", tenPercentMovement);
-    await longShort._updateSystemState(marketIndex);
+    let oraclePrice = await oracleManager.getLatestPrice.call();
+    await oracleManager.setPrice(
+      oraclePrice.add(oraclePrice.mul(tenPercentMovement).div(e18))
+    );
 
+    await longShort._updateSystemState(marketIndex);
     const newLongVal = await longShort.longValue.call(marketIndex);
     const newShortVal = await longShort.shortValue.call(marketIndex);
 
@@ -323,7 +351,12 @@ contract("LongShort (price movements)", (accounts) => {
       defaultMintAmount,
       "Short value change correct"
     );
-    await priceOracle.decreasePrice("1", hundredPercentMovement);
+
+    oraclePrice = await oracleManager.getLatestPrice.call();
+    await oracleManager.setPrice(
+      oraclePrice.sub(oraclePrice.mul(hundredPercentMovement).div(e18))
+    );
+    await longShort._updateSystemState(marketIndex);
 
     // 100 fund
     assert.equal(newLongVal.toString(), 0, "Longvalue change not correct");

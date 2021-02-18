@@ -292,10 +292,10 @@ contract LongShort is ILongShort, Initializable {
         // Initial market state.
         longTokenPrice[latestMarket] = TEN_TO_THE_18;
         shortTokenPrice[latestMarket] = TEN_TO_THE_18;
-        assetPrice[latestMarket] = uint256(getLatestPrice(latestMarket));
         fundTokens[latestMarket] = IERC20Upgradeable(_fundToken);
         yieldManagers[latestMarket] = IYieldManager(_yieldManager);
         oracleManagers[latestMarket] = IOracleManager(_oracleManager);
+        assetPrice[latestMarket] = uint256(getLatestPrice(latestMarket));
 
         emit SyntheticTokenCreated(
             latestMarket,

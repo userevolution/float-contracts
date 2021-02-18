@@ -29,7 +29,7 @@ contract("LongShort (gas prices)", (accounts) => {
   let long;
   let short;
   let dai;
-  let priceOracle;
+  let oracleManager;
   let marketIndex;
   let fund;
 
@@ -48,7 +48,8 @@ contract("LongShort (gas prices)", (accounts) => {
   const user2 = accounts[2];
   const user3 = accounts[3];
 
-  const tenPercentMovement = "100000000000000000";
+  const e18 = new BN("1000000000000000000");
+  const tenPercentMovement = new BN("100000000000000000");
   const defaultMintAmount = "100000000000000000000"; // 100 dai etc.
   const oneUnitInWei = "1000000000000000000";
 
@@ -56,7 +57,6 @@ contract("LongShort (gas prices)", (accounts) => {
     const result = await initialize(admin);
     longShort = result.longShort;
     dai = result.dai;
-    priceOracle = result.oracleManagerMock;
 
     const synthResult = await createSynthetic(
       admin,
@@ -73,6 +73,7 @@ contract("LongShort (gas prices)", (accounts) => {
     long = synthResult.long;
     short = synthResult.short;
     marketIndex = synthResult.currentMarketIndex;
+    oracleManager = synthResult.oracleManager;
   });
 
   it("check cost of minting without oracle movement", async () => {
@@ -126,7 +127,11 @@ contract("LongShort (gas prices)", (accounts) => {
 
     await mintAndApprove(fund, defaultMintAmount, user3, longShort.address);
     // change oracle price.
-    await priceOracle.increasePrice("1", tenPercentMovement);
+    const oraclePrice = await oracleManager.getLatestPrice.call();
+    await oracleManager.setPrice(
+      oraclePrice.add(oraclePrice.mul(tenPercentMovement).div(e18))
+    );
+
     const receipt = await longShort.mintLong(
       marketIndex,
       new BN(defaultMintAmount),

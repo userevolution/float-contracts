@@ -3,7 +3,7 @@ const { web3 } = require("@nomiclabs/hardhat-web3");
 
 const LONGSHORT_CONTRACT_NAME = "LongShort";
 const YIELD_MANAGER = "YieldManagerMock";
-const ORACLE_AGREGATOR = "OracleManagerMock";
+const ORACLE_MANAGER = "OracleManagerMock";
 const STARDAND_ERC20 = "ERC20PresetMinterPauserUpgradeable";
 const TOKEN_FACTORY = "TokenFactory";
 const STAKER = "Staker";
@@ -14,7 +14,7 @@ const TEN_TO_THE_18 = "1000000000000000000";
 
 const erc20 = artifacts.require(STARDAND_ERC20);
 const LongShort = artifacts.require(LONGSHORT_CONTRACT_NAME);
-const OracleManagerMock = artifacts.require(ORACLE_AGREGATOR);
+const OracleManager = artifacts.require(ORACLE_MANAGER);
 const YieldManager = artifacts.require(YIELD_MANAGER);
 const TokenFactory = artifacts.require(TOKEN_FACTORY);
 const Staker = artifacts.require(STAKER);
@@ -37,10 +37,6 @@ const initialize = async (admin) => {
     from: admin,
   });
 
-  const oracleManagerMock = await OracleManagerMock.new({
-    from: admin,
-  });
-
   await floatToken.setup("Float token", "FLOAT TOKEN", staker.address, {
     from: admin,
   });
@@ -49,30 +45,19 @@ const initialize = async (admin) => {
     from: admin,
   });
 
-  await oracleManagerMock.setup(admin, longShort.address, {
+  await longShort.setup(admin, tokenFactory.address, staker.address, {
     from: admin,
   });
-
-  await longShort.setup(
-    admin,
-    tokenFactory.address,
-    staker.address,
-    oracleManagerMock.address,
-    {
-      from: admin,
-    }
-  );
 
   await staker.initialize(admin, longShort.address, floatToken.address, {
     from: admin,
   });
 
   return {
-    longShort,
-    tokenFactory,
-    oracleManagerMock,
     staker,
+    longShort,
     floatToken,
+    tokenFactory,
   };
 };
 
@@ -90,14 +75,19 @@ const createSynthetic = async (
     from: admin,
   });
 
+  const oracleManager = await OracleManager.new({
+    from: admin,
+  });
+
   const yieldManager = await YieldManager.new({
     from: admin,
   });
 
-  // For testing, we will use the fundToken's address as the oracle address. This is likely to chance in the future
-  const priceOracleAddress = fundToken.address;
-
   await fundToken.initialize("fund token", "FND", {
+    from: admin,
+  });
+
+  await oracleManager.setup(admin, {
     from: admin,
   });
 
@@ -113,7 +103,7 @@ const createSynthetic = async (
     syntheticName,
     syntheticSymbol,
     fundToken.address,
-    priceOracleAddress,
+    oracleManager.address,
     yieldManager.address,
     _baseEntryFee,
     _badLiquidityEntryFee,
@@ -129,11 +119,12 @@ const createSynthetic = async (
   let shortToken = await erc20.at(shortAddress);
 
   return {
-    currentMarketIndex,
+    fundToken,
     longToken,
     shortToken,
-    fundToken,
     yieldManager,
+    oracleManager,
+    currentMarketIndex,
   };
 };
 
@@ -208,12 +199,7 @@ const feeCalculation = (
     }
   }
   // If greater than minFeeThreshold
-  if (
-    amount
-      .add(longValue)
-      .add(shortValue)
-      .gte(minThreshold)
-  ) {
+  if (amount.add(longValue).add(shortValue).gte(minThreshold)) {
     const TEN_TO_THE_18 = "1" + "000000000000000000";
     let betaDiff = new BN(TEN_TO_THE_18).sub(thinBeta); // TODO: when previous beta != 1
 
@@ -261,10 +247,7 @@ const logGasPrices = async (
   console.log(`USD Price: $${ethPriceUsd}`);
   const ethCost =
     Number(
-      totalCostEth
-        .mul(new BN(ethPriceUsd))
-        .mul(new BN(100))
-        .div(ONE_ETH)
+      totalCostEth.mul(new BN(ethPriceUsd)).mul(new BN(100)).div(ONE_ETH)
     ) / 100;
   console.log(`Cost on ETH Mainnet: $${ethCost}`);
 
@@ -276,10 +259,7 @@ const logGasPrices = async (
   console.log(`BNB Price: $${bnbPriceUsd}`);
   const bscCost =
     Number(
-      totalCostBsc
-        .mul(new BN(bnbPriceUsd))
-        .mul(new BN(100))
-        .div(ONE_ETH)
+      totalCostBsc.mul(new BN(bnbPriceUsd)).mul(new BN(100)).div(ONE_ETH)
     ) / 100;
   console.log(`Cost on BSC: $${bscCost}`);
 };

@@ -13,7 +13,7 @@ contract OracleManagerMock is IOracleManager, Initializable {
     address public admin;
 
     // Global state.
-    int256 currentPrice;
+    int256 currentPrice; // e18
 
     ////////////////////////////////////
     /////////// MODIFIERS //////////////
@@ -30,13 +30,16 @@ contract OracleManagerMock is IOracleManager, Initializable {
 
     function setup(address _admin) public initializer {
         admin = _admin;
+
+        // Default to a price of 1.
+        currentPrice = 1e18;
     }
 
     ////////////////////////////////////
     ///// IMPLEMENTATION ///////////////
     ////////////////////////////////////
 
-    function setLatestPrice(int256 newPrice) public adminOnly {
+    function setPrice(int256 newPrice) public adminOnly {
         currentPrice = newPrice;
     }
 
