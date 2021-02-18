@@ -19,6 +19,9 @@ const { add, push, create } = scripts;
 const deployContracts = async (options, accounts, deployer) => {
   const admin = accounts[0];
 
+  // Handles idempotent deployments for upgradeable contracts using zeppelin.
+  // The contract name can change, but alias must remain constant across
+  // deployments. Use create(...) to deploy a proxy for an alias.
   add({
     contractsData: [
       { name: "LongShort", alias: "LongShort" },
@@ -28,7 +31,6 @@ const deployContracts = async (options, accounts, deployer) => {
   });
   await push({ ...options, force: true });
 
-  // Dai
   await deployer.deploy(Dai);
   let dai = await Dai.deployed();
 
@@ -96,10 +98,12 @@ module.exports = async function (deployer, networkName, accounts) {
     if (networkName === "test") {
       return;
     }
+
     const { network, txParams } = await ConfigManager.initNetworkConfiguration({
       network: networkName,
       from: accounts[0],
     });
+
     await deployContracts({ network, txParams }, accounts, deployer);
   });
 };

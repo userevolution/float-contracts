@@ -1,7 +1,7 @@
 const Dai = artifacts.require("Dai");
 const SyntheticToken = artifacts.require("SyntheticToken");
 const YieldManagerMock = artifacts.require("YieldManagerMock");
-// const YieldManagerVenus = artifacts.require("YieldManagerVenus");
+const YieldManagerVenus = artifacts.require("YieldManagerVenus");
 
 const OracleAggregator = artifacts.require("OracleManagerMock");
 const LongShort = artifacts.require("LongShort");
