@@ -1,5 +1,4 @@
 const path = require("path");
-// This gives very strange errors in development, so keep these values null unless you require infura etc.
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 const {
   mnemonic,
@@ -11,6 +10,7 @@ const {
   etherscanApiKey,
   bscscanApiKey,
 } = require("./secretsManager.js");
+
 const blockchainNodeHost = process.env.BLOCKCHAIN_NODE_HOST || "localhost";
 
 const defaultLocalhostNetwork = {
@@ -36,15 +36,13 @@ const lazyCreateNetwork = (rpcUrl) => {
 };
 
 module.exports = {
-  // See <http://truffleframework.com/docs/advanced/configuration>
-  // to customize your Truffle configuration!
   plugins: ["solidity-coverage", "truffle-plugin-verify"],
   networks: {
     mainnet: {
       network_id: 1,
       provider: lazyCreateNetwork(mainnetProviderUrl),
       // gas: 4700000,
-      gasPrice: 45000000000, // 10 gwei
+      gasPrice: 45000000000, // 45 gwei
       skipDryRun: true,
     },
     rinkeby: {
@@ -72,7 +70,7 @@ module.exports = {
       network_id: 97,
       provider: lazyCreateNetwork(binanceTest),
       gas: 8000000,
-      gasPrice: 50000000000, // 10 gwei
+      gasPrice: 50000000000, // 50 gwei
       skipDryRun: true,
     },
     development: defaultLocalhostNetwork,
@@ -83,7 +81,7 @@ module.exports = {
     reporter: "eth-gas-reporter",
     reporterOptions: {
       currency: "USD",
-      gasPrice: 25, //in gwei
+      gasPrice: 25, // in gwei
     },
   },
   compilers: {
