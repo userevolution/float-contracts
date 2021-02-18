@@ -6,7 +6,8 @@
     "LongShort": "LongShort",
     "oracleAggregator": "OracleManagerMock",
     "YieldManager": "YieldManagerMock",
-    "Staker": "Staker"
+    "Staker": "Staker",
+    "OracleAggregator": "OracleManagerMock"
   },
   "dependencies": {},
   "compiler": {

@@ -1,10 +1,15 @@
-const Dai = artifacts.require("Dai");
-const SyntheticToken = artifacts.require("SyntheticToken");
-
-const OracleAggregator = artifacts.require("OracleManagerMock");
-const LongShort = artifacts.require("LongShort");
-
 const { BN } = require("@openzeppelin/test-helpers");
+
+const Dai = artifacts.require("Dai");
+const LongShort = artifacts.require("LongShort");
+const SyntheticToken = artifacts.require("SyntheticToken");
+const YieldManagerMock = artifacts.require("YieldManagerMock");
+const OracleAggregator = artifacts.require("OracleManagerMock");
+const YieldManagerVenus = artifacts.require("YieldManagerVenus");
+
+// BSC testnet BUSD and vBUSD token addresses (for venus).
+const bscBUSDAddress = "0x8301F2213c0eeD49a7E28Ae4c3e91722919B8B47";
+const bscVBUSDAddress = "0x08e0A5575De71037aE36AbfAfb516595fE68e5e4";
 
 const mintAndApprove = async (token, amount, user, approvedAddress) => {
   let bnAmount = new BN(amount);
@@ -20,21 +25,48 @@ const deployTestMarket = async (
   longShortInstance,
   fundTokenInstance,
   oracleAddress,
-  yieldManagerAddress
+  admin,
+  networkName
 ) => {
-  // Deploy a synthetic market:
-  // Use these as defaults
+  // Default mint/redeem fees.
   const _baseEntryFee = 0;
   const _badLiquidityEntryFee = 50;
   const _baseExitFee = 30;
   const _badLiquidityExitFee = 50;
 
+  // We mock out the yield manager unless we're on BSC testnet.
+  let yieldManager;
+  let fundTokenAddress;
+  if (networkName == "binanceTest") {
+    yieldManager = await YieldManagerVenus.new();
+    fundTokenAddress = bscBUSDAddress;
+
+    await yieldManager.setup(
+      admin,
+      longShortInstance.address,
+      bscBUSDAddress,
+      bscVBUSDAddress
+    );
+  } else {
+    yieldManager = await YieldManagerMock.new();
+    fundTokenAddress = fundTokenInstance.address;
+
+    await yieldManager.setup(
+      admin,
+      longShortInstance.address,
+      fundTokenInstance.address
+    );
+
+    var mintRole = await fundTokenInstance.MINTER_ROLE.call();
+    await fundTokenInstance.grantRole(mintRole, yieldManager.address);
+  }
+
   await longShortInstance.newSyntheticMarket(
     syntheticName,
     syntheticSymbol,
-    fundTokenInstance.address,
+    fundTokenAddress,
     oracleAddress,
-    yieldManagerAddress,
+    yieldManager.address,
     _baseEntryFee,
     _badLiquidityEntryFee,
     _baseExitFee,
@@ -73,13 +105,13 @@ module.exports = async function(deployer, network, accounts) {
   const dummyOracleAddress2 = "0x1230000000000000000000000000000000000002";
   const dummyOracleAddress3 = "0x1230000000000000000000000000000000000003";
 
-  const dummyYieldAddress1 = "0x1230000000000000000000000000000000000004";
-  const dummyYieldAddress2 = "0x1230000000000000000000000000000000000005";
-  const dummyYieldAddress3 = "0x1230000000000000000000000000000000000006";
-
   const oneHundredMintAmount = "100000000000000000000";
 
-  const dai = await Dai.deployed();
+  // We use fake DAI if we're not on BSC testnet.
+  let token;
+  if (network != "binanceTest") {
+    token = await Dai.deployed();
+  }
 
   const oracleAggregator = await OracleAggregator.deployed();
 
@@ -88,57 +120,62 @@ module.exports = async function(deployer, network, accounts) {
     "FTSE100",
     "FTSE",
     longShort,
-    dai,
+    token,
     dummyOracleAddress1,
-    dummyYieldAddress1
+    admin,
+    network
   );
   await deployTestMarket(
     "GOLD",
     "GOLD",
     longShort,
-    dai,
+    token,
     dummyOracleAddress2,
-    dummyYieldAddress2
+    admin,
+    network
   );
   await deployTestMarket(
     "SP",
     "S&P500",
     longShort,
-    dai,
+    token,
     dummyOracleAddress3,
-    dummyYieldAddress3
+    admin,
+    network
   );
 
-  const currentMarketIndex = (await longShort.latestMarket()).toNumber();
+  // Don't try to mint tokens and fake transactions on BSC testnet.
+  if (network == "binanceTest") {
+    return;
+  }
 
+  const currentMarketIndex = (await longShort.latestMarket()).toNumber();
   for (let marketIndex = 1; marketIndex <= currentMarketIndex; ++marketIndex) {
+    console.log(`Simulating transactions for marketIndex: ${marketIndex}`);
     const longAddress = await longShort.longTokens.call(marketIndex);
     const shortAddress = await longShort.shortTokens.call(marketIndex);
 
     let long = await SyntheticToken.at(longAddress);
     let short = await SyntheticToken.at(shortAddress);
 
-    await mintAndApprove(dai, oneHundredMintAmount, user1, longShort.address);
-
+    await mintAndApprove(token, oneHundredMintAmount, user1, longShort.address);
     await longShort.mintLong(marketIndex, new BN(oneHundredMintAmount), {
       from: user1,
     });
 
-    await mintAndApprove(dai, oneHundredMintAmount, user2, longShort.address);
+    await mintAndApprove(token, oneHundredMintAmount, user2, longShort.address);
     await longShort.mintShort(marketIndex, new BN(oneHundredMintAmount), {
       from: user2,
     });
 
-    // Making even more short tokens
-    await mintAndApprove(dai, oneHundredMintAmount, user3, longShort.address);
+    await mintAndApprove(token, oneHundredMintAmount, user3, longShort.address);
     await longShort.mintShort(marketIndex, new BN(oneHundredMintAmount), {
       from: user3,
     });
 
-    // increase oracle price
+    // Increase oracle price.
     const tenPercentMovement = "100000000000000000";
     await oracleAggregator.increasePrice("1", tenPercentMovement);
-
     await longShort._updateSystemState(marketIndex);
 
     // Simulate user 2 redeeming half his tokens.
@@ -146,7 +183,6 @@ module.exports = async function(deployer, network, accounts) {
     await short.increaseAllowance(longShort.address, halfTokensMinted, {
       from: user2,
     });
-
     await longShort.redeemShort(marketIndex, halfTokensMinted, {
       from: user2,
     });
@@ -156,9 +192,26 @@ module.exports = async function(deployer, network, accounts) {
     await long.increaseAllowance(longShort.address, thirdTokensMinted, {
       from: user1,
     });
-
     await longShort.redeemLong(marketIndex, thirdTokensMinted, {
       from: user1,
     });
+
+    await mintAndApprove(dai, oneHundredMintAmount, user3, longShort.address);
+    await longShort.mintLongAndStake(
+      marketIndex,
+      new BN(oneHundredMintAmount),
+      {
+        from: user3,
+      }
+    );
+
+    await mintAndApprove(dai, oneHundredMintAmount, user3, longShort.address);
+    await longShort.mintShortAndStake(
+      marketIndex,
+      new BN(oneHundredMintAmount),
+      {
+        from: user3,
+      }
+    );
   }
 };

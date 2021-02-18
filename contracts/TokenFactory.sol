@@ -67,7 +67,8 @@ contract TokenFactory is Initializable {
 
     function createTokenLong(
         string calldata syntheticName,
-        string calldata syntheticSymbol
+        string calldata syntheticSymbol,
+        uint256 marketIndex
     ) external onlyFLOAT returns (SyntheticToken) {
         SyntheticToken tokenContract;
         tokenContract = new SyntheticToken();
@@ -75,7 +76,8 @@ contract TokenFactory is Initializable {
             string(abi.encodePacked("FLOAT UP", syntheticName)),
             string(abi.encodePacked("fu", syntheticSymbol)),
             floatContract,
-            true
+            true,
+            marketIndex
         );
         setupPermissions(tokenContract);
         return tokenContract;
@@ -83,7 +85,8 @@ contract TokenFactory is Initializable {
 
     function createTokenShort(
         string calldata syntheticName,
-        string calldata syntheticSymbol
+        string calldata syntheticSymbol,
+        uint256 marketIndex
     ) external onlyFLOAT returns (SyntheticToken) {
         SyntheticToken tokenContract;
         tokenContract = new SyntheticToken();
@@ -91,7 +94,8 @@ contract TokenFactory is Initializable {
             string(abi.encodePacked("FLOAT DOWN ", syntheticName)),
             string(abi.encodePacked("fd", syntheticSymbol)),
             floatContract,
-            false
+            false,
+            marketIndex
         );
 
         setupPermissions(tokenContract);

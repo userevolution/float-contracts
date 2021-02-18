@@ -105,6 +105,10 @@ const createSynthetic = async (
     from: admin,
   });
 
+  // Mock yield manager needs to be able to mint tokens to simulate yield.
+  var mintRole = await fundToken.MINTER_ROLE.call();
+  await fundToken.grantRole(mintRole, yieldManager.address);
+
   await longShort.newSyntheticMarket(
     syntheticName,
     syntheticSymbol,
