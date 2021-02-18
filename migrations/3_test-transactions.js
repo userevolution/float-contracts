@@ -38,6 +38,7 @@ const deployTestMarket = async (
   let yieldManager;
   let fundTokenAddress;
   if (networkName == "binanceTest") {
+    console.log("Deploying VENUS yield manager", syntheticName);
     yieldManager = await YieldManagerVenus.new();
     fundTokenAddress = bscBUSDAddress;
 
@@ -196,7 +197,7 @@ module.exports = async function(deployer, network, accounts) {
       from: user1,
     });
 
-    await mintAndApprove(dai, oneHundredMintAmount, user3, longShort.address);
+    await mintAndApprove(token, oneHundredMintAmount, user3, longShort.address);
     await longShort.mintLongAndStake(
       marketIndex,
       new BN(oneHundredMintAmount),
@@ -205,7 +206,7 @@ module.exports = async function(deployer, network, accounts) {
       }
     );
 
-    await mintAndApprove(dai, oneHundredMintAmount, user3, longShort.address);
+    await mintAndApprove(token, oneHundredMintAmount, user3, longShort.address);
     await longShort.mintShortAndStake(
       marketIndex,
       new BN(oneHundredMintAmount),

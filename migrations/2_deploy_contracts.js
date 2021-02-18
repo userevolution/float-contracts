@@ -29,7 +29,7 @@ const deployContracts = async (options, accounts, deployer, networkName) => {
   add({
     contractsData: [
       { name: "LongShort", alias: "LongShort" },
-      { name: ORACLE_AGGREGATOR, alias: "oracleAggregator" },
+      { name: ORACLE_AGGREGATOR, alias: "OracleAggregator" },
       { name: STAKER, alias: "Staker" },
     ],
   });
@@ -56,7 +56,7 @@ const deployContracts = async (options, accounts, deployer, networkName) => {
 
   const oracleAggregator = await create({
     ...options,
-    contractAlias: "oracleAggregator",
+    contractAlias: "OracleAggregator",
   });
   const oracleAggregatorInstance = await OracleManagerMock.at(
     oracleAggregator.address
@@ -98,7 +98,7 @@ const deployContracts = async (options, accounts, deployer, networkName) => {
   );
 };
 
-module.exports = async function (deployer, networkName, accounts) {
+module.exports = async function(deployer, networkName, accounts) {
   deployer.then(async () => {
     // Initialise openzeppelin for upgradeable contracts.
     const options = await ConfigManager.initNetworkConfiguration({

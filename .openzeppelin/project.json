@@ -4,8 +4,6 @@
   "version": "0.1.0",
   "contracts": {
     "LongShort": "LongShort",
-    "oracleAggregator": "OracleManagerMock",
-    "YieldManager": "YieldManagerMock",
     "Staker": "Staker",
     "OracleAggregator": "OracleManagerMock"
   },
