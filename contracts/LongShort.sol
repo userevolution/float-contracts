@@ -929,7 +929,7 @@ contract LongShort is ILongShort, Initializable {
         refreshSystemState(marketIndex)
     {
         // Burn tokens - will revert unless user gives permission.
-        longTokens[marketIndex].burnFrom(msg.sender, tokensToRedeem);
+        longTokens[marketIndex].synthRedeemBurn(msg.sender, tokensToRedeem);
 
         // Compute fees.
         uint256 amount =
@@ -969,7 +969,7 @@ contract LongShort is ILongShort, Initializable {
         refreshSystemState(marketIndex)
     {
         // Burn tokens - will revert unless user gives permission to contract.
-        shortTokens[marketIndex].burnFrom(msg.sender, tokensToRedeem);
+        shortTokens[marketIndex].synthRedeemBurn(msg.sender, tokensToRedeem);
 
         // Compute fees.
         uint256 amount =

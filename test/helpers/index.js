@@ -4,7 +4,7 @@ const { web3 } = require("@nomiclabs/hardhat-web3");
 const LONGSHORT_CONTRACT_NAME = "LongShort";
 const YIELD_MANAGER = "YieldManagerMock";
 const ORACLE_AGREGATOR = "OracleManagerMock";
-const SYNTHETIC_TOKEN = "SyntheticToken";
+const STARDAND_ERC20 = "ERC20PresetMinterPauserUpgradeable";
 const TOKEN_FACTORY = "TokenFactory";
 const STAKER = "Staker";
 const FLOAT_TOKEN = "FloatToken";
@@ -12,7 +12,7 @@ const FLOAT_TOKEN = "FloatToken";
 const SIMULATED_INSTANT_APY = 10;
 const TEN_TO_THE_18 = "1000000000000000000";
 
-const erc20 = artifacts.require(SYNTHETIC_TOKEN);
+const erc20 = artifacts.require(STARDAND_ERC20);
 const LongShort = artifacts.require(LONGSHORT_CONTRACT_NAME);
 const OracleManagerMock = artifacts.require(ORACLE_AGREGATOR);
 const YieldManager = artifacts.require(YIELD_MANAGER);
@@ -208,7 +208,12 @@ const feeCalculation = (
     }
   }
   // If greater than minFeeThreshold
-  if (amount.add(longValue).add(shortValue).gte(minThreshold)) {
+  if (
+    amount
+      .add(longValue)
+      .add(shortValue)
+      .gte(minThreshold)
+  ) {
     const TEN_TO_THE_18 = "1" + "000000000000000000";
     let betaDiff = new BN(TEN_TO_THE_18).sub(thinBeta); // TODO: when previous beta != 1
 
@@ -256,7 +261,10 @@ const logGasPrices = async (
   console.log(`USD Price: $${ethPriceUsd}`);
   const ethCost =
     Number(
-      totalCostEth.mul(new BN(ethPriceUsd)).mul(new BN(100)).div(ONE_ETH)
+      totalCostEth
+        .mul(new BN(ethPriceUsd))
+        .mul(new BN(100))
+        .div(ONE_ETH)
     ) / 100;
   console.log(`Cost on ETH Mainnet: $${ethCost}`);
 
@@ -268,7 +276,10 @@ const logGasPrices = async (
   console.log(`BNB Price: $${bnbPriceUsd}`);
   const bscCost =
     Number(
-      totalCostBsc.mul(new BN(bnbPriceUsd)).mul(new BN(100)).div(ONE_ETH)
+      totalCostBsc
+        .mul(new BN(bnbPriceUsd))
+        .mul(new BN(100))
+        .div(ONE_ETH)
     ) / 100;
   console.log(`Cost on BSC: $${bscCost}`);
 };

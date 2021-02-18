@@ -117,16 +117,10 @@ contract("LongShort (redeeming fees)", (accounts) => {
 
       // Redeem the tokens.
       if (redeemShort == 0) {
-        await long.increaseAllowance(longShort.address, redeemLong, {
-          from: user1,
-        });
         await longShort.redeemLong(marketIndex, new BN(redeemLong), {
           from: user1,
         });
       } else {
-        await short.increaseAllowance(longShort.address, redeemShort, {
-          from: user2,
-        });
         await longShort.redeemShort(marketIndex, new BN(redeemShort), {
           from: user2,
         });

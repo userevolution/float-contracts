@@ -75,9 +75,7 @@ contract TokenFactory is Initializable {
         tokenContract.initialize(
             string(abi.encodePacked("FLOAT UP", syntheticName)),
             string(abi.encodePacked("fu", syntheticSymbol)),
-            floatContract,
-            true,
-            marketIndex
+            floatContract
         );
         setupPermissions(tokenContract);
         return tokenContract;
@@ -93,9 +91,7 @@ contract TokenFactory is Initializable {
         tokenContract.initialize(
             string(abi.encodePacked("FLOAT DOWN ", syntheticName)),
             string(abi.encodePacked("fd", syntheticSymbol)),
-            floatContract,
-            false,
-            marketIndex
+            floatContract
         );
 
         setupPermissions(tokenContract);
