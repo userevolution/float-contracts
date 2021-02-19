@@ -11,7 +11,6 @@ const { initialize, mintAndApprove, createSynthetic } = require("./helpers");
 
 contract("LongShort (initialisation)", (accounts) => {
   let longShort;
-  let priceOracle;
   let marketIndex;
   let long;
   let short;
@@ -52,7 +51,6 @@ contract("LongShort (initialisation)", (accounts) => {
     fund = synthResult.fundToken;
     long = synthResult.longToken;
     short = synthResult.shortToken;
-    priceOracle = synthResult.oracle;
     marketIndex = synthResult.currentMarketIndex;
   });
 

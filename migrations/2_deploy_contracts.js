@@ -6,14 +6,12 @@ const STAKER = "Staker";
 const FLOAT_TOKEN = "FloatToken";
 const TOKEN_FACTORY = "TokenFactory";
 const SYNTHETIC_TOKEN = "Dai";
-const ORACLE_AGGREGATOR = "OracleManagerMock";
 
 const LongShort = artifacts.require("LongShort");
 const Staker = artifacts.require(STAKER);
 const Dai = artifacts.require(SYNTHETIC_TOKEN);
 const FloatToken = artifacts.require(FLOAT_TOKEN);
 const TokenFactory = artifacts.require(TOKEN_FACTORY);
-const OracleManagerMock = artifacts.require(ORACLE_AGGREGATOR);
 
 const deployContracts = async (options, accounts, deployer, networkName) => {
   const admin = accounts[0];
@@ -29,7 +27,6 @@ const deployContracts = async (options, accounts, deployer, networkName) => {
   add({
     contractsData: [
       { name: "LongShort", alias: "LongShort" },
-      { name: ORACLE_AGGREGATOR, alias: "OracleAggregator" },
       { name: STAKER, alias: "Staker" },
     ],
   });
@@ -54,31 +51,14 @@ const deployContracts = async (options, accounts, deployer, networkName) => {
   });
   const stakerInstance = await Staker.at(staker.address);
 
-  const oracleAggregator = await create({
-    ...options,
-    contractAlias: "OracleAggregator",
-  });
-  const oracleAggregatorInstance = await OracleManagerMock.at(
-    oracleAggregator.address
-  );
-
   const longShort = await create({
     ...options,
     contractAlias: "LongShort",
     methodName: "setup",
-    methodArgs: [
-      admin,
-      tokenFactory.address,
-      staker.address,
-      oracleAggregator.address,
-    ],
+    methodArgs: [admin, tokenFactory.address, staker.address],
   });
 
   const longShortInstance = await LongShort.at(longShort.address);
-
-  await oracleAggregatorInstance.setup(admin, longShort.address, {
-    from: admin,
-  });
 
   await tokenFactory.setup(admin, longShort.address, {
     from: admin,
@@ -98,7 +78,7 @@ const deployContracts = async (options, accounts, deployer, networkName) => {
   );
 };
 
-module.exports = async function(deployer, networkName, accounts) {
+module.exports = async function (deployer, networkName, accounts) {
   deployer.then(async () => {
     // Initialise openzeppelin for upgradeable contracts.
     const options = await ConfigManager.initNetworkConfiguration({

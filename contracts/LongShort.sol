@@ -2,16 +2,16 @@
 pragma solidity 0.7.6;
 
 import "hardhat/console.sol";
-import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
 
-import "./SyntheticToken.sol";
-import "./TokenFactory.sol";
 import "./Staker.sol";
+import "./TokenFactory.sol";
+import "./SyntheticToken.sol";
+import "./interfaces/ILongShort.sol";
 import "./interfaces/IYieldManager.sol";
 import "./interfaces/IOracleManager.sol";
-import "./interfaces/ILongShort.sol";
 
 /**
  * @dev {LongShort} contract, including:
@@ -87,9 +87,6 @@ contract LongShort is ILongShort, Initializable {
     // Staker for controlling governance token issuance.
     Staker public staker;
 
-    // Oracle for pulling underlying price data.
-    IOracleManager public oracleAgregator;
-
     // Fixed-precision constants.
     uint256 public constant TEN_TO_THE_18 = 10**18;
     uint256 public constant feeUnitsOfPrecision = 10000;
@@ -106,6 +103,7 @@ contract LongShort is ILongShort, Initializable {
     mapping(uint256 => uint256) public externalContractCounter;
     mapping(uint256 => IERC20Upgradeable) public fundTokens;
     mapping(uint256 => IYieldManager) public yieldManagers;
+    mapping(uint256 => IOracleManager) public oracleManagers;
 
     // Synthetic long/short tokens users can mint and redeem.
     mapping(uint256 => SyntheticToken) public longTokens;
@@ -122,12 +120,7 @@ contract LongShort is ILongShort, Initializable {
     /////////// EVENTS /////////////////
     ////////////////////////////////////
 
-    event V1(
-        address admin,
-        address tokenFactory,
-        address staker,
-        address oracleAgregator
-    );
+    event V1(address admin, address tokenFactory, address staker);
 
     event ValueLockedInSystem(
         uint256 marketIndex,
@@ -245,15 +238,13 @@ contract LongShort is ILongShort, Initializable {
     function setup(
         address _admin,
         address _tokenFactory,
-        address _staker,
-        address _oracleAgregator
+        address _staker
     ) public initializer {
         admin = _admin;
         tokenFactory = TokenFactory(_tokenFactory);
         staker = Staker(_staker);
-        oracleAgregator = IOracleManager(_oracleAgregator);
 
-        emit V1(_admin, _tokenFactory, _staker, _oracleAgregator);
+        emit V1(_admin, _tokenFactory, _staker);
     }
 
     ////////////////////////////////////
@@ -264,7 +255,7 @@ contract LongShort is ILongShort, Initializable {
         string calldata syntheticName,
         string calldata syntheticSymbol,
         address _fundToken,
-        address _oracleFeed,
+        address _oracleManager,
         address _yieldManager,
         uint256 _baseEntryFee,
         uint256 _badLiquidityEntryFee,
@@ -279,9 +270,6 @@ contract LongShort is ILongShort, Initializable {
         baseExitFee[latestMarket] = _baseExitFee;
         badLiquidityEntryFee[latestMarket] = _badLiquidityEntryFee;
         badLiquidityExitFee[latestMarket] = _badLiquidityExitFee;
-
-        // Register price feed with oracle manager.
-        oracleAgregator.registerNewMarket(latestMarket, _oracleFeed);
 
         // Create new synthetic long token.
         longTokens[latestMarket] = SyntheticToken(
@@ -304,9 +292,10 @@ contract LongShort is ILongShort, Initializable {
         // Initial market state.
         longTokenPrice[latestMarket] = TEN_TO_THE_18;
         shortTokenPrice[latestMarket] = TEN_TO_THE_18;
-        assetPrice[latestMarket] = uint256(getLatestPrice(latestMarket));
         fundTokens[latestMarket] = IERC20Upgradeable(_fundToken);
         yieldManagers[latestMarket] = IYieldManager(_yieldManager);
+        oracleManagers[latestMarket] = IOracleManager(_oracleManager);
+        assetPrice[latestMarket] = uint256(getLatestPrice(latestMarket));
 
         emit SyntheticTokenCreated(
             latestMarket,
@@ -315,7 +304,7 @@ contract LongShort is ILongShort, Initializable {
             assetPrice[latestMarket],
             syntheticName,
             syntheticSymbol,
-            _oracleFeed,
+            _oracleManager,
             _baseEntryFee,
             _badLiquidityEntryFee,
             _baseExitFee,
@@ -338,7 +327,7 @@ contract LongShort is ILongShort, Initializable {
      * Returns the latest price
      */
     function getLatestPrice(uint256 marketIndex) public view returns (int256) {
-        return oracleAgregator.getLatestPrice(marketIndex);
+        return oracleManagers[marketIndex].getLatestPrice();
     }
 
     /**

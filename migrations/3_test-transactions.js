@@ -4,7 +4,7 @@ const Dai = artifacts.require("Dai");
 const LongShort = artifacts.require("LongShort");
 const SyntheticToken = artifacts.require("SyntheticToken");
 const YieldManagerMock = artifacts.require("YieldManagerMock");
-const OracleAggregator = artifacts.require("OracleManagerMock");
+const OracleManagerMock = artifacts.require("OracleManagerMock");
 const YieldManagerVenus = artifacts.require("YieldManagerVenus");
 
 // BSC testnet BUSD and vBUSD token addresses (for venus).
@@ -24,7 +24,6 @@ const deployTestMarket = async (
   syntheticName,
   longShortInstance,
   fundTokenInstance,
-  oracleAddress,
   admin,
   networkName
 ) => {
@@ -33,6 +32,11 @@ const deployTestMarket = async (
   const _badLiquidityEntryFee = 50;
   const _baseExitFee = 30;
   const _badLiquidityExitFee = 50;
+
+  // Deploy mock oracle manager for market.
+  // TODO: replace with aggregator feed on BSC testnet.
+  let oracleManager = await OracleManagerMock.new();
+  await oracleManager.setup(admin);
 
   // We mock out the yield manager unless we're on BSC testnet.
   let yieldManager;
@@ -66,7 +70,7 @@ const deployTestMarket = async (
     syntheticName,
     syntheticSymbol,
     fundTokenAddress,
-    oracleAddress,
+    oracleManager.address,
     yieldManager.address,
     _baseEntryFee,
     _badLiquidityEntryFee,
@@ -92,7 +96,7 @@ const topupBalanceIfLow = async (from, to) => {
   }
 };
 
-module.exports = async function(deployer, network, accounts) {
+module.exports = async function (deployer, network, accounts) {
   const admin = accounts[0];
   const user1 = accounts[1];
   const user2 = accounts[2];
@@ -102,10 +106,6 @@ module.exports = async function(deployer, network, accounts) {
   await topupBalanceIfLow(admin, user2);
   await topupBalanceIfLow(admin, user3);
 
-  const dummyOracleAddress1 = "0x1230000000000000000000000000000000000001";
-  const dummyOracleAddress2 = "0x1230000000000000000000000000000000000002";
-  const dummyOracleAddress3 = "0x1230000000000000000000000000000000000003";
-
   const oneHundredMintAmount = "100000000000000000000";
 
   // We use fake DAI if we're not on BSC testnet.
@@ -114,36 +114,10 @@ module.exports = async function(deployer, network, accounts) {
     token = await Dai.deployed();
   }
 
-  const oracleAggregator = await OracleAggregator.deployed();
-
   const longShort = await LongShort.deployed();
-  await deployTestMarket(
-    "FTSE100",
-    "FTSE",
-    longShort,
-    token,
-    dummyOracleAddress1,
-    admin,
-    network
-  );
-  await deployTestMarket(
-    "GOLD",
-    "GOLD",
-    longShort,
-    token,
-    dummyOracleAddress2,
-    admin,
-    network
-  );
-  await deployTestMarket(
-    "SP",
-    "S&P500",
-    longShort,
-    token,
-    dummyOracleAddress3,
-    admin,
-    network
-  );
+  await deployTestMarket("FTSE100", "FTSE", longShort, token, admin, network);
+  await deployTestMarket("GOLD", "GOLD", longShort, token, admin, network);
+  await deployTestMarket("SP", "S&P500", longShort, token, admin, network);
 
   // Don't try to mint tokens and fake transactions on BSC testnet.
   if (network == "binanceTest") {
@@ -153,6 +127,7 @@ module.exports = async function(deployer, network, accounts) {
   const currentMarketIndex = (await longShort.latestMarket()).toNumber();
   for (let marketIndex = 1; marketIndex <= currentMarketIndex; ++marketIndex) {
     console.log(`Simulating transactions for marketIndex: ${marketIndex}`);
+
     const longAddress = await longShort.longTokens.call(marketIndex);
     const shortAddress = await longShort.shortTokens.call(marketIndex);
 
@@ -174,9 +149,11 @@ module.exports = async function(deployer, network, accounts) {
       from: user3,
     });
 
-    // Increase oracle price.
-    const tenPercentMovement = "100000000000000000";
-    await oracleAggregator.increasePrice("1", tenPercentMovement);
+    // Increase mock oracle price from 1 (default) to 1.1.
+    const onePointOne = new BN("1100000000000000000");
+    const oracleManagerAddr = await longShort.oracleManagers.call(marketIndex);
+    const oracleManager = await OracleManagerMock.at(oracleManagerAddr);
+    await oracleManager.setPrice(onePointOne);
     await longShort._updateSystemState(marketIndex);
 
     // Simulate user 2 redeeming half his tokens.

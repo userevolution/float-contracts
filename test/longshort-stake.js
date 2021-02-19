@@ -36,13 +36,11 @@ contract("LongShort (staking)", (accounts) => {
   let shortToken;
   let marketIndex;
   let fundToken;
-  let priceOracle;
   let floatToken;
   beforeEach(async () => {
     const result = await initialize(admin);
     longShort = result.longShort;
     staker = result.staker;
-    priceOracle = result.oracleManagerMock;
     floatToken = result.floatToken;
     // no fees
     const r2 = await createSynthetic(
