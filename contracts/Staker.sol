@@ -27,14 +27,13 @@ contract Staker is Initializable {
     mapping(address => bool) syntheticValid;
 
     ///////// User Specific ///////////
-    mapping(address => uint256) public accumulatedFloat;
     mapping(address => mapping(address => uint256)) public userAmountStaked; // synthetic token type -> user -> amount staked
     mapping(address => mapping(address => uint256))
         public userIndexOfLastClaimedReward;
 
     struct RewardState {
         uint256 timestamp;
-        uint256 accumulativeFloatPerSecond;
+        uint256 accumulativeFloatPerToken;
     }
 
     mapping(address => uint256) public marketIndexOfToken;
@@ -121,11 +120,11 @@ contract Staker is Initializable {
 
         syntheticRewardParams[longTokenAddress][0].timestamp = block.timestamp;
         syntheticRewardParams[longTokenAddress][0]
-            .accumulativeFloatPerSecond = 0;
+            .accumulativeFloatPerToken = 0;
 
         syntheticRewardParams[shortTokenAddress][0].timestamp = block.timestamp;
         syntheticRewardParams[shortTokenAddress][0]
-            .accumulativeFloatPerSecond = 0;
+            .accumulativeFloatPerToken = 0;
 
         emit StateAdded(longTokenAddress, 0, block.timestamp, 0);
         emit StateAdded(shortTokenAddress, 0, block.timestamp, 0);
@@ -172,7 +171,7 @@ contract Staker is Initializable {
         uint256 timeDelta = calculateTimeDelta(tokenAddress);
         return
             syntheticRewardParams[tokenAddress][latestRewardIndex[tokenAddress]]
-                .accumulativeFloatPerSecond
+                .accumulativeFloatPerToken
                 .add(timeDelta.mul(floatPerSecond));
     }
 
@@ -182,7 +181,7 @@ contract Staker is Initializable {
         uint256 newIndex = latestRewardIndex[tokenAddress] + 1;
         // Set accumulative
         syntheticRewardParams[tokenAddress][newIndex]
-            .accumulativeFloatPerSecond = calculateNewAccumulative(
+            .accumulativeFloatPerToken = calculateNewAccumulative(
             tokenAddress,
             tokenPrice
         );
@@ -197,7 +196,7 @@ contract Staker is Initializable {
             newIndex,
             block.timestamp,
             syntheticRewardParams[tokenAddress][newIndex]
-                .accumulativeFloatPerSecond
+                .accumulativeFloatPerToken
         );
     }
 
@@ -235,30 +234,47 @@ contract Staker is Initializable {
         }
         uint256 accumDelta =
             syntheticRewardParams[tokenAddress][latestRewardIndex[tokenAddress]]
-                .accumulativeFloatPerSecond
+                .accumulativeFloatPerToken
                 .sub(
                 syntheticRewardParams[tokenAddress][
                     userIndexOfLastClaimedReward[tokenAddress][msg.sender]
                 ]
-                    .accumulativeFloatPerSecond
+                    .accumulativeFloatPerToken
             );
 
         return accumDelta * userAmountStaked[tokenAddress][msg.sender];
     }
 
-    function creditAccumulatedFloat(address tokenAddress) internal {
-        uint256 additionalFloat = calculateAccumulatedFloat(tokenAddress);
+    function mintAccumulatedFloat(address tokenAddress) internal {
+        uint256 floatToMint = calculateAccumulatedFloat(tokenAddress);
         // Set the user has claimed up until now.
         userIndexOfLastClaimedReward[tokenAddress][
             msg.sender
         ] = latestRewardIndex[tokenAddress];
 
-        if (additionalFloat > 0) {
-            // Add float to their balance.
-            accumulatedFloat[msg.sender] =
-                accumulatedFloat[msg.sender] +
-                additionalFloat;
-            emit FloatAccumulated(msg.sender, tokenAddress, additionalFloat);
+        if (floatToMint > 0) {
+            floatToken.mint(msg.sender, floatToMint);
+            emit FloatAccumulated(msg.sender, tokenAddress, floatToMint);
+            emit FloatMinted(msg.sender, floatToMint);
+        }
+    }
+
+    function claimFloat(address[] memory tokenAddresses) external {
+        require(tokenAddresses.length <= 15); // Set some limit on loop length
+        uint256 floatTotal = 0;
+        for (uint256 i = 0; i < tokenAddresses.length; i++) {
+            uint256 floatToMint = calculateAccumulatedFloat(tokenAddresses[i]);
+            // Set the user has claimed up until now.
+            userIndexOfLastClaimedReward[tokenAddresses[i]][
+                msg.sender
+            ] = latestRewardIndex[tokenAddresses[i]];
+
+            floatTotal += floatToMint;
+            emit FloatAccumulated(msg.sender, tokenAddresses[i], floatToMint);
+        }
+        if (floatTotal > 0) {
+            floatToken.mint(msg.sender, floatTotal);
+            emit FloatMinted(msg.sender, floatTotal);
         }
     }
 
@@ -337,8 +353,7 @@ contract Staker is Initializable {
                 userIndexOfLastClaimedReward[tokenAddress][user] <
                 latestRewardIndex[tokenAddress]
             ) {
-                creditAccumulatedFloat(tokenAddress);
-                mintFloat();
+                mintAccumulatedFloat(tokenAddress);
             }
         }
 
@@ -370,7 +385,7 @@ contract Staker is Initializable {
             userAmountStaked[tokenAddress][msg.sender] > 0,
             "nothing to withdraw"
         );
-        creditAccumulatedFloat(tokenAddress);
+        mintAccumulatedFloat(tokenAddress);
 
         userAmountStaked[tokenAddress][msg.sender] = userAmountStaked[
             tokenAddress
@@ -382,21 +397,6 @@ contract Staker is Initializable {
             amount
         );
 
-        mintFloat();
         emit StakeWithdrawn(msg.sender, tokenAddress, amount);
-    }
-
-    /*
-    Mint function.
-    If the user has accumulated float, we mint it to them.
-    */
-    function mintFloat() public {
-        if (accumulatedFloat[msg.sender] > 0) {
-            uint256 floatToMint = accumulatedFloat[msg.sender];
-            accumulatedFloat[msg.sender] = 0;
-            // mint and send user floatToMint
-            floatToken.mint(msg.sender, floatToMint);
-            emit FloatMinted(msg.sender, floatToMint);
-        }
     }
 }
