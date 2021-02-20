@@ -135,7 +135,7 @@ contract Staker is Initializable {
     ////////////////////////////////////
 
     function calculateFloatPerSecond(uint256 tokenPrice)
-        internal
+        public
         view
         returns (uint256)
     {
