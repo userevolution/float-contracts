@@ -1,11 +1,11 @@
 {
   "contracts": {
     "Staker": {
-      "address": "0x2D305aE040c502BaC72496C5ddb7A022614C42c4",
-      "constructorCode": "608060405234801561001057600080fd5b506114c7806100206000396000f3fe",
-      "bodyBytecodeHash": "6ba044eeb345d885e1055d0095950dbcbd787f6776aabebc93422b8c9bc123b2",
-      "localBytecodeHash": "7f71d70461ac3a1db61ba8fca1e69e7c16e4babd28310934b19514e70d08deb3",
-      "deployedBytecodeHash": "7f71d70461ac3a1db61ba8fca1e69e7c16e4babd28310934b19514e70d08deb3",
+      "address": "0xdE6e3eb75464C21e826C2A3611243C4dC77d1C35",
+      "constructorCode": "608060405234801561001057600080fd5b506114d4806100206000396000f3fe",
+      "bodyBytecodeHash": "ca7b5037e245da69d568fedc4403b6b3a637c35970890ecf2c3f29315a8c3018",
+      "localBytecodeHash": "f5af33840b45c82ceb23f4b23e4b4604f6adb7db9034daf1b98c998ca90cdcc2",
+      "deployedBytecodeHash": "f5af33840b45c82ceb23f4b23e4b4604f6adb7db9034daf1b98c998ca90cdcc2",
       "types": {
         "t_bool": {
           "id": "t_bool",
@@ -65,7 +65,7 @@
           "contract": "Initializable",
           "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
           "label": "_initialized",
-          "astId": 5572,
+          "astId": 5575,
           "type": "t_bool",
           "src": "1212:25:26"
         },
@@ -73,7 +73,7 @@
           "contract": "Initializable",
           "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
           "label": "_initializing",
-          "astId": 5575,
+          "astId": 5578,
           "type": "t_bool",
           "src": "1340:26:26"
         },
@@ -159,7 +159,7 @@
       }
     },
     "OracleAggregator": {
-      "address": "0xb40e06A9983CECaFD5Ff9AFFE2Eb1d0eb5635727",
+      "address": "0x51cac4B11B167E7C83F1b78bb423005f7d35f169",
       "constructorCode": "608060405234801561001057600080fd5b50610291806100206000396000f3fe",
       "bodyBytecodeHash": "95ab445c823367a3e451056b11239f81ae38d8da445e4407fc4746b121c8c226",
       "localBytecodeHash": "87006e466b74eef9ff2e59c7a9ee6a47407724c91c21f86d1c9aa0c323faf1b3",
@@ -186,7 +186,7 @@
           "contract": "Initializable",
           "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
           "label": "_initialized",
-          "astId": 5572,
+          "astId": 5575,
           "type": "t_bool",
           "src": "1212:25:26"
         },
@@ -194,7 +194,7 @@
           "contract": "Initializable",
           "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
           "label": "_initializing",
-          "astId": 5575,
+          "astId": 5578,
           "type": "t_bool",
           "src": "1340:26:26"
         },
@@ -202,7 +202,7 @@
           "contract": "OracleManagerMock",
           "path": "contracts/mocks/OracleManagerMock.sol",
           "label": "admin",
-          "astId": 4341,
+          "astId": 4344,
           "type": "t_address",
           "src": "346:20:20"
         },
@@ -210,7 +210,7 @@
           "contract": "OracleManagerMock",
           "path": "contracts/mocks/OracleManagerMock.sol",
           "label": "currentPrice",
-          "astId": 4343,
+          "astId": 4346,
           "type": "t_int256",
           "src": "394:19:20"
         }
@@ -224,7 +224,7 @@
       }
     },
     "LongShort": {
-      "address": "0xb54dC86CedFE96163E14B4a4C002C2d3C577F8f8",
+      "address": "0x5841B0eCd8ca5AC2769ed98a481513D77aadE17c",
       "constructorCode": "608060405234801561001057600080fd5b50612b88806100206000396000f3fe",
       "bodyBytecodeHash": "f9a9a2fc5be1798943be238066c443f42a3f2f9f8a48f5c8589a3366d5db9c1a",
       "localBytecodeHash": "a964514d5be25fe3db92d39653121172e0451d7e19a56bd945bb23ef27d6e59c",
@@ -269,7 +269,7 @@
           "contract": "Initializable",
           "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
           "label": "_initialized",
-          "astId": 5572,
+          "astId": 5575,
           "type": "t_bool",
           "src": "1212:25:26"
         },
@@ -277,7 +277,7 @@
           "contract": "Initializable",
           "path": "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol",
           "label": "_initializing",
-          "astId": 5575,
+          "astId": 5578,
           "type": "t_bool",
           "src": "1340:26:26"
         },
@@ -479,19 +479,19 @@
   "proxies": {
     "float-capital/Staker": [
       {
-        "address": "0x67A2567aE6F07F0C14a475bC524A1470800c5C43",
+        "address": "0x18eA194ffC9c4547bE436Cc4041d2665b805bb0C",
         "version": "0.1.0",
-        "implementation": "0x2D305aE040c502BaC72496C5ddb7A022614C42c4",
-        "admin": "0x93e509f8bD4546064862Aa5195c59777a4b4B354",
+        "implementation": "0xdE6e3eb75464C21e826C2A3611243C4dC77d1C35",
+        "admin": "0x488BA1A2f28f5A8fa377CfD4E8d456A3234fc077",
         "kind": "Upgradeable"
       }
     ],
     "float-capital/LongShort": [
       {
-        "address": "0x8b307D7369fC7F8b8e5CccE2595E5Cbd45d26298",
+        "address": "0xd3D7f98650d7dbDb155eFBB8b7BFB028172b28FC",
         "version": "0.1.0",
-        "implementation": "0xb54dC86CedFE96163E14B4a4C002C2d3C577F8f8",
-        "admin": "0x93e509f8bD4546064862Aa5195c59777a4b4B354",
+        "implementation": "0x5841B0eCd8ca5AC2769ed98a481513D77aadE17c",
+        "admin": "0x488BA1A2f28f5A8fa377CfD4E8d456A3234fc077",
         "kind": "Upgradeable"
       }
     ]
@@ -499,6 +499,6 @@
   "manifestVersion": "2.2",
   "version": "0.1.0",
   "proxyAdmin": {
-    "address": "0x93e509f8bD4546064862Aa5195c59777a4b4B354"
+    "address": "0x488BA1A2f28f5A8fa377CfD4E8d456A3234fc077"
   }
 }

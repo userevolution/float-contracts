@@ -220,14 +220,14 @@ contract Staker is Initializable {
     // USER REWARD STATE FUNCTIONS ///
     ////////////////////////////////////
 
-    function calculateAccumulatedFloat(address tokenAddress)
+    function calculateAccumulatedFloat(address tokenAddress, address user)
         internal
         returns (uint256)
     {
         // Safe Math will make this fail in case users try to claim immediately after
         // after deposit before the next state is updated.
         if (
-            userIndexOfLastClaimedReward[tokenAddress][msg.sender] >
+            userIndexOfLastClaimedReward[tokenAddress][user] >
             latestRewardIndex[tokenAddress]
         ) {
             return 0;
@@ -237,25 +237,27 @@ contract Staker is Initializable {
                 .accumulativeFloatPerToken
                 .sub(
                 syntheticRewardParams[tokenAddress][
-                    userIndexOfLastClaimedReward[tokenAddress][msg.sender]
+                    userIndexOfLastClaimedReward[tokenAddress][user]
                 ]
                     .accumulativeFloatPerToken
             );
 
-        return accumDelta * userAmountStaked[tokenAddress][msg.sender];
+        return accumDelta * userAmountStaked[tokenAddress][user];
     }
 
-    function mintAccumulatedFloat(address tokenAddress) internal {
-        uint256 floatToMint = calculateAccumulatedFloat(tokenAddress);
+    function mintAccumulatedFloat(address tokenAddress, address user) internal {
+        uint256 floatToMint = calculateAccumulatedFloat(tokenAddress, user);
         // Set the user has claimed up until now.
-        userIndexOfLastClaimedReward[tokenAddress][
-            msg.sender
-        ] = latestRewardIndex[tokenAddress];
 
         if (floatToMint > 0) {
-            floatToken.mint(msg.sender, floatToMint);
-            emit FloatAccumulated(msg.sender, tokenAddress, floatToMint);
-            emit FloatMinted(msg.sender, floatToMint);
+            // stops them setting this forward
+            userIndexOfLastClaimedReward[tokenAddress][
+                user
+            ] = latestRewardIndex[tokenAddress];
+
+            floatToken.mint(user, floatToMint);
+            emit FloatAccumulated(user, tokenAddress, floatToMint);
+            emit FloatMinted(user, floatToMint);
         }
     }
 
@@ -263,7 +265,8 @@ contract Staker is Initializable {
         require(tokenAddresses.length <= 15); // Set some limit on loop length
         uint256 floatTotal = 0;
         for (uint256 i = 0; i < tokenAddresses.length; i++) {
-            uint256 floatToMint = calculateAccumulatedFloat(tokenAddresses[i]);
+            uint256 floatToMint =
+                calculateAccumulatedFloat(tokenAddresses[i], msg.sender);
             // Set the user has claimed up until now.
             userIndexOfLastClaimedReward[tokenAddresses[i]][
                 msg.sender
@@ -353,7 +356,7 @@ contract Staker is Initializable {
                 userIndexOfLastClaimedReward[tokenAddress][user] <
                 latestRewardIndex[tokenAddress]
             ) {
-                mintAccumulatedFloat(tokenAddress);
+                mintAccumulatedFloat(tokenAddress, user);
             }
         }
 
@@ -385,7 +388,7 @@ contract Staker is Initializable {
             userAmountStaked[tokenAddress][msg.sender] > 0,
             "nothing to withdraw"
         );
-        mintAccumulatedFloat(tokenAddress);
+        mintAccumulatedFloat(tokenAddress, msg.sender);
 
         userAmountStaked[tokenAddress][msg.sender] = userAmountStaked[
             tokenAddress
