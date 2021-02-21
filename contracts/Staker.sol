@@ -148,7 +148,7 @@ contract Staker is Initializable {
         // (4)  Perhaps which market
         // (5)  scalar for imbalance
         // (6) amount already locked from that token
-        return tokenPrice;
+        return tokenPrice.div(1000);
     }
 
     function calculateTimeDelta(address tokenAddress)
@@ -172,7 +172,7 @@ contract Staker is Initializable {
         return
             syntheticRewardParams[tokenAddress][latestRewardIndex[tokenAddress]]
                 .accumulativeFloatPerToken
-                .add(timeDelta.mul(floatPerSecond));
+                .add(timeDelta.mul(floatPerSecond).div(1e18));
     }
 
     function setRewardObjects(address tokenAddress, uint256 tokenPrice)
